@@ -1,0 +1,7 @@
+required_group_fields: [hicn, provider_id, split_year_indicator]
+required_source_fields: [hicn, provider_id, stay_from_date, stay_thru_date]
+excluded_sort_fields: [admission_date]
+collections: [condition_codes, occurrence_codes, occurrence_span_lines, value_lines, revenue_lines]
+limits:
+  occurrence_span_lines: 10
+selected_fields: [medpar_dte_cr_ended_0220, medpar_tot_chrg_0400, medpar_drg_price_0380, medpar_sqstrtn_rdctn_amt_1130, medpar_infor_enctr_ind_sw_0800, medpar_ma_teach_ind_sw_0810, medpar_snf_qual_from_date_0180, medpar_snf_qual_thru_date_0190]

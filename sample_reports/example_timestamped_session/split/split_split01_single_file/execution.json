@@ -1,0 +1,17 @@
+{
+  "name": "Split - Split01 single file",
+  "stage": "split",
+  "command": "python scripts/run_stage.py --stage split --run-date 2024-04-04 --mode calculate --run-id split_split01_single_file --command-id split_split01_single_file --report-session reports/20260719_095819 --show-pass --source data/user_inputs/split/source/Split01_claim.r1.a_20210103.json",
+  "returncode": 0,
+  "expected_exit_codes": [
+    0
+  ],
+  "completed_as_expected": true,
+  "outcome": "COMPLETED AS EXPECTED",
+  "report_files": [
+    "reports/20260719_095819/split/index.html",
+    "reports/20260719_095819/split/split_split01_single_file/report.html",
+    "reports/20260719_095819/split/split_split01_single_file/report.json",
+    "reports/20260719_095819/split/split_split01_single_file/report.txt"
+  ]
+}

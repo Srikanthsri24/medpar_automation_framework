@@ -1,0 +1,27 @@
+run_id: final_medpar_user_regression
+run_date: 2026-07-19
+files:
+  - {path: data/user_inputs/final_medpar/source/*, stage: final_medpar, role: source}
+  - {path: data/user_inputs/final_medpar/actual_output/*, stage: final_medpar, role: actual_output}
+  - {path: data/user_inputs/final_medpar/expected_output/*, stage: final_medpar, role: expected_output}
+settings:
+  final_medpar:
+    expected_bytes: 3000
+    encoding: ascii
+    require_fixed_width: true
+    require_actual_output: true
+    require_expected_output: true
+    allowed_classifications: [SS, LS, SNF]
+    required_selected_fields:
+      - medpar_tot_chrg_0400
+      - medpar_drg_price_0380
+      - medpar_sqstrtn_rdctn_amt_1130
+      - medpar_dte_cr_ended_0220
+      - medpar_adm_day_0090
+      - medpar_organ_ind_0487
+      - medpar_drg_code
+      - medpar_tot_acc_chrg_0430
+      - medpar_bill_tot_perdiem_0381
+      - medpar_intensive_care_ind_0481
+    # Populate only after the official 3050-to-3000 offset map is approved.
+    field_layout: []

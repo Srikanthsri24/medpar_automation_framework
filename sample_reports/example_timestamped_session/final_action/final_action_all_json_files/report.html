@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEDPAR Final Action Detailed Validation Report — final_action_all_json_files</title>
+<style>
+:root{--navy:#102a43;--navy2:#243b53;--ink:#172033;--muted:#667085;--line:#d0d5dd;--bg:#f4f6f9;--green:#087f5b;--red:#c92a2a;--amber:#b05a00;--blue:#1864ab;--purple:#5f3dc4}
+*{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.48}
+header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:30px 34px} header h1{margin:8px 0;font-size:30px} header p{margin:4px 0} .back-link{color:#fff;text-decoration:none;font-weight:700}
+.container{max-width:1600px;margin:auto;padding:24px} .overall-badge{display:inline-block;margin-top:14px;padding:10px 18px;border-radius:999px;font-size:19px;font-weight:900;background:#d3f9d8;color:#087f5b}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0} .summary-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px;box-shadow:0 2px 9px rgba(16,42,67,.06)} .summary-card strong{display:block;font-size:27px;margin-top:5px}
+.guide,.failure-overview,.run-inputs{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0} .guide h2,.failure-overview h2{margin-top:0} .guide ol{columns:2;column-gap:36px}
+.toolbar{position:sticky;top:0;z-index:20;display:flex;gap:9px;flex-wrap:wrap;padding:11px;background:#e9eef5;border:1px solid var(--line);border-radius:10px;margin:18px 0} .toolbar input,.toolbar select,.toolbar button{padding:9px 11px;border:1px solid #98a2b3;border-radius:7px;background:#fff} .toolbar input{flex:1;min-width:300px}
+.stage-section{background:#fff;border:1px solid var(--line);border-radius:13px;margin:16px 0;overflow:hidden} .stage-section>summary{cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:17px;background:#edf2f7;font-weight:800} .stage-number{color:var(--muted)} .stage-name{font-size:19px} .stage-status{margin-left:auto;padding:5px 10px;border-radius:999px} .stage-status.pass{background:#d3f9d8;color:var(--green)} .stage-status.fail{background:#ffe3e3;color:var(--red)} .stage-counts{color:var(--muted);font-weight:600} .stage-content{padding:2px 12px 18px} .stage-intro{margin:14px 2px;padding:12px;background:#eef6ff;border-left:5px solid var(--blue);border-radius:8px}
+.validation-card{background:#fff;border:1px solid var(--line);border-left:7px solid #98a2b3;border-radius:11px;margin:14px 2px;padding:17px;box-shadow:0 2px 7px rgba(16,42,67,.04)} .validation-card.status-pass{border-left-color:var(--green)} .validation-card.status-fail{border-left-color:var(--red)} .validation-card.status-blocked{border-left-color:var(--amber)} .validation-card.status-not_applicable{border-left-color:var(--blue)}
+.validation-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap} .identity-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .sequence{color:var(--muted)} .badge,.field-chip,.decision{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:900} .badge.pass,.decision.keep{background:#d3f9d8;color:var(--green)} .badge.fail,.decision.drop{background:#ffe3e3;color:var(--red)} .badge.blocked{background:#fff3bf;color:#8d5500} .badge.not_applicable{background:#dbeafe;color:var(--blue)} .field-chip{background:#ede9fe;color:var(--purple)} .rule-id{font-weight:800}
+.copy-button{border:1px solid #98a2b3;background:#fff;border-radius:7px;padding:7px 10px;cursor:pointer} .validation-card h3{margin:14px 0 10px;font-size:21px}
+.explanation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px} .explanation-block{border:1px solid var(--line);border-radius:9px;padding:12px;background:#fafbfc} .explanation-block h4{margin:0 0 7px} .runtime-message{padding-top:7px;border-top:1px dashed var(--line)}
+.expected-actual-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;margin:12px 0} .value-panel{border:1px solid var(--line);border-radius:9px;overflow:hidden} .value-panel h5{margin:0;padding:10px 12px;background:#eef2f7;font-size:15px} .value-panel.expected{border-left:5px solid var(--blue)} .value-panel.actual{border-left:5px solid var(--amber)} pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;background:#172033;color:#f8fafc;padding:12px;max-height:420px;overflow:auto}
+.conclusion{border-radius:9px;padding:13px;margin:12px 0} .conclusion h4{margin:0 0 6px} .conclusion.pass{background:#e6fcf5;border:1px solid #96f2d7} .conclusion.fail{background:#fff0f0;border:1px solid #ffc9c9} .conclusion.blocked{background:#fff9db;border:1px solid #ffec99} .conclusion.not_applicable{background:#e7f5ff;border:1px solid #a5d8ff} .recommended{padding:12px;background:#fff4e6;border-left:5px solid var(--amber);border-radius:8px}
+.traceability{margin-top:12px;border-top:1px solid var(--line);padding-top:10px} .traceability>summary{cursor:pointer;font-weight:800} .trace-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:10px} .trace-grid section{min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px} .trace-grid h5{margin:0 0 7px} ul{margin:4px 0;padding-left:20px} .muted{color:var(--muted)}
+.table-wrap{overflow:auto} table{width:100%;border-collapse:collapse} th,td{border:1px solid var(--line);padding:9px;text-align:left;vertical-align:top} th{background:#edf2f7} .rule-catalogue{margin:14px 2px;padding:0 12px 12px;border:1px solid var(--line);border-radius:9px;background:#fafbfc} .rule-catalogue>summary{cursor:pointer;font-weight:800;padding:12px 0} .catalogue-status{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800} .catalogue-status.executed{background:#d3f9d8;color:var(--green)} .catalogue-status.not-triggered{background:#f1f3f5;color:var(--muted)} .decision-section{margin:18px 2px} .hidden{display:none!important} footer{text-align:center;color:var(--muted);padding:30px}
+@media(max-width:800px){.guide ol{columns:1}.stage-status{margin-left:0}} @media print{.toolbar,.copy-button{display:none}details{display:block}details>summary{list-style:none}.validation-card,.stage-section{break-inside:avoid}body{background:#fff}}
+</style></head>
+<body><header><a class="back-link" href="../../master/index.html">← Back to master report</a><h1>MEDPAR Final Action Detailed Validation Report</h1><p><strong>Run ID:</strong> final_action_all_json_files</p><p><strong>Business run date:</strong> 2024-04-04</p><p><strong>Generated:</strong> 2026-07-19T09:58:21+00:00</p><span class="overall-badge">OVERALL PASS</span></header>
+<main class="container">
+<section class="summary-grid"><div class="summary-card">Stages<strong>1</strong></div><div class="summary-card">Validations<strong>13</strong></div><div class="summary-card">Passed<strong>12</strong></div><div class="summary-card">Failed<strong>0</strong></div><div class="summary-card">Blocked<strong>0</strong></div><div class="summary-card">Not applicable<strong>1</strong></div><div class="summary-card">Record decisions<strong>3</strong></div></section>
+<section class="guide"><h2>How to read this report</h2><ol><li>Open the required stage.</li><li>Use status filters to focus on failures.</li><li>Read the business requirement and exact validation performed.</li><li>Compare Expected result with Observed result.</li><li>Read the conclusion explaining why it passed, failed, or was blocked.</li><li>Open source evidence for relative file paths, record IDs, group keys, and validator function.</li></ol></section>
+<section class="failure-overview"><h2>Failure / blocked overview</h2><p>No failed or blocked validations were recorded.</p></section>
+<section class="toolbar"><input id="search" type="search" placeholder="Search stage, rule, field, requirement, source file..." oninput="applyFilters()"><select id="statusFilter" onchange="applyFilters()"><option value="ALL">All statuses</option><option>PASS</option><option>FAIL</option><option>BLOCKED</option><option>NOT_APPLICABLE</option></select><select id="stageFilter" onchange="applyFilters()"><option value="ALL">All stages</option><option value="final_action">Final Action</option></select><button onclick="expandAll(true)">Expand all</button><button onclick="expandAll(false)">Collapse all</button><button onclick="window.print()">Print / Save PDF</button></section>
+
+        <details class="run-inputs">
+          <summary>Run inputs and configuration</summary>
+          <p>All paths below are project-relative paths.</p>
+          <div class="table-wrap"><table><thead><tr><th>Stage</th><th>Role</th><th>Format</th><th>Relative path / wildcard</th></tr></thead><tbody><tr><td>final_action</td><td>source</td><td>auto</td><td><code>data/user_inputs/final_action/source/*.json</code></td></tr></tbody></table></div>
+          <h3>Configured settings</h3><pre>{
+  &quot;final_action&quot;: {
+    &quot;rule1_keep_qcs&quot;: [
+      1,
+      3,
+      5
+    ],
+    &quot;allowed_query_codes&quot;: [
+      0,
+      1,
+      3,
+      5
+    ],
+    &quot;allowed_transaction_codes&quot;: [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    &quot;block_ambiguous_ordering&quot;: true,
+    &quot;rule6_enabled&quot;: false
+  }
+}</pre>
+        </details>
+        
+    <details class="stage-section" open data-stage-container="final_action">
+      <summary>
+        <span class="stage-number">Stage 1</span>
+        <span class="stage-name">Final Action</span>
+        <span class="stage-status pass">PASS</span>
+        <span class="stage-counts">12 pass · 0 fail · 0 blocked · 1 N/A</span>
+      </summary>
+      <div class="stage-content">
+        <div class="stage-intro">
+          <strong>How to review this stage:</strong> Read validations in order. Each card states the business requirement, exact check, expected result, observed result, conclusion, and source evidence.
+        </div>
+        <details class='rule-catalogue'><summary>Complete stage rule catalogue and coverage</summary><p><strong>Executed</strong> means the rule/function emitted a result for this run. <strong>Not triggered</strong> means its prerequisites did not occur in this input; it is not a hidden pass.</p><div class='table-wrap'><table><thead><tr><th>Rule ID</th><th>Rule / validation</th><th>Run state</th><th>Business requirement</th></tr></thead><tbody><tr><td><code>FA-ACTUAL-OUTPUT-RECONCILIATION</code></td><td>Final Action actual-output reconciliation</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Actual retained output must exactly match expected KEEP decisions.</td></tr><tr><td><code>FA-ALL-QC0</code></td><td>All QC0 group</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>When every claim in a group has query code 0, the complete group is dropped.</td></tr><tr><td><code>FA-DEFAULT</code></td><td>Final Action default rule</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>When no numbered rule applies, keep the newest non-zero QC record and drop the rest.</td></tr><tr><td><code>FA-GROUP-RECONCILIATION</code></td><td>Final Action group reconciliation</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every group record must receive exactly one KEEP or DROP decision.</td></tr><tr><td><code>FA-PRE-EMPTY-GROUP</code></td><td>Fa Pre Empty Group</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>The Final Action process must satisfy validation FA-PRE-EMPTY-GROUP.</td></tr><tr><td><code>FA-PRE-GROUPING</code></td><td>Final Action claim grouping</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Claims must be grouped by record type, HICN, provider, stay-from date, and stay-thru date.</td></tr><tr><td><code>FA-PRE-ORDERING</code></td><td>Final Action newest-record ordering</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Rules that use first/latest records require deterministic newest-first ordering.</td></tr><tr><td><code>FA-PRE-SCHEMA</code></td><td>Final Action required-field validation</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Each claim must contain valid identity, provider, dates, transaction code, query code, ICN, and processing data.</td></tr><tr><td><code>FA-PRE-SOURCE-FILES</code></td><td>Final Action source availability</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Final Action requires source claim records.</td></tr><tr><td><code>FA-RULE-01</code></td><td>Final Action Rule 1 — single claim</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>A one-record group keeps approved non-zero QC values and drops QC0.</td></tr><tr><td><code>FA-RULE-02</code></td><td>Final Action Rule 2 — 5-0-3 / 5-0-1</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>A three-record newest-first sequence 5-0-3 or 5-0-1 keeps only QC5.</td></tr><tr><td><code>FA-RULE-03</code></td><td>Final Action Rule 3 — same QC</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>When all records have the same QC, retain only the newest record for each unique ICN.</td></tr><tr><td><code>FA-RULE-05</code></td><td>Final Action Rule 5</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>For the approved three-record/no-QC5/one-QC0 route, compare ICNs and retain the approved newest non-QC0 record.</td></tr><tr><td><code>FA-RULE-06</code></td><td>Final Action Rule 6</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>A two-record QC0/QC5 group requires the approved ICN and Action Code decision matrix.</td></tr><tr><td><code>FA-RULE-07</code></td><td>Final Action Rule 7</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>With no QC5 and QC0 count dominating, retain eligible unique non-QC0 ICNs and drop QC0/duplicates.</td></tr><tr><td><code>FA-RULE-08</code></td><td>Final Action Rule 8</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>With no QC5, more than three records, newest QC0, and non-QC0 count dominating, retain eligible unique non-QC0 ICNs.</td></tr><tr><td><code>FA-RULE-09</code></td><td>Final Action Rule 9</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>With no QC5 and newest non-QC0, keep eligible unique non-QC0 ICNs and drop QC0/duplicates.</td></tr><tr><td><code>FA-RULE-10A</code></td><td>Final Action Rule 10A</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>When QC5 exists, newest is QC0, and QC0 count exceeds QC5 count, apply ICN uniqueness to non-QC0 records.</td></tr><tr><td><code>FA-RULE-10B</code></td><td>Final Action Rule 10B</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>When QC5 exists and Rule 10A is false, keep the newest non-QC0 record without ICN comparison.</td></tr><tr><td><code>FA-STAGE-RECONCILIATION</code></td><td>Final Action stage reconciliation</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every valid source claim must be decided or explicitly failed/blocked.</td></tr><tr><td><code>INGEST-DISCOVERY</code></td><td>Input file discovery</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every configured relative file path or wildcard must resolve to at least one input file.</td></tr><tr><td><code>INGEST-NO-RECORDS</code></td><td>Input record availability</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>A requested stage cannot run without at least one valid input record.</td></tr><tr><td><code>INGEST-READ-FILE</code></td><td>Input file readability</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every discovered JSON or Parquet file must be readable and parse into records.</td></tr><tr><td><code>STAGE-FINAL-SUMMARY</code></td><td>Stage completion summary</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>A stage passes only when it has no FAIL or BLOCKED validation results.</td></tr></tbody></table></div></details>
+        
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass ingest-discovery input file discovery every configured relative file path or wildcard must resolve to at least one input file. resolve the configured source, actual, or expected path and count matching files.  discovered 3 file(s) for source data/user_inputs/final_action/source/fa_t.cvm.cwfcb.d240404.t1438012-000000004.json data/user_inputs/final_action/source/filerule1rule2.json data/user_inputs/final_action/source/claim.r2.a (1).json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#1</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-DISCOVERY</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file discovery</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every configured relative file path or wildcard must resolve to at least one input file.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Resolve the configured source, actual, or expected path and count matching files.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Discovered 3 file(s) for source</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when one or more files are found; FAIL when no file matches or discovery raises an error.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;One or more matching files&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>[
+  &quot;data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json&quot;,
+  &quot;data/user_inputs/final_action/source/FileRule1Rule2.json&quot;,
+  &quot;data/user_inputs/final_action/source/claim.r2.a (1).json&quot;
+]</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Discovered 3 file(s) for source. Observed result [&#x27;data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json&#x27;, &#x27;data/user_inputs/final_action/source/FileRule1Rule2.json&#x27;, &#x27;data/user_inputs/final_action/source/claim.r2.a (1).json&#x27;] satisfied the expected condition &#x27;One or more matching files&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json</li><li>data/user_inputs/final_action/source/FileRule1Rule2.json</li><li>data/user_inputs/final_action/source/claim.r2.a (1).json</li></ul></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;configured_path&quot;: &quot;data/user_inputs/final_action/source/*.json&quot;,
+  &quot;role&quot;: &quot;source&quot;,
+  &quot;format&quot;: &quot;auto&quot;,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 75,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:75&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass ingest-read-file input file readability every discovered json or parquet file must be readable and parse into records. open the file, parse its content, normalize the root structure, and count records.  file was read successfully and produced 1 record(s) data/user_inputs/final_action/source/fa_t.cvm.cwfcb.d240404.t1438012-000000004.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#2</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-READ-FILE</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file readability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every discovered JSON or Parquet file must be readable and parse into records.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Open the file, parse its content, normalize the root structure, and count records.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> File was read successfully and produced 1 record(s)</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Readable file containing at least one record&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;file&quot;: &quot;data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json&quot;,
+  &quot;record_count&quot;: 1,
+  &quot;role&quot;: &quot;source&quot;
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — File was read successfully and produced 1 record(s). Observed result {&#x27;file&#x27;: &#x27;data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json&#x27;, &#x27;record_count&#x27;: 1, &#x27;role&#x27;: &#x27;source&#x27;} satisfied the expected condition &#x27;Readable file containing at least one record&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>8c2685d6364cd60c60d0</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;file_size_bytes&quot;: 142042,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 121,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:121&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass ingest-read-file input file readability every discovered json or parquet file must be readable and parse into records. open the file, parse its content, normalize the root structure, and count records.  file was read successfully and produced 1 record(s) data/user_inputs/final_action/source/filerule1rule2.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#3</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-READ-FILE</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file readability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every discovered JSON or Parquet file must be readable and parse into records.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Open the file, parse its content, normalize the root structure, and count records.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> File was read successfully and produced 1 record(s)</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Readable file containing at least one record&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;file&quot;: &quot;data/user_inputs/final_action/source/FileRule1Rule2.json&quot;,
+  &quot;record_count&quot;: 1,
+  &quot;role&quot;: &quot;source&quot;
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — File was read successfully and produced 1 record(s). Observed result {&#x27;file&#x27;: &#x27;data/user_inputs/final_action/source/FileRule1Rule2.json&#x27;, &#x27;record_count&#x27;: 1, &#x27;role&#x27;: &#x27;source&#x27;} satisfied the expected condition &#x27;Readable file containing at least one record&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FileRule1Rule2.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>cb7769b0f3f3e8886bda</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;file_size_bytes&quot;: 1541289,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 121,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:121&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass ingest-read-file input file readability every discovered json or parquet file must be readable and parse into records. open the file, parse its content, normalize the root structure, and count records.  file was read successfully and produced 1 record(s) data/user_inputs/final_action/source/claim.r2.a (1).json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#4</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-READ-FILE</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file readability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every discovered JSON or Parquet file must be readable and parse into records.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Open the file, parse its content, normalize the root structure, and count records.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> File was read successfully and produced 1 record(s)</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Readable file containing at least one record&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;file&quot;: &quot;data/user_inputs/final_action/source/claim.r2.a (1).json&quot;,
+  &quot;record_count&quot;: 1,
+  &quot;role&quot;: &quot;source&quot;
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — File was read successfully and produced 1 record(s). Observed result {&#x27;file&#x27;: &#x27;data/user_inputs/final_action/source/claim.r2.a (1).json&#x27;, &#x27;record_count&#x27;: 1, &#x27;role&#x27;: &#x27;source&#x27;} satisfied the expected condition &#x27;Readable file containing at least one record&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/claim.r2.a (1).json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>ea12d4d6ccee7be16fbf</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;file_size_bytes&quot;: 1096603,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 121,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:121&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass fa-rule-01 final action rule 1 — single claim a one-record group keeps approved non-zero qc values and drops qc0. count the group, inspect query code, and assign keep or drop.  single-record claim routed to keep data/user_inputs/final_action/source/fa_t.cvm.cwfcb.d240404.t1438012-000000004.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#5</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">FA-RULE-01</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action Rule 1 — single claim</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>A one-record group keeps approved non-zero QC values and drops QC0.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count the group, inspect query code, and assign KEEP or DROP.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Single-record claim routed to KEEP</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>For configured rules: QC1/QC3/QC5=KEEP and QC0=DROP.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;KEEP&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;KEEP&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Single-record claim routed to KEEP. Observed result &#x27;KEEP&#x27; satisfied the expected condition &#x27;KEEP&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.rules.base._result</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>8c2685d6364cd60c60d0</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{
+  &quot;rec_type&quot;: &quot;I&quot;,
+  &quot;hicn&quot;: &quot;CC&quot;,
+  &quot;provider_id&quot;: &quot;215148&quot;,
+  &quot;stay_from_date&quot;: &quot;2024-04-01&quot;,
+  &quot;stay_thru_date&quot;: &quot;2024-05-01&quot;
+}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;query_code&quot;: 1,
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.rules.base._result&quot;,
+  &quot;source_line&quot;: 53,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.rules.base._result:53&quot;,
+    &quot;medpar_qa.stages.final_action.rules.rule_01.evaluate:43&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate_group:125&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate:197&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass fa-group-reconciliation final action group reconciliation every group record must receive exactly one keep or drop decision. compare input record ids with decision record ids and detect duplicates/missing decisions.  every group record received exactly one decision data/user_inputs/final_action/source/fa_t.cvm.cwfcb.d240404.t1438012-000000004.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#6</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">FA-GROUP-RECONCILIATION</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action group reconciliation</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every group record must receive exactly one KEEP or DROP decision.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare input record IDs with decision record IDs and detect duplicates/missing decisions.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Every group record received exactly one decision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when input count equals unique decision count and each record is decided once.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>{
+  &quot;record_count&quot;: 1,
+  &quot;one_decision_per_record&quot;: true
+}</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;decision_count&quot;: 1,
+  &quot;missing_record_ids&quot;: [],
+  &quot;unexpected_record_ids&quot;: [],
+  &quot;duplicate_decision_ids&quot;: []
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Every group record received exactly one decision. Observed result {&#x27;decision_count&#x27;: 1, &#x27;missing_record_ids&#x27;: [], &#x27;unexpected_record_ids&#x27;: [], &#x27;duplicate_decision_ids&#x27;: []} satisfied the expected condition {&#x27;record_count&#x27;: 1, &#x27;one_decision_per_record&#x27;: True}. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.reconciler.validate_group_decisions</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>8c2685d6364cd60c60d0</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{
+  &quot;rec_type&quot;: &quot;I&quot;,
+  &quot;hicn&quot;: &quot;CC&quot;,
+  &quot;provider_id&quot;: &quot;215148&quot;,
+  &quot;stay_from_date&quot;: &quot;2024-04-01&quot;,
+  &quot;stay_thru_date&quot;: &quot;2024-05-01&quot;
+}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.reconciler.validate_group_decisions&quot;,
+  &quot;source_line&quot;: 53,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.reconciler.validate_group_decisions:53&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate_group:131&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate:197&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass fa-rule-01 final action rule 1 — single claim a one-record group keeps approved non-zero qc values and drops qc0. count the group, inspect query code, and assign keep or drop.  single-record claim routed to keep data/user_inputs/final_action/source/filerule1rule2.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#7</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">FA-RULE-01</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action Rule 1 — single claim</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>A one-record group keeps approved non-zero QC values and drops QC0.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count the group, inspect query code, and assign KEEP or DROP.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Single-record claim routed to KEEP</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>For configured rules: QC1/QC3/QC5=KEEP and QC0=DROP.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;KEEP&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;KEEP&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Single-record claim routed to KEEP. Observed result &#x27;KEEP&#x27; satisfied the expected condition &#x27;KEEP&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.rules.base._result</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FileRule1Rule2.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>cb7769b0f3f3e8886bda</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{
+  &quot;rec_type&quot;: &quot;I&quot;,
+  &quot;hicn&quot;: &quot;B&quot;,
+  &quot;provider_id&quot;: &quot;330064&quot;,
+  &quot;stay_from_date&quot;: &quot;2023-01-10&quot;,
+  &quot;stay_thru_date&quot;: &quot;2023-01-20&quot;
+}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;query_code&quot;: 3,
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.rules.base._result&quot;,
+  &quot;source_line&quot;: 53,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.rules.base._result:53&quot;,
+    &quot;medpar_qa.stages.final_action.rules.rule_01.evaluate:43&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate_group:125&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate:197&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass fa-group-reconciliation final action group reconciliation every group record must receive exactly one keep or drop decision. compare input record ids with decision record ids and detect duplicates/missing decisions.  every group record received exactly one decision data/user_inputs/final_action/source/filerule1rule2.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#8</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">FA-GROUP-RECONCILIATION</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action group reconciliation</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every group record must receive exactly one KEEP or DROP decision.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare input record IDs with decision record IDs and detect duplicates/missing decisions.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Every group record received exactly one decision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when input count equals unique decision count and each record is decided once.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>{
+  &quot;record_count&quot;: 1,
+  &quot;one_decision_per_record&quot;: true
+}</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;decision_count&quot;: 1,
+  &quot;missing_record_ids&quot;: [],
+  &quot;unexpected_record_ids&quot;: [],
+  &quot;duplicate_decision_ids&quot;: []
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Every group record received exactly one decision. Observed result {&#x27;decision_count&#x27;: 1, &#x27;missing_record_ids&#x27;: [], &#x27;unexpected_record_ids&#x27;: [], &#x27;duplicate_decision_ids&#x27;: []} satisfied the expected condition {&#x27;record_count&#x27;: 1, &#x27;one_decision_per_record&#x27;: True}. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.reconciler.validate_group_decisions</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FileRule1Rule2.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>cb7769b0f3f3e8886bda</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{
+  &quot;rec_type&quot;: &quot;I&quot;,
+  &quot;hicn&quot;: &quot;B&quot;,
+  &quot;provider_id&quot;: &quot;330064&quot;,
+  &quot;stay_from_date&quot;: &quot;2023-01-10&quot;,
+  &quot;stay_thru_date&quot;: &quot;2023-01-20&quot;
+}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.reconciler.validate_group_decisions&quot;,
+  &quot;source_line&quot;: 53,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.reconciler.validate_group_decisions:53&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate_group:131&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate:197&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass fa-rule-01 final action rule 1 — single claim a one-record group keeps approved non-zero qc values and drops qc0. count the group, inspect query code, and assign keep or drop.  single-record claim routed to keep data/user_inputs/final_action/source/claim.r2.a (1).json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#9</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">FA-RULE-01</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action Rule 1 — single claim</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>A one-record group keeps approved non-zero QC values and drops QC0.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count the group, inspect query code, and assign KEEP or DROP.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Single-record claim routed to KEEP</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>For configured rules: QC1/QC3/QC5=KEEP and QC0=DROP.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;KEEP&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;KEEP&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Single-record claim routed to KEEP. Observed result &#x27;KEEP&#x27; satisfied the expected condition &#x27;KEEP&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.rules.base._result</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/claim.r2.a (1).json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>ea12d4d6ccee7be16fbf</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{
+  &quot;rec_type&quot;: &quot;I&quot;,
+  &quot;hicn&quot;: &quot;CC&quot;,
+  &quot;provider_id&quot;: &quot;334455&quot;,
+  &quot;stay_from_date&quot;: &quot;2023-01-10&quot;,
+  &quot;stay_thru_date&quot;: &quot;2023-01-20&quot;
+}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;query_code&quot;: 5,
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.rules.base._result&quot;,
+  &quot;source_line&quot;: 53,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.rules.base._result:53&quot;,
+    &quot;medpar_qa.stages.final_action.rules.rule_01.evaluate:43&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate_group:125&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate:197&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass fa-group-reconciliation final action group reconciliation every group record must receive exactly one keep or drop decision. compare input record ids with decision record ids and detect duplicates/missing decisions.  every group record received exactly one decision data/user_inputs/final_action/source/claim.r2.a (1).json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#10</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">FA-GROUP-RECONCILIATION</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action group reconciliation</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every group record must receive exactly one KEEP or DROP decision.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare input record IDs with decision record IDs and detect duplicates/missing decisions.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Every group record received exactly one decision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when input count equals unique decision count and each record is decided once.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>{
+  &quot;record_count&quot;: 1,
+  &quot;one_decision_per_record&quot;: true
+}</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;decision_count&quot;: 1,
+  &quot;missing_record_ids&quot;: [],
+  &quot;unexpected_record_ids&quot;: [],
+  &quot;duplicate_decision_ids&quot;: []
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Every group record received exactly one decision. Observed result {&#x27;decision_count&#x27;: 1, &#x27;missing_record_ids&#x27;: [], &#x27;unexpected_record_ids&#x27;: [], &#x27;duplicate_decision_ids&#x27;: []} satisfied the expected condition {&#x27;record_count&#x27;: 1, &#x27;one_decision_per_record&#x27;: True}. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.reconciler.validate_group_decisions</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/claim.r2.a (1).json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>ea12d4d6ccee7be16fbf</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{
+  &quot;rec_type&quot;: &quot;I&quot;,
+  &quot;hicn&quot;: &quot;CC&quot;,
+  &quot;provider_id&quot;: &quot;334455&quot;,
+  &quot;stay_from_date&quot;: &quot;2023-01-10&quot;,
+  &quot;stay_thru_date&quot;: &quot;2023-01-20&quot;
+}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.reconciler.validate_group_decisions&quot;,
+  &quot;source_line&quot;: 53,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.reconciler.validate_group_decisions:53&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate_group:131&quot;,
+    &quot;medpar_qa.stages.final_action.processor.validate:197&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass fa-stage-reconciliation final action stage reconciliation every valid source claim must be decided or explicitly failed/blocked. compare all valid source ids against decisions and explicit failed/blocked ids.  all valid source records were decided or explicitly blocked/failed data/user_inputs/final_action/source/fa_t.cvm.cwfcb.d240404.t1438012-000000004.json data/user_inputs/final_action/source/filerule1rule2.json data/user_inputs/final_action/source/claim.r2.a (1).json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#11</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">FA-STAGE-RECONCILIATION</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action stage reconciliation</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every valid source claim must be decided or explicitly failed/blocked.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare all valid source IDs against decisions and explicit failed/blocked IDs.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> All valid source records were decided or explicitly blocked/failed</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when no valid claim remains unexplained.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>{
+  &quot;undecided_records&quot;: 0
+}</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;undecided_record_ids&quot;: []
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — All valid source records were decided or explicitly blocked/failed. Observed result {&#x27;undecided_record_ids&#x27;: []} satisfied the expected condition {&#x27;undecided_records&#x27;: 0}. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.processor.validate</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/final_action/source/FA_T.CVM.CWFCB.D240404.T1438012-000000004.json</li><li>data/user_inputs/final_action/source/FileRule1Rule2.json</li><li>data/user_inputs/final_action/source/claim.r2.a (1).json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>8c2685d6364cd60c60d0</li><li>cb7769b0f3f3e8886bda</li><li>ea12d4d6ccee7be16fbf</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.processor.validate&quot;,
+  &quot;source_line&quot;: 214,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.processor.validate:214&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-not_applicable"
+             data-status="NOT_APPLICABLE" data-stage="final_action"
+             data-search="final_action not_applicable fa-actual-output-reconciliation final action actual-output reconciliation actual retained output must exactly match expected keep decisions. compare expected keep identities with actual output identities and duplicates.  actual final action output was not supplied; expected decisions only ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#12</span>
+          <span class="badge not_applicable">NOT_APPLICABLE</span>
+          <code class="rule-id">FA-ACTUAL-OUTPUT-RECONCILIATION</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Final Action actual-output reconciliation</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Actual retained output must exactly match expected KEEP decisions.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare expected KEEP identities with actual output identities and duplicates.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Actual Final Action output was not supplied; expected decisions only</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when there are no missing, unexpected, or duplicate output records.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>Not supplied / not applicable</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>Not supplied / not applicable</pre></section>
+      </div>
+
+      <section class="conclusion not_applicable">
+        <h4>6. Why this is not applicable — NOT_APPLICABLE</h4>
+        <p>NOT APPLICABLE — Actual Final Action output was not supplied; expected decisions only. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.final_action.processor.validate</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.final_action.processor.validate&quot;,
+  &quot;source_line&quot;: 246,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.final_action.processor.validate:246&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="final_action"
+             data-search="final_action pass stage-final-summary stage completion summary a stage passes only when it has no fail or blocked validation results. count pass, fail, blocked, and not_applicable results emitted by the stage.  stage completed with no failed or blocked validations ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#13</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">STAGE-FINAL-SUMMARY</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Stage completion summary</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>A stage passes only when it has no FAIL or BLOCKED validation results.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count PASS, FAIL, BLOCKED, and NOT_APPLICABLE results emitted by the stage.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Stage completed with no failed or blocked validations</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when FAIL=0 and BLOCKED=0; otherwise FAIL.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>{
+  &quot;FAIL&quot;: 0,
+  &quot;BLOCKED&quot;: 0
+}</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;PASS&quot;: 11,
+  &quot;FAIL&quot;: 0,
+  &quot;NOT_APPLICABLE&quot;: 1,
+  &quot;BLOCKED&quot;: 0
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Stage completed with no failed or blocked validations. Observed result {&#x27;PASS&#x27;: 11, &#x27;FAIL&#x27;: 0, &#x27;NOT_APPLICABLE&#x27;: 1, &#x27;BLOCKED&#x27;: 0} satisfied the expected condition {&#x27;FAIL&#x27;: 0, &#x27;BLOCKED&#x27;: 0}. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>final_action</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.run</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;source_record_count&quot;: 3,
+  &quot;decision_count&quot;: 3,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.run&quot;,
+  &quot;source_line&quot;: 233,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.run:233&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+        
+        <section class="decision-section">
+          <h3>Record-level KEEP/DROP decisions</h3>
+          <p>These are the final decisions produced by the applicable Final Action rule for each record.</p>
+          <div class="table-wrap"><table><thead><tr><th>Record ID</th><th>Decision</th><th>Rule</th><th>Explanation</th></tr></thead><tbody><tr><td>8c2685d6364cd60c60d0</td><td><span class='decision keep'>KEEP</span></td><td>FA-RULE-01</td><td>Single-record QC=1</td></tr><tr><td>cb7769b0f3f3e8886bda</td><td><span class='decision keep'>KEEP</span></td><td>FA-RULE-01</td><td>Single-record QC=3</td></tr><tr><td>ea12d4d6ccee7be16fbf</td><td><span class='decision keep'>KEEP</span></td><td>FA-RULE-01</td><td>Single-record QC=5</td></tr></tbody></table></div>
+        </section>
+        
+      </div>
+    </details>
+    </main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
+<script>
+function applyFilters(){const q=document.getElementById('search').value.toLowerCase();const status=document.getElementById('statusFilter').value;const stage=document.getElementById('stageFilter').value;document.querySelectorAll('.validation-card').forEach(card=>{const okQ=!q||card.dataset.search.includes(q);const okS=status==='ALL'||card.dataset.status===status;const okStage=stage==='ALL'||card.dataset.stage===stage;card.classList.toggle('hidden',!(okQ&&okS&&okStage));});}
+function expandAll(open){document.querySelectorAll('details').forEach(item=>item.open=open);}
+function copyCard(button){const card=button.closest('.validation-card');navigator.clipboard.writeText(card.innerText).then(()=>{button.textContent='Copied';setTimeout(()=>button.textContent='Copy validation',1200);});}
+</script></body></html>

@@ -1,0 +1,117 @@
+[
+  {
+    "claim_id": "A1",
+    "claim_can": "A1595",
+    "hicn": "H1",
+    "provider_id": "P001",
+    "icn": "I1",
+    "query_code": 3,
+    "processing_date": "2024-04-01",
+    "accrete_date": "2024-04-01",
+    "admission_date": "2024-03-01",
+    "stay_from_date": "2024-03-01",
+    "stay_thru_date": "2024-03-05",
+    "transaction_code": "3",
+    "covered_days": 3,
+    "total_charges": "100.50",
+    "discharge_date": "2024-03-05",
+    "diagnosis_codes": [
+      "D1"
+    ],
+    "procedure_codes": [
+      "P1"
+    ]
+  },
+  {
+    "claim_id": "B1",
+    "claim_can": "B1595",
+    "hicn": "H2",
+    "provider_id": "P001",
+    "icn": "I2",
+    "query_code": 1,
+    "processing_date": "2024-04-01",
+    "accrete_date": "2024-04-01",
+    "admission_date": "2024-03-01",
+    "stay_from_date": "2024-03-01",
+    "stay_thru_date": "2024-03-02",
+    "transaction_code": "3",
+    "covered_days": 1,
+    "total_charges": "100.50",
+    "discharge_date": "2024-03-02",
+    "diagnosis_codes": [
+      "D1"
+    ],
+    "procedure_codes": [
+      "P1"
+    ]
+  },
+  {
+    "claim_id": "B2",
+    "claim_can": "B2595",
+    "hicn": "H2",
+    "provider_id": "P001",
+    "icn": "I3",
+    "query_code": 3,
+    "processing_date": "2024-04-02",
+    "accrete_date": "2024-04-02",
+    "admission_date": "2024-03-01",
+    "stay_from_date": "2024-03-01",
+    "stay_thru_date": "2024-03-03",
+    "transaction_code": "3",
+    "covered_days": 1,
+    "total_charges": "100.50",
+    "discharge_date": "2024-03-03",
+    "diagnosis_codes": [
+      "D2"
+    ],
+    "procedure_codes": [
+      "P1"
+    ]
+  },
+  {
+    "claim_id": "S1",
+    "claim_can": "S1595",
+    "hicn": "H3",
+    "provider_id": "P001",
+    "icn": "I4",
+    "query_code": 3,
+    "processing_date": "2024-04-01",
+    "accrete_date": "2024-04-01",
+    "admission_date": "2024-02-01",
+    "stay_from_date": "2024-02-01",
+    "stay_thru_date": "2024-02-04",
+    "transaction_code": "4",
+    "covered_days": 3,
+    "total_charges": "100.50",
+    "discharge_date": "2024-02-04",
+    "diagnosis_codes": [
+      "D1"
+    ],
+    "procedure_codes": [
+      "P1"
+    ]
+  },
+  {
+    "claim_id": "O1",
+    "claim_can": "O1595",
+    "hicn": "H4",
+    "provider_id": "P001",
+    "icn": "I5",
+    "query_code": 3,
+    "processing_date": "2024-04-01",
+    "accrete_date": "2024-04-01",
+    "admission_date": "2018-02-01",
+    "stay_from_date": "2018-02-01",
+    "stay_thru_date": "2018-02-04",
+    "transaction_code": "3",
+    "covered_days": 3,
+    "total_charges": "100.50",
+    "discharge_date": "2018-02-04",
+    "diagnosis_codes": [
+      "D1"
+    ],
+    "procedure_codes": [
+      "P1"
+    ]
+  }
+]

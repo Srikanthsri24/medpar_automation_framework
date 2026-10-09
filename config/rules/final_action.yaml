@@ -1,0 +1,19 @@
+stage: final_action
+change_request: LD-3137
+group_key: [rec_type, hicn, provider_id, stay_from_date, stay_thru_date]
+sort_order: [hicn, provider_id, stay_from_date, stay_thru_date, processing_date_desc, accrete_date_desc, source_sequence_desc]
+excluded_sort_fields: [admission_date]
+rules:
+  - {id: FA-ALL-QC0, description: Drop the group when every QC is zero}
+  - {id: FA-RULE-01, description: Single record; keep QueryCode 1, 3, or 5; drop QC0}
+  - {id: FA-RULE-02, description: Three-record 5-0-3 or 5-0-1; QC5 must be newest/highest accrete date; keep QC5}
+  - {id: FA-RULE-03, description: Same QC; keep newest record per unique ICN; all QC0 drops all}
+  - {id: FA-RULE-04, description: Support predicate used to determine whether all QueryCodes are identical}
+  - {id: FA-RULE-05, description: Three records, no QC5, exactly one QC0; compare ICNs and retain newest non-QC0 when appropriate}
+  - {id: FA-RULE-06, description: Two records QC0/QC5; same ICN plus QC0 action code 4 or 6 drops both, otherwise keep QC5}
+  - {id: FA-RULE-07, description: No QC5 and QC0 count dominates}
+  - {id: FA-RULE-08, description: No QC5, more than three records, newest QC0}
+  - {id: FA-RULE-09, description: No QC5 and newest is non-QC0}
+  - {id: FA-RULE-10A, description: QC5 exists, newest QC0, QC0 count greater than QC5 count}
+  - {id: FA-RULE-10B, description: QC5 fallback; keep newest non-QC0 without ICN comparison}
+  - {id: FA-DEFAULT, description: BLOCK unmatched groups; never infer a KEEP decision}

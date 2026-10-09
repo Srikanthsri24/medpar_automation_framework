@@ -1,0 +1,31 @@
+stage: final_medpar
+change_request: LD-3137
+identity_fields: [hicn, provider_id, split_year_indicator]
+sort_order: [hicn, provider_id, split_year_indicator, medpar_ss_ls_snf_ind_0140]
+excluded_sort_fields: [admission_date]
+rules:
+  - validate Split-year indicator format and value
+  - validate SS/LS/SNF classification
+  - validate configured bypass rules using expected-output membership
+  - compare every configured selected field with approved expected output
+  - verify Intermediate discrepancy fields populate into the final extract
+  - reject duplicate and unexpected identities
+  - validate actual encoded fixed-width record is exactly 3000 bytes
+  - validate field offsets when the approved 3050-to-3000 layout is supplied
+selected_fields:
+  - MEDPAR-TOT-CHRG-0400
+  - MEDPAR-DRG-PRICE-0380
+  - MEDPAR-SQSTRTN-RDCTN-AMT-1130
+  - MEDPAR-DTE-CR-ENDED-0220
+  - medparAdmDay0090
+  - MEDPAR-ORGAN-IND-0487
+  - MEDPAR-DRG-CODE
+  - MEDPAR-TOT-ACC-CHRG-0430
+  - MEDPAR-BILL-TOT-PERDIEM-0381
+  - MEDPAR-INTENSIVE-CARE-IND-0481
+  - MEDPAR-BIC-CODE-0022
+  - MEDPAR-VALQ1-PMT-RDCTN-AM-1470
+  - medparSSIData0252
+  - MEDPAR-HIMASTER-DOD-0230
+  - medparProvider0130
+open_specification: Approved field offsets and 3050-to-3000 transformation map are still required for full byte-position validation

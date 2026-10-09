@@ -1,0 +1,340 @@
+
+======================================================================================================================
+RUN ID: split_split01_single_file
+STAGE: split
+MODE: calculate
+REPORT SESSION: reports/20260719_095819
+======================================================================================================================
+MEDPAR QA — DETAILED BUSINESS VALIDATION RESULTS
+======================================================================================================================
+Every validation below explains the requirement, check performed, expected result, observed result, and conclusion.
+
+######################################################################################################################
+STAGE: SPLIT
+STAGE STATUS: PASS
+VALIDATION COUNTS: PASS=12 | FAIL=0 | BLOCKED=0 | NOT_APPLICABLE=0
+######################################################################################################################
+[1] PASS | INGEST-DISCOVERY | Input file discovery
+    Business requirement: Every configured relative file path or wildcard must resolve to at least one input file.
+    What was checked: Resolve the configured source, actual, or expected path and count matching files.
+    Evaluation logic: PASS when one or more files are found; FAIL when no file matches or discovery raises an error.
+    Expected result:
+      "One or more matching files"
+    Observed result:
+      [
+        "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+      ]
+    Final explanation: PASS — Discovered 1 file(s) for source. Observed result ['data/user_inputs/split/source/Split01_claim.r1.a_20210103.json'] satisfied the expected condition 'One or more matching files'. The observed data satisfies the stated business requirement.
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.orchestration.pipeline.load_with_diagnostics
+    Technical evidence:
+      {
+        "configured_path": "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json",
+        "role": "source",
+        "format": "auto",
+        "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+        "source_line": 75,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.load_with_diagnostics:75",
+          "medpar_qa.orchestration.pipeline.run:199"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[2] PASS | INGEST-READ-FILE | Input file readability
+    Business requirement: Every discovered JSON or Parquet file must be readable and parse into records.
+    What was checked: Open the file, parse its content, normalize the root structure, and count records.
+    Evaluation logic: PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.
+    Expected result:
+      "Readable file containing at least one record"
+    Observed result:
+      {
+        "file": "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json",
+        "record_count": 1,
+        "role": "source"
+      }
+    Final explanation: PASS — File was read successfully and produced 1 record(s). Observed result {'file': 'data/user_inputs/split/source/Split01_claim.r1.a_20210103.json', 'record_count': 1, 'role': 'source'} satisfied the expected condition 'Readable file containing at least one record'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.orchestration.pipeline.load_with_diagnostics
+    Technical evidence:
+      {
+        "file_size_bytes": 1913501,
+        "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+        "source_line": 121,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.load_with_diagnostics:121",
+          "medpar_qa.orchestration.pipeline.run:199"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[3] PASS | SP-PRE-SOURCE | Split source availability
+    Business requirement: Split validation requires source claim records.
+    What was checked: Confirm source-role records are present.
+    Evaluation logic: PASS when source count is greater than zero.
+    Expected result:
+      Not supplied / not applicable
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: PASS — Split source records were supplied. Observed result None satisfied the expected condition None. The observed data satisfies the stated business requirement.
+    Validator function: medpar_qa.stages.common.presence_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.common.presence_result",
+        "source_line": 94,
+        "validator_call_chain": [
+          "medpar_qa.stages.common.presence_result:94",
+          "medpar_qa.stages.split.processor.validate:79",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[4] PASS | SP-PRE-REQUIRED-FIELD | Sp Pre Required Field
+    Business requirement: The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for claim_can.
+    What was checked: Execute the configured business check for claim_can and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: claim_can
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "900500013"
+    Final explanation: PASS — Required field claim_can is supplied. Observed result '900500013' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.split.processor.validate:92",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[5] PASS | SP-PRE-REQUIRED-FIELD | Sp Pre Required Field
+    Business requirement: The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for hicn.
+    What was checked: Execute the configured business check for hicn and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: hicn
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "BC"
+    Final explanation: PASS — Required field hicn is supplied. Observed result 'BC' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.split.processor.validate:92",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[6] PASS | SP-PRE-REQUIRED-FIELD | Sp Pre Required Field
+    Business requirement: The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for provider_id.
+    What was checked: Execute the configured business check for provider_id and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: provider_id
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "334455"
+    Final explanation: PASS — Required field provider_id is supplied. Observed result '334455' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.split.processor.validate:92",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[7] PASS | SP-PRE-REQUIRED-FIELD | Sp Pre Required Field
+    Business requirement: The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for stay_from_date.
+    What was checked: Execute the configured business check for stay_from_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: stay_from_date
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "20200111"
+    Final explanation: PASS — Required field stay_from_date is supplied. Observed result '20200111' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.split.processor.validate:92",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[8] PASS | SP-PRE-REQUIRED-FIELD | Sp Pre Required Field
+    Business requirement: The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for stay_thru_date.
+    What was checked: Execute the configured business check for stay_thru_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: stay_thru_date
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "20200121"
+    Final explanation: PASS — Required field stay_thru_date is supplied. Observed result '20200121' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.split.processor.validate:92",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[9] PASS | SP-PRE-REQUIRED-FIELD | Sp Pre Required Field
+    Business requirement: The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for transaction_code.
+    What was checked: Execute the configured business check for transaction_code and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: transaction_code
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "3"
+    Final explanation: PASS — Required field transaction_code is supplied. Observed result '3' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.split.processor.validate:92",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[10] PASS | SP-PRE-DATE-ORDER | Split stay date order
+    Business requirement: Stay-from date must not be later than stay-thru date.
+    What was checked: Compare parsed stay-from and stay-thru dates.
+    Evaluation logic: PASS when from <= thru.
+    Expected result:
+      "stay_from_date <= stay_thru_date"
+    Observed result:
+      {
+        "stay_from_date": "2020-01-11",
+        "stay_thru_date": "2020-01-21"
+      }
+    Final explanation: PASS — Date order is valid. Observed result {'stay_from_date': '2020-01-11', 'stay_thru_date': '2020-01-21'} satisfied the expected condition 'stay_from_date <= stay_thru_date'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.field_checks.date_order_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.date_order_result",
+        "source_line": 145,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.date_order_result:145",
+          "medpar_qa.stages.split.processor.validate:104",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[11] PASS | SP-RULE-INDICATOR | Split-year indicator derivation
+    Business requirement: Eligible claims must derive Y#0109, Y#1012, or Y99999 according to date window and reference month.
+    What was checked: Calculate the expected indicator and compare it with the populated indicator.
+    Evaluation logic: PASS when actual indicator exactly equals the calculated value.
+    Field: splitYearIndicator
+    Expected result:
+      "Y99999"
+    Observed result:
+      "Y99999"
+    Final explanation: PASS — Split indicator matches expected. Observed result 'Y99999' satisfied the expected condition 'Y99999'. The observed data satisfies the stated business requirement.
+    Record IDs (1): e64de48ba4c000654375
+    Relative source files:
+      - data/user_inputs/split/source/Split01_claim.r1.a_20210103.json
+    Validator function: medpar_qa.stages.split.processor.validate
+    Technical evidence:
+      {
+        "window": [
+          "2021-01-01",
+          "2024-04-04"
+        ],
+        "validator_function": "medpar_qa.stages.split.processor.validate",
+        "source_line": 187,
+        "validator_call_chain": [
+          "medpar_qa.stages.split.processor.validate:187",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[12] PASS | STAGE-FINAL-SUMMARY | Stage completion summary
+    Business requirement: A stage passes only when it has no FAIL or BLOCKED validation results.
+    What was checked: Count PASS, FAIL, BLOCKED, and NOT_APPLICABLE results emitted by the stage.
+    Evaluation logic: PASS when FAIL=0 and BLOCKED=0; otherwise FAIL.
+    Expected result:
+      {
+        "FAIL": 0,
+        "BLOCKED": 0
+      }
+    Observed result:
+      {
+        "PASS": 11,
+        "FAIL": 0,
+        "NOT_APPLICABLE": 0,
+        "BLOCKED": 0
+      }
+    Final explanation: PASS — Stage completed with no failed or blocked validations. Observed result {'PASS': 11, 'FAIL': 0, 'NOT_APPLICABLE': 0, 'BLOCKED': 0} satisfied the expected condition {'FAIL': 0, 'BLOCKED': 0}. The observed data satisfies the stated business requirement.
+    Validator function: medpar_qa.orchestration.pipeline.run
+    Technical evidence:
+      {
+        "source_record_count": 1,
+        "decision_count": 0,
+        "validator_function": "medpar_qa.orchestration.pipeline.run",
+        "source_line": 233,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.run:233"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+
+RULE COVERAGE SUMMARY
+    Configured/catalogued rules: 11
+    Rules that emitted results: 7
+    Rules not triggered by this input: INGEST-NO-RECORDS, SP-ACTUAL-DUPLICATE-IDENTITY, SP-OUTPUT-RECONCILIATION, SP-PRE-DATES, SP-REC-TYPE-BYPASS
+    Note: 'not triggered' is not a PASS; its business prerequisites were absent in this data.
+======================================================================================================================
+OVERALL RESULT: PASS
+
+GENERATED REPORTS — RELATIVE PATHS
+  Stage HTML: reports/20260719_095819/split/split_split01_single_file/report.html
+  Stage JSON: reports/20260719_095819/split/split_split01_single_file/report.json
+  Stage text: reports/20260719_095819/split/split_split01_single_file/report.txt
+  Master HTML: reports/20260719_095819/master/index.html

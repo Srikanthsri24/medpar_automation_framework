@@ -1,0 +1,12 @@
+stages:
+  - final_action
+  - split
+  - stay
+  - intermediate
+  - final_medpar
+
+rule_statuses:
+  - PASS
+  - FAIL
+  - NOT_APPLICABLE
+  - BLOCKED

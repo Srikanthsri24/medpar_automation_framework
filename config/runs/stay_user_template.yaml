@@ -1,0 +1,11 @@
+run_id: stay_user_regression
+run_date: 2026-07-19
+files:
+  - {path: data/user_inputs/stay/source/*, stage: stay, role: source}
+  - {path: data/user_inputs/stay/actual_output/*, stage: stay, role: actual_output}
+  - {path: data/user_inputs/stay/expected_output/*, stage: stay, role: expected_output}
+settings:
+  stay:
+    decimal_scale: "0.001"
+    require_actual_output: true
+    require_expected_output: true

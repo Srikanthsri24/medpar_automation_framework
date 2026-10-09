@@ -1,0 +1,1251 @@
+
+======================================================================================================================
+RUN ID: stay_sample_source_calculation
+STAGE: stay
+MODE: calculate
+REPORT SESSION: reports/20260719_095819
+======================================================================================================================
+MEDPAR QA — DETAILED BUSINESS VALIDATION RESULTS
+======================================================================================================================
+Every validation below explains the requirement, check performed, expected result, observed result, and conclusion.
+
+######################################################################################################################
+STAGE: STAY
+STAGE STATUS: PASS
+VALIDATION COUNTS: PASS=24 | FAIL=0 | BLOCKED=0 | NOT_APPLICABLE=21
+######################################################################################################################
+[1] PASS | INGEST-DISCOVERY | Input file discovery
+    Business requirement: Every configured relative file path or wildcard must resolve to at least one input file.
+    What was checked: Resolve the configured source, actual, or expected path and count matching files.
+    Evaluation logic: PASS when one or more files are found; FAIL when no file matches or discovery raises an error.
+    Expected result:
+      "One or more matching files"
+    Observed result:
+      [
+        "sample_data/input/stay/source.json"
+      ]
+    Final explanation: PASS — Discovered 1 file(s) for source. Observed result ['sample_data/input/stay/source.json'] satisfied the expected condition 'One or more matching files'. The observed data satisfies the stated business requirement.
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.orchestration.pipeline.load_with_diagnostics
+    Technical evidence:
+      {
+        "configured_path": "sample_data/input/stay/source.json",
+        "role": "source",
+        "format": "auto",
+        "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+        "source_line": 75,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.load_with_diagnostics:75",
+          "medpar_qa.orchestration.pipeline.run:199"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[2] PASS | INGEST-READ-FILE | Input file readability
+    Business requirement: Every discovered JSON or Parquet file must be readable and parse into records.
+    What was checked: Open the file, parse its content, normalize the root structure, and count records.
+    Evaluation logic: PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.
+    Expected result:
+      "Readable file containing at least one record"
+    Observed result:
+      {
+        "file": "sample_data/input/stay/source.json",
+        "record_count": 2,
+        "role": "source"
+      }
+    Final explanation: PASS — File was read successfully and produced 2 record(s). Observed result {'file': 'sample_data/input/stay/source.json', 'record_count': 2, 'role': 'source'} satisfied the expected condition 'Readable file containing at least one record'. The observed data satisfies the stated business requirement.
+    Record IDs (2): 9278d79ef99d458afe7c, 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.orchestration.pipeline.load_with_diagnostics
+    Technical evidence:
+      {
+        "file_size_bytes": 1307,
+        "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+        "source_line": 121,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.load_with_diagnostics:121",
+          "medpar_qa.orchestration.pipeline.run:199"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[3] PASS | ST-PRE-SOURCE | Stay source availability
+    Business requirement: Stay processing requires source claims.
+    What was checked: Confirm at least one source-role claim exists.
+    Evaluation logic: PASS when source count is greater than zero.
+    Expected result:
+      Not supplied / not applicable
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: PASS — Stay source records were supplied. Observed result None satisfied the expected condition None. The observed data satisfies the stated business requirement.
+    Validator function: medpar_qa.stages.common.presence_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.common.presence_result",
+        "source_line": 94,
+        "validator_call_chain": [
+          "medpar_qa.stages.common.presence_result:94",
+          "medpar_qa.stages.stay.processor.validate:268",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[4] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for hicn.
+    What was checked: Execute the configured business check for hicn and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: hicn
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "HICN-101"
+    Final explanation: PASS — Required field hicn is supplied. Observed result 'HICN-101' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[5] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for provider_id.
+    What was checked: Execute the configured business check for provider_id and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: provider_id
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "PRV-101"
+    Final explanation: PASS — Required field provider_id is supplied. Observed result 'PRV-101' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[6] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for stay_from_date.
+    What was checked: Execute the configured business check for stay_from_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: stay_from_date
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "20260301"
+    Final explanation: PASS — Required field stay_from_date is supplied. Observed result '20260301' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[7] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for stay_thru_date.
+    What was checked: Execute the configured business check for stay_thru_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: stay_thru_date
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "20260331"
+    Final explanation: PASS — Required field stay_thru_date is supplied. Observed result '20260331' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[8] PASS | ST-STAY-DATE-ORDER | St Stay Date Order
+    Business requirement: The Stay process must satisfy validation ST-STAY-DATE-ORDER.
+    What was checked: Execute the configured business check and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Expected result:
+      "stay_from_date <= stay_thru_date"
+    Observed result:
+      {
+        "stay_from_date": "2026-03-01",
+        "stay_thru_date": "2026-03-31"
+      }
+    Final explanation: PASS — Date order is valid. Observed result {'stay_from_date': '2026-03-01', 'stay_thru_date': '2026-03-31'} satisfied the expected condition 'stay_from_date <= stay_thru_date'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.date_order_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.date_order_result",
+        "source_line": 145,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.date_order_result:145",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:34",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[9] PASS | ST-ADMISSION-DATE | St Admission Date
+    Business requirement: The Stay process must satisfy validation ST-ADMISSION-DATE for admission_date.
+    What was checked: Execute the configured business check for admission_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: admission_date
+    Expected result:
+      "Valid date"
+    Observed result:
+      "2026-03-01"
+    Final explanation: PASS — Date admission_date is valid. Observed result '2026-03-01' satisfied the expected condition 'Valid date'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 84,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:84",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:45",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[10] PASS | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: condition_codes
+    Expected result:
+      {
+        "type": "list",
+        "item_required_keys": []
+      }
+    Observed result:
+      {
+        "count": 2,
+        "invalid": []
+      }
+    Final explanation: PASS — condition_codes structure is valid. Observed result {'count': 2, 'invalid': []} satisfied the expected condition {'type': 'list', 'item_required_keys': []}. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 314,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:314",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[11] NOT_APPLICABLE | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: occurrence_span_lines
+    Expected result:
+      "List"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional collection occurrence_span_lines is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 277,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:277",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[12] PASS | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: occurrence_codes
+    Expected result:
+      {
+        "type": "list",
+        "item_required_keys": []
+      }
+    Observed result:
+      {
+        "count": 1,
+        "invalid": []
+      }
+    Final explanation: PASS — occurrence_codes structure is valid. Observed result {'count': 1, 'invalid': []} satisfied the expected condition {'type': 'list', 'item_required_keys': []}. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 314,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:314",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[13] PASS | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: value_lines
+    Expected result:
+      {
+        "type": "list",
+        "item_required_keys": []
+      }
+    Observed result:
+      {
+        "count": 1,
+        "invalid": []
+      }
+    Final explanation: PASS — value_lines structure is valid. Observed result {'count': 1, 'invalid': []} satisfied the expected condition {'type': 'list', 'item_required_keys': []}. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 314,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:314",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[14] NOT_APPLICABLE | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: revenue_lines
+    Expected result:
+      "List"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional collection revenue_lines is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 277,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:277",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[15] PASS | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: medpar_tot_chrg_0400
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      "100.125"
+    Final explanation: PASS — medpar_tot_chrg_0400 is a valid Decimal amount. Observed result '100.125' satisfied the expected condition 'Decimal quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 240,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:240",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[16] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: medpar_drg_price_0380
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount medpar_drg_price_0380 is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[17] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: medpar_sqstrtn_rdctn_amt_1130
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount medpar_sqstrtn_rdctn_amt_1130 is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[18] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: reimbursement_amount
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount reimbursement_amount is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[19] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: primary_payment_amount
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount primary_payment_amount is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[20] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: therapy_reduction_amount
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount therapy_reduction_amount is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[21] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: reduce_coinsurance
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount reduce_coinsurance is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 9278d79ef99d458afe7c
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[22] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for hicn.
+    What was checked: Execute the configured business check for hicn and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: hicn
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "HICN-101"
+    Final explanation: PASS — Required field hicn is supplied. Observed result 'HICN-101' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[23] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for provider_id.
+    What was checked: Execute the configured business check for provider_id and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: provider_id
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "PRV-101"
+    Final explanation: PASS — Required field provider_id is supplied. Observed result 'PRV-101' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[24] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for stay_from_date.
+    What was checked: Execute the configured business check for stay_from_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: stay_from_date
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "20260301"
+    Final explanation: PASS — Required field stay_from_date is supplied. Observed result '20260301' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[25] PASS | ST-PRE-REQUIRED-FIELD | St Pre Required Field
+    Business requirement: The Stay process must satisfy validation ST-PRE-REQUIRED-FIELD for stay_thru_date.
+    What was checked: Execute the configured business check for stay_thru_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: stay_thru_date
+    Expected result:
+      "Non-blank value"
+    Observed result:
+      "20260331"
+    Final explanation: PASS — Required field stay_thru_date is supplied. Observed result '20260331' satisfied the expected condition 'Non-blank value'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.required_fields_results
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+        "source_line": 29,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.required_fields_results:29",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[26] PASS | ST-STAY-DATE-ORDER | St Stay Date Order
+    Business requirement: The Stay process must satisfy validation ST-STAY-DATE-ORDER.
+    What was checked: Execute the configured business check and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Expected result:
+      "stay_from_date <= stay_thru_date"
+    Observed result:
+      {
+        "stay_from_date": "2026-03-01",
+        "stay_thru_date": "2026-03-31"
+      }
+    Final explanation: PASS — Date order is valid. Observed result {'stay_from_date': '2026-03-01', 'stay_thru_date': '2026-03-31'} satisfied the expected condition 'stay_from_date <= stay_thru_date'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.date_order_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.date_order_result",
+        "source_line": 145,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.date_order_result:145",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:34",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[27] PASS | ST-ADMISSION-DATE | St Admission Date
+    Business requirement: The Stay process must satisfy validation ST-ADMISSION-DATE for admission_date.
+    What was checked: Execute the configured business check for admission_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: admission_date
+    Expected result:
+      "Valid date"
+    Observed result:
+      "2026-03-01"
+    Final explanation: PASS — Date admission_date is valid. Observed result '2026-03-01' satisfied the expected condition 'Valid date'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 84,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:84",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:45",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[28] PASS | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: condition_codes
+    Expected result:
+      {
+        "type": "list",
+        "item_required_keys": []
+      }
+    Observed result:
+      {
+        "count": 1,
+        "invalid": []
+      }
+    Final explanation: PASS — condition_codes structure is valid. Observed result {'count': 1, 'invalid': []} satisfied the expected condition {'type': 'list', 'item_required_keys': []}. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 314,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:314",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[29] NOT_APPLICABLE | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: occurrence_span_lines
+    Expected result:
+      "List"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional collection occurrence_span_lines is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 277,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:277",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[30] PASS | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: occurrence_codes
+    Expected result:
+      {
+        "type": "list",
+        "item_required_keys": []
+      }
+    Observed result:
+      {
+        "count": 1,
+        "invalid": []
+      }
+    Final explanation: PASS — occurrence_codes structure is valid. Observed result {'count': 1, 'invalid': []} satisfied the expected condition {'type': 'list', 'item_required_keys': []}. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 314,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:314",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[31] PASS | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: value_lines
+    Expected result:
+      {
+        "type": "list",
+        "item_required_keys": []
+      }
+    Observed result:
+      {
+        "count": 1,
+        "invalid": []
+      }
+    Final explanation: PASS — value_lines structure is valid. Observed result {'count': 1, 'invalid': []} satisfied the expected condition {'type': 'list', 'item_required_keys': []}. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 314,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:314",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[32] NOT_APPLICABLE | ST-CODE-COLLECTION-STRUCTURE | Stay code collection structure
+    Business requirement: Condition, span, occurrence, and value-code containers must use the expected list/object structure.
+    What was checked: Inspect collection type and each contained code object.
+    Evaluation logic: PASS when the collection is structurally valid.
+    Field: revenue_lines
+    Expected result:
+      "List"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional collection revenue_lines is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.collection_structure_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+        "source_line": 277,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.collection_structure_result:277",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[33] PASS | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: medpar_tot_chrg_0400
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      "50.250"
+    Final explanation: PASS — medpar_tot_chrg_0400 is a valid Decimal amount. Observed result '50.250' satisfied the expected condition 'Decimal quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 240,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:240",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[34] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: medpar_drg_price_0380
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount medpar_drg_price_0380 is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[35] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: medpar_sqstrtn_rdctn_amt_1130
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount medpar_sqstrtn_rdctn_amt_1130 is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[36] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: reimbursement_amount
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount reimbursement_amount is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[37] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: primary_payment_amount
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount primary_payment_amount is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[38] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: therapy_reduction_amount
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount therapy_reduction_amount is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[39] NOT_APPLICABLE | ST-DECIMAL-PRECISION | Stay Decimal precision
+    Business requirement: Stay monetary calculations must avoid binary floating-point errors and use configured three-decimal precision.
+    What was checked: Convert with Decimal(str(value)) and quantize using configured scale/mode.
+    Evaluation logic: PASS when normalized Decimal value matches expectation.
+    Field: reduce_coinsurance
+    Expected result:
+      "Decimal quantized to 0.001"
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional amount reduce_coinsurance is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.field_checks.decimal_field_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+        "source_line": 223,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.decimal_field_result:223",
+          "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+          "medpar_qa.stages.stay.processor.validate:281",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[40] NOT_APPLICABLE | ST-LATEST-CONDITION-CODES | St Latest Condition Codes
+    Business requirement: The Stay process must satisfy validation ST-LATEST-CONDITION-CODES for condition_codes.
+    What was checked: Execute the configured business check for condition_codes and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: condition_codes
+    Expected result:
+      [
+        {
+          "code": "04",
+          "value": "NEW"
+        },
+        {
+          "code": "69",
+          "value": "TEACH"
+        }
+      ]
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Actual Stay collection not supplied. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (2): 9278d79ef99d458afe7c, 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.stay.processor._validate_latest_code_collections
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+        "source_line": 105,
+        "validator_call_chain": [
+          "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+          "medpar_qa.stages.stay.processor.validate:346",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[41] NOT_APPLICABLE | ST-LATEST-OCCURRENCE-CODES | St Latest Occurrence Codes
+    Business requirement: The Stay process must satisfy validation ST-LATEST-OCCURRENCE-CODES for occurrence_codes.
+    What was checked: Execute the configured business check for occurrence_codes and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: occurrence_codes
+    Expected result:
+      [
+        {
+          "code": "11",
+          "date": "20260302"
+        }
+      ]
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Actual Stay collection not supplied. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (2): 9278d79ef99d458afe7c, 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.stay.processor._validate_latest_code_collections
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+        "source_line": 105,
+        "validator_call_chain": [
+          "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+          "medpar_qa.stages.stay.processor.validate:346",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[42] NOT_APPLICABLE | ST-LATEST-SPAN-CODES | St Latest Span Codes
+    Business requirement: The Stay process must satisfy validation ST-LATEST-SPAN-CODES for occurrence_span_lines.
+    What was checked: Execute the configured business check for occurrence_span_lines and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: occurrence_span_lines
+    Expected result:
+      []
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Actual Stay collection not supplied. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (2): 9278d79ef99d458afe7c, 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.stay.processor._validate_latest_code_collections
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+        "source_line": 105,
+        "validator_call_chain": [
+          "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+          "medpar_qa.stages.stay.processor.validate:346",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[43] NOT_APPLICABLE | ST-LATEST-VALUE-CODES | St Latest Value Codes
+    Business requirement: The Stay process must satisfy validation ST-LATEST-VALUE-CODES for value_lines.
+    What was checked: Execute the configured business check for value_lines and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: value_lines
+    Expected result:
+      [
+        {
+          "code": "73",
+          "amount": "-0.100"
+        }
+      ]
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Actual Stay collection not supplied. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (2): 9278d79ef99d458afe7c, 469a3b2d724f66a98b93
+    Relative source files:
+      - sample_data/input/stay/source.json
+    Validator function: medpar_qa.stages.stay.processor._validate_latest_code_collections
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+        "source_line": 105,
+        "validator_call_chain": [
+          "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+          "medpar_qa.stages.stay.processor.validate:346",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[44] NOT_APPLICABLE | ST-GOLDEN-COMPARISON | Stay golden regression availability
+    Business requirement: Field-by-field golden comparison requires both actual and approved expected Stay output.
+    What was checked: Confirm both roles are supplied before golden comparison.
+    Evaluation logic: NOT_APPLICABLE when both are not supplied; PASS/FAIL is emitted by field comparisons when they are.
+    Expected result:
+      Not supplied / not applicable
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Expected Stay output was not supplied; known derivations and structural checks only. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (2): 9278d79ef99d458afe7c, 469a3b2d724f66a98b93
+    Validator function: medpar_qa.stages.stay.processor.validate
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.stay.processor.validate",
+        "source_line": 394,
+        "validator_call_chain": [
+          "medpar_qa.stages.stay.processor.validate:394",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[45] PASS | STAGE-FINAL-SUMMARY | Stage completion summary
+    Business requirement: A stage passes only when it has no FAIL or BLOCKED validation results.
+    What was checked: Count PASS, FAIL, BLOCKED, and NOT_APPLICABLE results emitted by the stage.
+    Evaluation logic: PASS when FAIL=0 and BLOCKED=0; otherwise FAIL.
+    Expected result:
+      {
+        "FAIL": 0,
+        "BLOCKED": 0
+      }
+    Observed result:
+      {
+        "PASS": 23,
+        "FAIL": 0,
+        "NOT_APPLICABLE": 21,
+        "BLOCKED": 0
+      }
+    Final explanation: PASS — Stage completed with no failed or blocked validations. Observed result {'PASS': 23, 'FAIL': 0, 'NOT_APPLICABLE': 21, 'BLOCKED': 0} satisfied the expected condition {'FAIL': 0, 'BLOCKED': 0}. The observed data satisfies the stated business requirement.
+    Validator function: medpar_qa.orchestration.pipeline.run
+    Technical evidence:
+      {
+        "source_record_count": 2,
+        "decision_count": 0,
+        "validator_function": "medpar_qa.orchestration.pipeline.run",
+        "source_line": 233,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.run:233"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+
+RULE COVERAGE SUMMARY
+    Configured/catalogued rules: 26
+    Rules that emitted results: 14
+    Rules not triggered by this input: INGEST-NO-RECORDS, ST-ACTUAL-DUPLICATE-IDENTITY, ST-BILL-COUNT, ST-DRG-PRICE-LATEST-RECORD, ST-DTE-CR-ENDED-0220-FORMAT, ST-DTE-CR-ENDED-LATEST-RECORD, ST-EXPECTED-DUPLICATE-IDENTITY, ST-MISSING-ACTUAL-OUTPUT, ST-MISSING-EXPECTED-OUTPUT, ST-OUTPUT-RECONCILIATION, ST-SELECTED-DECIMAL, ST-SELECTED-DECIMAL-PRECISION, ST-SNF-QUAL-DATE-ORDER, ST-SNF-QUAL-FROM-DATE-FORMAT, ST-SNF-QUAL-THRU-DATE-FORMAT, ST-TOTAL-CHARGE, ST-VALUE-CODE-SEQUESTRATION
+    Note: 'not triggered' is not a PASS; its business prerequisites were absent in this data.
+======================================================================================================================
+OVERALL RESULT: PASS
+
+GENERATED REPORTS — RELATIVE PATHS
+  Stage HTML: reports/20260719_095819/stay/stay_sample_source_calculation/report.html
+  Stage JSON: reports/20260719_095819/stay/stay_sample_source_calculation/report.json
+  Stage text: reports/20260719_095819/stay/stay_sample_source_calculation/report.txt
+  Master HTML: reports/20260719_095819/master/index.html

@@ -1,0 +1,2594 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEDPAR Intermediate Detailed Validation Report — intermediate_sample_actual_output_structural_checks</title>
+<style>
+:root{--navy:#102a43;--navy2:#243b53;--ink:#172033;--muted:#667085;--line:#d0d5dd;--bg:#f4f6f9;--green:#087f5b;--red:#c92a2a;--amber:#b05a00;--blue:#1864ab;--purple:#5f3dc4}
+*{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.48}
+header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:30px 34px} header h1{margin:8px 0;font-size:30px} header p{margin:4px 0} .back-link{color:#fff;text-decoration:none;font-weight:700}
+.container{max-width:1600px;margin:auto;padding:24px} .overall-badge{display:inline-block;margin-top:14px;padding:10px 18px;border-radius:999px;font-size:19px;font-weight:900;background:#d3f9d8;color:#087f5b}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0} .summary-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px;box-shadow:0 2px 9px rgba(16,42,67,.06)} .summary-card strong{display:block;font-size:27px;margin-top:5px}
+.guide,.failure-overview,.run-inputs{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0} .guide h2,.failure-overview h2{margin-top:0} .guide ol{columns:2;column-gap:36px}
+.toolbar{position:sticky;top:0;z-index:20;display:flex;gap:9px;flex-wrap:wrap;padding:11px;background:#e9eef5;border:1px solid var(--line);border-radius:10px;margin:18px 0} .toolbar input,.toolbar select,.toolbar button{padding:9px 11px;border:1px solid #98a2b3;border-radius:7px;background:#fff} .toolbar input{flex:1;min-width:300px}
+.stage-section{background:#fff;border:1px solid var(--line);border-radius:13px;margin:16px 0;overflow:hidden} .stage-section>summary{cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:17px;background:#edf2f7;font-weight:800} .stage-number{color:var(--muted)} .stage-name{font-size:19px} .stage-status{margin-left:auto;padding:5px 10px;border-radius:999px} .stage-status.pass{background:#d3f9d8;color:var(--green)} .stage-status.fail{background:#ffe3e3;color:var(--red)} .stage-counts{color:var(--muted);font-weight:600} .stage-content{padding:2px 12px 18px} .stage-intro{margin:14px 2px;padding:12px;background:#eef6ff;border-left:5px solid var(--blue);border-radius:8px}
+.validation-card{background:#fff;border:1px solid var(--line);border-left:7px solid #98a2b3;border-radius:11px;margin:14px 2px;padding:17px;box-shadow:0 2px 7px rgba(16,42,67,.04)} .validation-card.status-pass{border-left-color:var(--green)} .validation-card.status-fail{border-left-color:var(--red)} .validation-card.status-blocked{border-left-color:var(--amber)} .validation-card.status-not_applicable{border-left-color:var(--blue)}
+.validation-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap} .identity-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .sequence{color:var(--muted)} .badge,.field-chip,.decision{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:900} .badge.pass,.decision.keep{background:#d3f9d8;color:var(--green)} .badge.fail,.decision.drop{background:#ffe3e3;color:var(--red)} .badge.blocked{background:#fff3bf;color:#8d5500} .badge.not_applicable{background:#dbeafe;color:var(--blue)} .field-chip{background:#ede9fe;color:var(--purple)} .rule-id{font-weight:800}
+.copy-button{border:1px solid #98a2b3;background:#fff;border-radius:7px;padding:7px 10px;cursor:pointer} .validation-card h3{margin:14px 0 10px;font-size:21px}
+.explanation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px} .explanation-block{border:1px solid var(--line);border-radius:9px;padding:12px;background:#fafbfc} .explanation-block h4{margin:0 0 7px} .runtime-message{padding-top:7px;border-top:1px dashed var(--line)}
+.expected-actual-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;margin:12px 0} .value-panel{border:1px solid var(--line);border-radius:9px;overflow:hidden} .value-panel h5{margin:0;padding:10px 12px;background:#eef2f7;font-size:15px} .value-panel.expected{border-left:5px solid var(--blue)} .value-panel.actual{border-left:5px solid var(--amber)} pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;background:#172033;color:#f8fafc;padding:12px;max-height:420px;overflow:auto}
+.conclusion{border-radius:9px;padding:13px;margin:12px 0} .conclusion h4{margin:0 0 6px} .conclusion.pass{background:#e6fcf5;border:1px solid #96f2d7} .conclusion.fail{background:#fff0f0;border:1px solid #ffc9c9} .conclusion.blocked{background:#fff9db;border:1px solid #ffec99} .conclusion.not_applicable{background:#e7f5ff;border:1px solid #a5d8ff} .recommended{padding:12px;background:#fff4e6;border-left:5px solid var(--amber);border-radius:8px}
+.traceability{margin-top:12px;border-top:1px solid var(--line);padding-top:10px} .traceability>summary{cursor:pointer;font-weight:800} .trace-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:10px} .trace-grid section{min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px} .trace-grid h5{margin:0 0 7px} ul{margin:4px 0;padding-left:20px} .muted{color:var(--muted)}
+.table-wrap{overflow:auto} table{width:100%;border-collapse:collapse} th,td{border:1px solid var(--line);padding:9px;text-align:left;vertical-align:top} th{background:#edf2f7} .rule-catalogue{margin:14px 2px;padding:0 12px 12px;border:1px solid var(--line);border-radius:9px;background:#fafbfc} .rule-catalogue>summary{cursor:pointer;font-weight:800;padding:12px 0} .catalogue-status{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800} .catalogue-status.executed{background:#d3f9d8;color:var(--green)} .catalogue-status.not-triggered{background:#f1f3f5;color:var(--muted)} .decision-section{margin:18px 2px} .hidden{display:none!important} footer{text-align:center;color:var(--muted);padding:30px}
+@media(max-width:800px){.guide ol{columns:1}.stage-status{margin-left:0}} @media print{.toolbar,.copy-button{display:none}details{display:block}details>summary{list-style:none}.validation-card,.stage-section{break-inside:avoid}body{background:#fff}}
+</style></head>
+<body><header><a class="back-link" href="../../master/index.html">← Back to master report</a><h1>MEDPAR Intermediate Detailed Validation Report</h1><p><strong>Run ID:</strong> intermediate_sample_actual_output_structural_checks</p><p><strong>Business run date:</strong> 2026-07-19</p><p><strong>Generated:</strong> 2026-07-19T09:58:25+00:00</p><span class="overall-badge">OVERALL PASS</span></header>
+<main class="container">
+<section class="summary-grid"><div class="summary-card">Stages<strong>1</strong></div><div class="summary-card">Validations<strong>39</strong></div><div class="summary-card">Passed<strong>36</strong></div><div class="summary-card">Failed<strong>0</strong></div><div class="summary-card">Blocked<strong>0</strong></div><div class="summary-card">Not applicable<strong>3</strong></div><div class="summary-card">Record decisions<strong>0</strong></div></section>
+<section class="guide"><h2>How to read this report</h2><ol><li>Open the required stage.</li><li>Use status filters to focus on failures.</li><li>Read the business requirement and exact validation performed.</li><li>Compare Expected result with Observed result.</li><li>Read the conclusion explaining why it passed, failed, or was blocked.</li><li>Open source evidence for relative file paths, record IDs, group keys, and validator function.</li></ol></section>
+<section class="failure-overview"><h2>Failure / blocked overview</h2><p>No failed or blocked validations were recorded.</p></section>
+<section class="toolbar"><input id="search" type="search" placeholder="Search stage, rule, field, requirement, source file..." oninput="applyFilters()"><select id="statusFilter" onchange="applyFilters()"><option value="ALL">All statuses</option><option>PASS</option><option>FAIL</option><option>BLOCKED</option><option>NOT_APPLICABLE</option></select><select id="stageFilter" onchange="applyFilters()"><option value="ALL">All stages</option><option value="intermediate">Intermediate</option></select><button onclick="expandAll(true)">Expand all</button><button onclick="expandAll(false)">Collapse all</button><button onclick="window.print()">Print / Save PDF</button></section>
+
+        <details class="run-inputs">
+          <summary>Run inputs and configuration</summary>
+          <p>All paths below are project-relative paths.</p>
+          <div class="table-wrap"><table><thead><tr><th>Stage</th><th>Role</th><th>Format</th><th>Relative path / wildcard</th></tr></thead><tbody><tr><td>intermediate</td><td>source</td><td>auto</td><td><code>sample_data/actual/intermediate/actual.json</code></td></tr></tbody></table></div>
+          <h3>Configured settings</h3><pre>{
+  &quot;intermediate&quot;: {
+    &quot;window_years&quot;: 5,
+    &quot;decimal_scale&quot;: &quot;0.001&quot;,
+    &quot;require_actual_output&quot;: false,
+    &quot;require_expected_output&quot;: false,
+    &quot;ndc_length&quot;: 10
+  }
+}</pre>
+        </details>
+        
+    <details class="stage-section" open data-stage-container="intermediate">
+      <summary>
+        <span class="stage-number">Stage 1</span>
+        <span class="stage-name">Intermediate</span>
+        <span class="stage-status pass">PASS</span>
+        <span class="stage-counts">36 pass · 0 fail · 0 blocked · 3 N/A</span>
+      </summary>
+      <div class="stage-content">
+        <div class="stage-intro">
+          <strong>How to review this stage:</strong> Read validations in order. Each card states the business requirement, exact check, expected result, observed result, conclusion, and source evidence.
+        </div>
+        <details class='rule-catalogue'><summary>Complete stage rule catalogue and coverage</summary><p><strong>Executed</strong> means the rule/function emitted a result for this run. <strong>Not triggered</strong> means its prerequisites did not occur in this input; it is not a hidden pass.</p><div class='table-wrap'><table><thead><tr><th>Rule ID</th><th>Rule / validation</th><th>Run state</th><th>Business requirement</th></tr></thead><tbody><tr><td><code>INGEST-DISCOVERY</code></td><td>Input file discovery</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every configured relative file path or wildcard must resolve to at least one input file.</td></tr><tr><td><code>INGEST-NO-RECORDS</code></td><td>Input record availability</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>A requested stage cannot run without at least one valid input record.</td></tr><tr><td><code>INGEST-READ-FILE</code></td><td>Input file readability</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every discovered JSON or Parquet file must be readable and parse into records.</td></tr><tr><td><code>INT-ACCOMMODATION-ARRAY-ALIGNMENT</code></td><td>Intermediate accommodation array alignment</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Accommodation charge and day arrays must preserve corresponding positions.</td></tr><tr><td><code>INT-ACCOMMODATION-DAYS</code></td><td>Int Accommodation Days</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>The Intermediate process must satisfy validation INT-ACCOMMODATION-DAYS.</td></tr><tr><td><code>INT-ACCOMMODATION-TOTAL</code></td><td>Intermediate total accommodation charge</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>MEDPAR-TOT-ACC-CHRG-0430 must equal the Decimal sum of repeated accommodation charges.</td></tr><tr><td><code>INT-ACTUAL-DUPLICATE-IDENTITY</code></td><td>Intermediate duplicate identity validation</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Each business identity must occur only once in the applicable dataset.</td></tr><tr><td><code>INT-AGE</code></td><td>Intermediate age</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>MEDPAR-AGE-0030 must be a valid integer in the approved range.</td></tr><tr><td><code>INT-CALENDAR-ALIGNED-DATE-WINDOW</code></td><td>Int Calendar Aligned Date Window</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW.</td></tr><tr><td><code>INT-DEATH-AFTER-ADMISSION</code></td><td>Intermediate death-after-admission indicator</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>medparDeathAfterAdm0611 must be derived from admission date and date of death.</td></tr><tr><td><code>INT-DECIMAL-PRECISION</code></td><td>Intermediate Decimal precision</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Amount fields must retain configured three-decimal precision without float conversion.</td></tr><tr><td><code>INT-EXPECTED-DUPLICATE-IDENTITY</code></td><td>Intermediate duplicate identity validation</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Each business identity must occur only once in the applicable dataset.</td></tr><tr><td><code>INT-GOLDEN-COMPARISON</code></td><td>Intermediate golden regression availability</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Golden field comparison requires both actual and approved expected Intermediate output.</td></tr><tr><td><code>INT-MISSING-ACTUAL-OUTPUT</code></td><td>Intermediate missing actual output</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Reconcile/golden mode requires an actual application-output record for every expected identity.</td></tr><tr><td><code>INT-MISSING-EXPECTED-OUTPUT</code></td><td>Intermediate missing approved expected output</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Golden mode requires an approved expected record for every tested identity.</td></tr><tr><td><code>INT-NDC</code></td><td>Intermediate NDC number</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>MEDPAR-REV-CNTR-NDC-NUM-1550 must follow configured normalization and length.</td></tr><tr><td><code>INT-OUTPUT-RECONCILIATION</code></td><td>Intermediate output reconciliation</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Actual Intermediate output must contain no unexpected identities.</td></tr><tr><td><code>INT-PRE-SOURCE</code></td><td>Intermediate source availability</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Intermediate validation requires Stay/intermediate source records.</td></tr><tr><td><code>INT-PROC-CODE-COUNT</code></td><td>Intermediate procedure-code count</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>MEDPAR-NO-SURG-CODES-0511 must equal populated procedure-code count.</td></tr><tr><td><code>INT-PROC-DATE-COUNT</code></td><td>Intermediate procedure-date count</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>MEDPAR-NO-SURG-DATES-0512 must equal populated procedure-date count.</td></tr><tr><td><code>INT-PROC-DATE-WINDOW</code></td><td>Intermediate procedure date window</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Procedure dates must be inside the January-aligned five-year window.</td></tr><tr><td><code>INT-PROC-SURGICAL-INDICATOR</code></td><td>Int Proc Surgical Indicator</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>The Intermediate process must satisfy validation INT-PROC-SURGICAL-INDICATOR.</td></tr><tr><td><code>INT-PROC-VERSION-ALIGNMENT</code></td><td>Intermediate procedure version alignment</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Procedure codes and version codes must align positionally.</td></tr><tr><td><code>INT-REPEATED-DECIMAL-PRECISION</code></td><td>Intermediate repeated charge precision</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Repeated amount arrays must preserve order/duplicates and each value must use Decimal precision.</td></tr><tr><td><code>INT-SELECTED-DECIMAL</code></td><td>Int Selected Decimal</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>The Intermediate process must satisfy validation INT-SELECTED-DECIMAL.</td></tr><tr><td><code>INT-SNF-QUAL-THRU-DATE</code></td><td>Int Snf Qual Thru Date</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>The Intermediate process must satisfy validation INT-SNF-QUAL-THRU-DATE.</td></tr><tr><td><code>INT-SOURCE-DUPLICATE-IDENTITY</code></td><td>Intermediate duplicate identity validation</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Each business identity must occur only once in the applicable dataset.</td></tr><tr><td><code>STAGE-FINAL-SUMMARY</code></td><td>Stage completion summary</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>A stage passes only when it has no FAIL or BLOCKED validation results.</td></tr></tbody></table></div></details>
+        
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass ingest-discovery input file discovery every configured relative file path or wildcard must resolve to at least one input file. resolve the configured source, actual, or expected path and count matching files.  discovered 1 file(s) for source sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#1</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-DISCOVERY</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file discovery</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every configured relative file path or wildcard must resolve to at least one input file.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Resolve the configured source, actual, or expected path and count matching files.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Discovered 1 file(s) for source</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when one or more files are found; FAIL when no file matches or discovery raises an error.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;One or more matching files&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>[
+  &quot;sample_data/actual/intermediate/actual.json&quot;
+]</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Discovered 1 file(s) for source. Observed result [&#x27;sample_data/actual/intermediate/actual.json&#x27;] satisfied the expected condition &#x27;One or more matching files&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;configured_path&quot;: &quot;sample_data/actual/intermediate/actual.json&quot;,
+  &quot;role&quot;: &quot;source&quot;,
+  &quot;format&quot;: &quot;auto&quot;,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 75,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:75&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass ingest-read-file input file readability every discovered json or parquet file must be readable and parse into records. open the file, parse its content, normalize the root structure, and count records.  file was read successfully and produced 1 record(s) sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#2</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-READ-FILE</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file readability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every discovered JSON or Parquet file must be readable and parse into records.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Open the file, parse its content, normalize the root structure, and count records.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> File was read successfully and produced 1 record(s)</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Readable file containing at least one record&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;file&quot;: &quot;sample_data/actual/intermediate/actual.json&quot;,
+  &quot;record_count&quot;: 1,
+  &quot;role&quot;: &quot;source&quot;
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — File was read successfully and produced 1 record(s). Observed result {&#x27;file&#x27;: &#x27;sample_data/actual/intermediate/actual.json&#x27;, &#x27;record_count&#x27;: 1, &#x27;role&#x27;: &#x27;source&#x27;} satisfied the expected condition &#x27;Readable file containing at least one record&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;file_size_bytes&quot;: 1320,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 121,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:121&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-pre-source intermediate source availability intermediate validation requires stay/intermediate source records. confirm source-role records are present.  intermediate source records were supplied ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#3</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PRE-SOURCE</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate source availability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Intermediate validation requires Stay/intermediate source records.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Confirm source-role records are present.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Intermediate source records were supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when source count is greater than zero.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>Not supplied / not applicable</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>Not supplied / not applicable</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Intermediate source records were supplied. Observed result None satisfied the expected condition None. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.common.presence_result</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.common.presence_result&quot;,
+  &quot;source_line&quot;: 94,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.common.presence_result:94&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:84&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-source-duplicate-identity intermediate duplicate identity validation each business identity must occur only once in the applicable dataset. index records using configured identity fields and identify repeated keys.  no duplicate intermediate source identities ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#4</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-SOURCE-DUPLICATE-IDENTITY</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate duplicate identity validation</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Each business identity must occur only once in the applicable dataset.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Index records using configured identity fields and identify repeated keys.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> No duplicate Intermediate source identities</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when duplicate identity count is zero.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;One record per identity&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — No duplicate Intermediate source identities. Observed result {} satisfied the expected condition &#x27;One record per identity&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.common.duplicate_identity_result</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;identity_fields&quot;: [
+    &quot;hicn&quot;,
+    &quot;provider_id&quot;,
+    &quot;admission_date&quot;,
+    &quot;split_year_indicator&quot;
+  ],
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.common.duplicate_identity_result&quot;,
+  &quot;source_line&quot;: 58,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.common.duplicate_identity_result:58&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:105&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-decimal-precision intermediate decimal precision amount fields must retain configured three-decimal precision without float conversion. parse with decimal(str(value)), quantize, and compare. medpar_cov_chrg_0410 decimal value is valid at configured precision sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#5</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DECIMAL-PRECISION</code>
+          <span class="field-chip">medpar_cov_chrg_0410</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate Decimal precision</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Amount fields must retain configured three-decimal precision without float conversion.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Parse with Decimal(str(value)), quantize, and compare.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Decimal value is valid at configured precision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the exact Decimal value/scale is correct, including negative numbers.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Valid Decimal quantized to 0.001&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;100.125&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Decimal value is valid at configured precision. Observed result &#x27;100.125&#x27; satisfied the expected condition &#x27;Valid Decimal quantized to 0.001&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_decimal_values</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values&quot;,
+  &quot;source_line&quot;: 36,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values:36&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:48&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-decimal-precision intermediate decimal precision amount fields must retain configured three-decimal precision without float conversion. parse with decimal(str(value)), quantize, and compare. medpar_service_charges_0470 decimal value is valid at configured precision sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#6</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DECIMAL-PRECISION</code>
+          <span class="field-chip">medpar_service_charges_0470</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate Decimal precision</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Amount fields must retain configured three-decimal precision without float conversion.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Parse with Decimal(str(value)), quantize, and compare.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Decimal value is valid at configured precision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the exact Decimal value/scale is correct, including negative numbers.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Valid Decimal quantized to 0.001&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;200.250&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Decimal value is valid at configured precision. Observed result &#x27;200.250&#x27; satisfied the expected condition &#x27;Valid Decimal quantized to 0.001&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_decimal_values</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values&quot;,
+  &quot;source_line&quot;: 36,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values:36&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:48&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-decimal-precision intermediate decimal precision amount fields must retain configured three-decimal precision without float conversion. parse with decimal(str(value)), quantize, and compare. medpar_tot_dpt_chrg_0440 decimal value is valid at configured precision sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#7</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DECIMAL-PRECISION</code>
+          <span class="field-chip">medpar_tot_dpt_chrg_0440</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate Decimal precision</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Amount fields must retain configured three-decimal precision without float conversion.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Parse with Decimal(str(value)), quantize, and compare.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Decimal value is valid at configured precision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the exact Decimal value/scale is correct, including negative numbers.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Valid Decimal quantized to 0.001&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;300.375&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Decimal value is valid at configured precision. Observed result &#x27;300.375&#x27; satisfied the expected condition &#x27;Valid Decimal quantized to 0.001&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_decimal_values</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values&quot;,
+  &quot;source_line&quot;: 36,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values:36&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:48&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-decimal-precision intermediate decimal precision amount fields must retain configured three-decimal precision without float conversion. parse with decimal(str(value)), quantize, and compare. medpar_tot_acc_chrg_0430 decimal value is valid at configured precision sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#8</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DECIMAL-PRECISION</code>
+          <span class="field-chip">medpar_tot_acc_chrg_0430</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate Decimal precision</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Amount fields must retain configured three-decimal precision without float conversion.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Parse with Decimal(str(value)), quantize, and compare.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Decimal value is valid at configured precision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the exact Decimal value/scale is correct, including negative numbers.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Valid Decimal quantized to 0.001&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;30.375&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Decimal value is valid at configured precision. Observed result &#x27;30.375&#x27; satisfied the expected condition &#x27;Valid Decimal quantized to 0.001&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_decimal_values</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values&quot;,
+  &quot;source_line&quot;: 36,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values:36&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:48&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-decimal-precision intermediate decimal precision amount fields must retain configured three-decimal precision without float conversion. parse with decimal(str(value)), quantize, and compare. medpar_drg_price_0380 decimal value is valid at configured precision sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#9</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DECIMAL-PRECISION</code>
+          <span class="field-chip">medpar_drg_price_0380</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate Decimal precision</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Amount fields must retain configured three-decimal precision without float conversion.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Parse with Decimal(str(value)), quantize, and compare.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Decimal value is valid at configured precision</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the exact Decimal value/scale is correct, including negative numbers.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Valid Decimal quantized to 0.001&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;900.125&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Decimal value is valid at configured precision. Observed result &#x27;900.125&#x27; satisfied the expected condition &#x27;Valid Decimal quantized to 0.001&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_decimal_values</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values&quot;,
+  &quot;source_line&quot;: 36,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values:36&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:48&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-repeated-decimal-precision intermediate repeated charge precision repeated amount arrays must preserve order/duplicates and each value must use decimal precision. validate every array value in position order. medpar_accommodation_chrg_0460 repeated decimal values are valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#10</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-REPEATED-DECIMAL-PRECISION</code>
+          <span class="field-chip">medpar_accommodation_chrg_0460</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate repeated charge precision</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Repeated amount arrays must preserve order/duplicates and each value must use Decimal precision.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Validate every array value in position order.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Repeated Decimal values are valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when all repeated values are valid and correctly scaled.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Every value quantized to 0.001&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;normalized&quot;: [
+    &quot;10.125&quot;,
+    &quot;20.250&quot;
+  ],
+  &quot;invalid&quot;: []
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Repeated Decimal values are valid. Observed result {&#x27;normalized&#x27;: [&#x27;10.125&#x27;, &#x27;20.250&#x27;], &#x27;invalid&#x27;: []} satisfied the expected condition &#x27;Every value quantized to 0.001&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_decimal_values</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values&quot;,
+  &quot;source_line&quot;: 62,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_decimal_values:62&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:48&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-proc-code-count intermediate procedure-code count medpar-no-surg-codes-0511 must equal populated procedure-code count. count valid procedure codes and compare to the reported count. medpar_no_surg_codes_0511 procedure field matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#11</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PROC-CODE-COUNT</code>
+          <span class="field-chip">medpar_no_surg_codes_0511</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate procedure-code count</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>MEDPAR-NO-SURG-CODES-0511 must equal populated procedure-code count.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count valid procedure codes and compare to the reported count.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Procedure field matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when counts match.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_procedure_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure&quot;,
+  &quot;source_line&quot;: 142,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure:142&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:56&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-proc-date-count intermediate procedure-date count medpar-no-surg-dates-0512 must equal populated procedure-date count. count valid procedure dates and compare to the reported count. medpar_no_surg_dates_0512 procedure field matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#12</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PROC-DATE-COUNT</code>
+          <span class="field-chip">medpar_no_surg_dates_0512</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate procedure-date count</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>MEDPAR-NO-SURG-DATES-0512 must equal populated procedure-date count.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count valid procedure dates and compare to the reported count.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Procedure field matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when counts match.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_procedure_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure&quot;,
+  &quot;source_line&quot;: 142,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure:142&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:56&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-proc-version-alignment intermediate procedure version alignment procedure codes and version codes must align positionally. compare array lengths and each code/version position. medpar_srgcl_prcdr_vrsn_cd procedure field matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#13</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PROC-VERSION-ALIGNMENT</code>
+          <span class="field-chip">medpar_srgcl_prcdr_vrsn_cd</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate procedure version alignment</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Procedure codes and version codes must align positionally.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare array lengths and each code/version position.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Procedure field matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when each procedure has its corresponding version.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_procedure_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure&quot;,
+  &quot;source_line&quot;: 142,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure:142&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:56&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-proc-code-date-alignment int proc code date alignment the intermediate process must satisfy validation int-proc-code-date-alignment for medpar_surg_date_0514. execute the configured business check for medpar_surg_date_0514 and record expected versus observed evidence. medpar_surg_date_0514 procedure field matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#14</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PROC-CODE-DATE-ALIGNMENT</code>
+          <span class="field-chip">medpar_surg_date_0514</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Proc Code Date Alignment</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-PROC-CODE-DATE-ALIGNMENT for medpar_surg_date_0514.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_surg_date_0514 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Procedure field matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_procedure_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure&quot;,
+  &quot;source_line&quot;: 142,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure:142&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:56&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-proc-surgical-indicator int proc surgical indicator the intermediate process must satisfy validation int-proc-surgical-indicator for medpar_surg_ind_0500. execute the configured business check for medpar_surg_ind_0500 and record expected versus observed evidence. medpar_surg_ind_0500 procedure field matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#15</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PROC-SURGICAL-INDICATOR</code>
+          <span class="field-chip">medpar_surg_ind_0500</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Proc Surgical Indicator</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-PROC-SURGICAL-INDICATOR for medpar_surg_ind_0500.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_surg_ind_0500 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Procedure field matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Y&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;Y&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Procedure field matches. Observed result &#x27;Y&#x27; satisfied the expected condition &#x27;Y&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_procedure_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure&quot;,
+  &quot;source_line&quot;: 142,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure:142&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:56&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-proc-date-window intermediate procedure date window procedure dates must be inside the january-aligned five-year window. calculate january 1 of run-year minus four years through run date and test each procedure date. medpar_surg_date_0514 procedure dates are valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#16</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PROC-DATE-WINDOW</code>
+          <span class="field-chip">medpar_surg_date_0514</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate procedure date window</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Procedure dates must be inside the January-aligned five-year window.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Calculate January 1 of run-year minus four years through run date and test each procedure date.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Procedure dates are valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when every applicable date is within the window.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;2022-01-01 through 2026-07-19&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>[]</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Procedure dates are valid. Observed result [] satisfied the expected condition &#x27;2022-01-01 through 2026-07-19&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_procedure_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure&quot;,
+  &quot;source_line&quot;: 163,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_procedure_structure:163&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:56&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-diag-count int diag count the intermediate process must satisfy validation int-diag-count for medpar_no_diag_codes_0491. execute the configured business check for medpar_no_diag_codes_0491 and record expected versus observed evidence. medpar_no_diag_codes_0491 diagnosis/poa structure matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#17</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DIAG-COUNT</code>
+          <span class="field-chip">medpar_no_diag_codes_0491</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Diag Count</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-DIAG-COUNT for medpar_no_diag_codes_0491.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_no_diag_codes_0491 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Diagnosis/POA structure matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_diagnosis_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure&quot;,
+  &quot;source_line&quot;: 221,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:58&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-diag-version-alignment int diag version alignment the intermediate process must satisfy validation int-diag-version-alignment for medpar_dgns_vrsn_cd. execute the configured business check for medpar_dgns_vrsn_cd and record expected versus observed evidence. medpar_dgns_vrsn_cd diagnosis/poa structure matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#18</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DIAG-VERSION-ALIGNMENT</code>
+          <span class="field-chip">medpar_dgns_vrsn_cd</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Diag Version Alignment</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-DIAG-VERSION-ALIGNMENT for medpar_dgns_vrsn_cd.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_dgns_vrsn_cd and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Diagnosis/POA structure matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_diagnosis_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure&quot;,
+  &quot;source_line&quot;: 221,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:58&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-poa-count int poa count the intermediate process must satisfy validation int-poa-count for medpar_poa_dgns_cd_cnt. execute the configured business check for medpar_poa_dgns_cd_cnt and record expected versus observed evidence. medpar_poa_dgns_cd_cnt diagnosis/poa structure matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#19</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-POA-COUNT</code>
+          <span class="field-chip">medpar_poa_dgns_cd_cnt</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Poa Count</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-POA-COUNT for medpar_poa_dgns_cd_cnt.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_poa_dgns_cd_cnt and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Diagnosis/POA structure matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_diagnosis_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure&quot;,
+  &quot;source_line&quot;: 221,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:58&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-poa-diag-alignment int poa diag alignment the intermediate process must satisfy validation int-poa-diag-alignment for medpar_poa_dgns_ind_cd. execute the configured business check for medpar_poa_dgns_ind_cd and record expected versus observed evidence. medpar_poa_dgns_ind_cd diagnosis/poa structure matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#20</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-POA-DIAG-ALIGNMENT</code>
+          <span class="field-chip">medpar_poa_dgns_ind_cd</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Poa Diag Alignment</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-POA-DIAG-ALIGNMENT for medpar_poa_dgns_ind_cd.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_poa_dgns_ind_cd and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Diagnosis/POA structure matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_diagnosis_structure</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure&quot;,
+  &quot;source_line&quot;: 221,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:58&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-adm-diag-code int adm diag code the intermediate process must satisfy validation int-adm-diag-code for medpar_adm_diag_code_0590. execute the configured business check for medpar_adm_diag_code_0590 and record expected versus observed evidence. medpar_adm_diag_code_0590 medpar_adm_diag_code_0590 format is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#21</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-ADM-DIAG-CODE</code>
+          <span class="field-chip">medpar_adm_diag_code_0590</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Adm Diag Code</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-ADM-DIAG-CODE for medpar_adm_diag_code_0590.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_adm_diag_code_0590 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> medpar_adm_diag_code_0590 format is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value &lt;= 10 characters&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;A001&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — medpar_adm_diag_code_0590 format is valid. Observed result &#x27;A001&#x27; satisfied the expected condition &#x27;Non-blank value &lt;= 10 characters&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.direct_fields._optional_scalar_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result&quot;,
+  &quot;source_line&quot;: 42,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:65&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-adm-diag-version int adm diag version the intermediate process must satisfy validation int-adm-diag-version for medpar_admtg_dgns_vrsn_cd. execute the configured business check for medpar_admtg_dgns_vrsn_cd and record expected versus observed evidence. medpar_admtg_dgns_vrsn_cd medpar_admtg_dgns_vrsn_cd format is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#22</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-ADM-DIAG-VERSION</code>
+          <span class="field-chip">medpar_admtg_dgns_vrsn_cd</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Adm Diag Version</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-ADM-DIAG-VERSION for medpar_admtg_dgns_vrsn_cd.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_admtg_dgns_vrsn_cd and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> medpar_admtg_dgns_vrsn_cd format is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value &lt;= 2 characters&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;10&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — medpar_admtg_dgns_vrsn_cd format is valid. Observed result &#x27;10&#x27; satisfied the expected condition &#x27;Non-blank value &lt;= 2 characters&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.direct_fields._optional_scalar_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result&quot;,
+  &quot;source_line&quot;: 42,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:66&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-mbi int mbi the intermediate process must satisfy validation int-mbi for medpar_mbi_id_1420. execute the configured business check for medpar_mbi_id_1420 and record expected versus observed evidence. medpar_mbi_id_1420 medpar_mbi_id_1420 format is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#23</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-MBI</code>
+          <span class="field-chip">medpar_mbi_id_1420</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Mbi</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-MBI for medpar_mbi_id_1420.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_mbi_id_1420 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> medpar_mbi_id_1420 format is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value &lt;= 11 characters&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;1EG4TE5MK73&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — medpar_mbi_id_1420 format is valid. Observed result &#x27;1EG4TE5MK73&#x27; satisfied the expected condition &#x27;Non-blank value &lt;= 11 characters&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.direct_fields._optional_scalar_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result&quot;,
+  &quot;source_line&quot;: 42,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:67&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-provider-full-num int provider full num the intermediate process must satisfy validation int-provider-full-num for medpar_prvdr_full_num_1660. execute the configured business check for medpar_prvdr_full_num_1660 and record expected versus observed evidence. medpar_prvdr_full_num_1660 medpar_prvdr_full_num_1660 format is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#24</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PROVIDER-FULL-NUM</code>
+          <span class="field-chip">medpar_prvdr_full_num_1660</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Provider Full Num</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-PROVIDER-FULL-NUM for medpar_prvdr_full_num_1660.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_prvdr_full_num_1660 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> medpar_prvdr_full_num_1660 format is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value &lt;= 20 characters&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;PRV201&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — medpar_prvdr_full_num_1660 format is valid. Observed result &#x27;PRV201&#x27; satisfied the expected condition &#x27;Non-blank value &lt;= 20 characters&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.direct_fields._optional_scalar_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result&quot;,
+  &quot;source_line&quot;: 42,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:68&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-primary-payer int primary payer the intermediate process must satisfy validation int-primary-payer for medpar_primry_pyr_0540. execute the configured business check for medpar_primry_pyr_0540 and record expected versus observed evidence. medpar_primry_pyr_0540 medpar_primry_pyr_0540 format is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#25</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-PRIMARY-PAYER</code>
+          <span class="field-chip">medpar_primry_pyr_0540</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Primary Payer</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-PRIMARY-PAYER for medpar_primry_pyr_0540.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_primry_pyr_0540 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> medpar_primry_pyr_0540 format is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value &lt;= 10 characters&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;A&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — medpar_primry_pyr_0540 format is valid. Observed result &#x27;A&#x27; satisfied the expected condition &#x27;Non-blank value &lt;= 10 characters&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.direct_fields._optional_scalar_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result&quot;,
+  &quot;source_line&quot;: 42,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:69&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-snf-qual-thru-date int snf qual thru date the intermediate process must satisfy validation int-snf-qual-thru-date for medpar_snf_qual_thru_date_0190. execute the configured business check for medpar_snf_qual_thru_date_0190 and record expected versus observed evidence. medpar_snf_qual_thru_date_0190 date medpar_snf_qual_thru_date_0190 is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#26</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-SNF-QUAL-THRU-DATE</code>
+          <span class="field-chip">medpar_snf_qual_thru_date_0190</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Snf Qual Thru Date</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-SNF-QUAL-THRU-DATE for medpar_snf_qual_thru_date_0190.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_snf_qual_thru_date_0190 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Date medpar_snf_qual_thru_date_0190 is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;2022-01-01 through 2026-07-19&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;2026-03-10&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Date medpar_snf_qual_thru_date_0190 is valid. Observed result &#x27;2026-03-10&#x27; satisfied the expected condition &#x27;2022-01-01 through 2026-07-19&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.optional_date_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.optional_date_result&quot;,
+  &quot;source_line&quot;: 84,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.optional_date_result:84&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:73&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-calendar-aligned-date-window int calendar aligned date window the intermediate process must satisfy validation int-calendar-aligned-date-window for admission_date. execute the configured business check for admission_date and record expected versus observed evidence. admission_date date admission_date is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#27</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-CALENDAR-ALIGNED-DATE-WINDOW</code>
+          <span class="field-chip">admission_date</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Calendar Aligned Date Window</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for admission_date.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for admission_date and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Date admission_date is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;2022-01-01 through 2026-07-19&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;2026-03-01&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Date admission_date is valid. Observed result &#x27;2026-03-01&#x27; satisfied the expected condition &#x27;2022-01-01 through 2026-07-19&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.optional_date_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.optional_date_result&quot;,
+  &quot;source_line&quot;: 84,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.optional_date_result:84&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-not_applicable"
+             data-status="NOT_APPLICABLE" data-stage="intermediate"
+             data-search="intermediate not_applicable int-calendar-aligned-date-window int calendar aligned date window the intermediate process must satisfy validation int-calendar-aligned-date-window for discharge_date. execute the configured business check for discharge_date and record expected versus observed evidence. discharge_date optional date discharge_date is not populated sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#28</span>
+          <span class="badge not_applicable">NOT_APPLICABLE</span>
+          <code class="rule-id">INT-CALENDAR-ALIGNED-DATE-WINDOW</code>
+          <span class="field-chip">discharge_date</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Calendar Aligned Date Window</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for discharge_date.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for discharge_date and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Optional date discharge_date is not populated</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>Not supplied / not applicable</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>Not supplied / not applicable</pre></section>
+      </div>
+
+      <section class="conclusion not_applicable">
+        <h4>6. Why this is not applicable — NOT_APPLICABLE</h4>
+        <p>NOT APPLICABLE — Optional date discharge_date is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.optional_date_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.optional_date_result&quot;,
+  &quot;source_line&quot;: 61,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.optional_date_result:61&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-calendar-aligned-date-window int calendar aligned date window the intermediate process must satisfy validation int-calendar-aligned-date-window for date_of_death. execute the configured business check for date_of_death and record expected versus observed evidence. date_of_death date date_of_death is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#29</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-CALENDAR-ALIGNED-DATE-WINDOW</code>
+          <span class="field-chip">date_of_death</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Calendar Aligned Date Window</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for date_of_death.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for date_of_death and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Date date_of_death is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;2022-01-01 through 2026-07-19&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;2026-03-05&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Date date_of_death is valid. Observed result &#x27;2026-03-05&#x27; satisfied the expected condition &#x27;2022-01-01 through 2026-07-19&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.optional_date_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.optional_date_result&quot;,
+  &quot;source_line&quot;: 84,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.optional_date_result:84&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-not_applicable"
+             data-status="NOT_APPLICABLE" data-stage="intermediate"
+             data-search="intermediate not_applicable int-calendar-aligned-date-window int calendar aligned date window the intermediate process must satisfy validation int-calendar-aligned-date-window for medpar_snf_qual_from_date_0180. execute the configured business check for medpar_snf_qual_from_date_0180 and record expected versus observed evidence. medpar_snf_qual_from_date_0180 optional date medpar_snf_qual_from_date_0180 is not populated sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#30</span>
+          <span class="badge not_applicable">NOT_APPLICABLE</span>
+          <code class="rule-id">INT-CALENDAR-ALIGNED-DATE-WINDOW</code>
+          <span class="field-chip">medpar_snf_qual_from_date_0180</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Calendar Aligned Date Window</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for medpar_snf_qual_from_date_0180.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_snf_qual_from_date_0180 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Optional date medpar_snf_qual_from_date_0180 is not populated</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>Not supplied / not applicable</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>Not supplied / not applicable</pre></section>
+      </div>
+
+      <section class="conclusion not_applicable">
+        <h4>6. Why this is not applicable — NOT_APPLICABLE</h4>
+        <p>NOT APPLICABLE — Optional date medpar_snf_qual_from_date_0180 is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.optional_date_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.optional_date_result&quot;,
+  &quot;source_line&quot;: 61,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.optional_date_result:61&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-calendar-aligned-date-window int calendar aligned date window the intermediate process must satisfy validation int-calendar-aligned-date-window for medpar_snf_qual_thru_date_0190. execute the configured business check for medpar_snf_qual_thru_date_0190 and record expected versus observed evidence. medpar_snf_qual_thru_date_0190 date medpar_snf_qual_thru_date_0190 is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#31</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-CALENDAR-ALIGNED-DATE-WINDOW</code>
+          <span class="field-chip">medpar_snf_qual_thru_date_0190</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Calendar Aligned Date Window</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for medpar_snf_qual_thru_date_0190.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_snf_qual_thru_date_0190 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Date medpar_snf_qual_thru_date_0190 is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;2022-01-01 through 2026-07-19&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;2026-03-10&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Date medpar_snf_qual_thru_date_0190 is valid. Observed result &#x27;2026-03-10&#x27; satisfied the expected condition &#x27;2022-01-01 through 2026-07-19&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.optional_date_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.optional_date_result&quot;,
+  &quot;source_line&quot;: 84,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.optional_date_result:84&quot;,
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:60&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-accommodation-array-alignment intermediate accommodation array alignment accommodation charge and day arrays must preserve corresponding positions. compare array lengths and positional relationships. medpar_accommodation_days_0450 accommodation charges and days align sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#32</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-ACCOMMODATION-ARRAY-ALIGNMENT</code>
+          <span class="field-chip">medpar_accommodation_days_0450</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate accommodation array alignment</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Accommodation charge and day arrays must preserve corresponding positions.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare array lengths and positional relationships.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Accommodation charges and days align</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when arrays align exactly.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>2</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>2</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Accommodation charges and days align. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment&quot;,
+  &quot;source_line&quot;: 135,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment:135&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:64&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-accommodation-days int accommodation days the intermediate process must satisfy validation int-accommodation-days for medpar_accommodation_days_0450. execute the configured business check for medpar_accommodation_days_0450 and record expected versus observed evidence. medpar_accommodation_days_0450 accommodation days are valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#33</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-ACCOMMODATION-DAYS</code>
+          <span class="field-chip">medpar_accommodation_days_0450</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Int Accommodation Days</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Intermediate process must satisfy validation INT-ACCOMMODATION-DAYS for medpar_accommodation_days_0450.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for medpar_accommodation_days_0450 and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Accommodation days are valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-negative integers&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>[]</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Accommodation days are valid. Observed result [] satisfied the expected condition &#x27;Non-negative integers&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment&quot;,
+  &quot;source_line&quot;: 146,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment:146&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:64&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-death-after-admission intermediate death-after-admission indicator medpardeathafteradm0611 must be derived from admission date and date of death. compare date of death with admission date and expected indicator. medpar_death_after_adm_0611 death-after-admission indicator matches sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#34</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-DEATH-AFTER-ADMISSION</code>
+          <span class="field-chip">medpar_death_after_adm_0611</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate death-after-admission indicator</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>medparDeathAfterAdm0611 must be derived from admission date and date of death.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare date of death with admission date and expected indicator.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Death-after-admission indicator matches</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the populated indicator matches the date relationship.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Y&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;Y&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Death-after-admission indicator matches. Observed result &#x27;Y&#x27; satisfied the expected condition &#x27;Y&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_death_after_admission</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_death_after_admission&quot;,
+  &quot;source_line&quot;: 253,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_death_after_admission:253&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:65&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-age intermediate age medpar-age-0030 must be a valid integer in the approved range. parse age and validate configured range, currently 0 through 120. medpar_age_0030 age is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#35</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-AGE</code>
+          <span class="field-chip">medpar_age_0030</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate age</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>MEDPAR-AGE-0030 must be a valid integer in the approved range.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Parse age and validate configured range, currently 0 through 120.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Age is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when age is a valid in-range integer.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;0..120&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>70</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Age is valid. Observed result 70 satisfied the expected condition &#x27;0..120&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_age_and_ndc</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_age_and_ndc&quot;,
+  &quot;source_line&quot;: 280,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_age_and_ndc:280&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:67&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-ndc intermediate ndc number medpar-rev-cntr-ndc-num-1550 must follow configured normalization and length. normalize characters/leading zeros and validate the configured length. medpar_rev_cntr_ndc_num_1550 ndc format is valid sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#36</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-NDC</code>
+          <span class="field-chip">medpar_rev_cntr_ndc_num_1550</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate NDC number</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>MEDPAR-REV-CNTR-NDC-NUM-1550 must follow configured normalization and length.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Normalize characters/leading zeros and validate the configured length.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> NDC format is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when normalized NDC equals the expected format.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;10 numeric characters&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;0012345678&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — NDC format is valid. Observed result &#x27;0012345678&#x27; satisfied the expected condition &#x27;10 numeric characters&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_age_and_ndc</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_age_and_ndc&quot;,
+  &quot;source_line&quot;: 302,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_age_and_ndc:302&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:67&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass int-accommodation-total intermediate total accommodation charge medpar-tot-acc-chrg-0430 must equal the decimal sum of repeated accommodation charges. sum eligible repeated charges and compare with total. medpar_tot_acc_chrg_0430 total accommodation charge matches repeated charges sample_data/actual/intermediate/actual.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#37</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INT-ACCOMMODATION-TOTAL</code>
+          <span class="field-chip">medpar_tot_acc_chrg_0430</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate total accommodation charge</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>MEDPAR-TOT-ACC-CHRG-0430 must equal the Decimal sum of repeated accommodation charges.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Sum eligible repeated charges and compare with total.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Total accommodation charge matches repeated charges</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when exact quantized totals match.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;30.375&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;30.375&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Total accommodation charge matches repeated charges. Observed result &#x27;30.375&#x27; satisfied the expected condition &#x27;30.375&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.structural.validate_accommodation_totals</code></section>
+          <section><h5>Relative source files</h5><ul><li>sample_data/actual/intermediate/actual.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.structural.validate_accommodation_totals&quot;,
+  &quot;source_line&quot;: 338,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.structural.validate_accommodation_totals:338&quot;,
+    &quot;medpar_qa.stages.intermediate.processor._validate_actual_structure:70&quot;,
+    &quot;medpar_qa.stages.intermediate.processor.validate:161&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-not_applicable"
+             data-status="NOT_APPLICABLE" data-stage="intermediate"
+             data-search="intermediate not_applicable int-golden-comparison intermediate golden regression availability golden field comparison requires both actual and approved expected intermediate output. confirm actual and expected roles are supplied.  expected and actual intermediate outputs were not both supplied; structural checks only ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#38</span>
+          <span class="badge not_applicable">NOT_APPLICABLE</span>
+          <code class="rule-id">INT-GOLDEN-COMPARISON</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Intermediate golden regression availability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Golden field comparison requires both actual and approved expected Intermediate output.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Confirm actual and expected roles are supplied.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Expected and actual Intermediate outputs were not both supplied; structural checks only</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>NOT_APPLICABLE without both; detailed field results are emitted when supplied.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>Not supplied / not applicable</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>Not supplied / not applicable</pre></section>
+      </div>
+
+      <section class="conclusion not_applicable">
+        <h4>6. Why this is not applicable — NOT_APPLICABLE</h4>
+        <p>NOT APPLICABLE — Expected and actual Intermediate outputs were not both supplied; structural checks only. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.intermediate.processor.validate</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><ul><li>f4553cccdf12a37c16d7</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.intermediate.processor.validate&quot;,
+  &quot;source_line&quot;: 178,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.intermediate.processor.validate:178&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="intermediate"
+             data-search="intermediate pass stage-final-summary stage completion summary a stage passes only when it has no fail or blocked validation results. count pass, fail, blocked, and not_applicable results emitted by the stage.  stage completed with no failed or blocked validations ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#39</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">STAGE-FINAL-SUMMARY</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Stage completion summary</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>A stage passes only when it has no FAIL or BLOCKED validation results.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count PASS, FAIL, BLOCKED, and NOT_APPLICABLE results emitted by the stage.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Stage completed with no failed or blocked validations</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when FAIL=0 and BLOCKED=0; otherwise FAIL.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>{
+  &quot;FAIL&quot;: 0,
+  &quot;BLOCKED&quot;: 0
+}</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;PASS&quot;: 35,
+  &quot;FAIL&quot;: 0,
+  &quot;NOT_APPLICABLE&quot;: 3,
+  &quot;BLOCKED&quot;: 0
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Stage completed with no failed or blocked validations. Observed result {&#x27;PASS&#x27;: 35, &#x27;FAIL&#x27;: 0, &#x27;NOT_APPLICABLE&#x27;: 3, &#x27;BLOCKED&#x27;: 0} satisfied the expected condition {&#x27;FAIL&#x27;: 0, &#x27;BLOCKED&#x27;: 0}. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>intermediate</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.run</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;source_record_count&quot;: 1,
+  &quot;decision_count&quot;: 0,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.run&quot;,
+  &quot;source_line&quot;: 233,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.run:233&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+        
+      </div>
+    </details>
+    </main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
+<script>
+function applyFilters(){const q=document.getElementById('search').value.toLowerCase();const status=document.getElementById('statusFilter').value;const stage=document.getElementById('stageFilter').value;document.querySelectorAll('.validation-card').forEach(card=>{const okQ=!q||card.dataset.search.includes(q);const okS=status==='ALL'||card.dataset.status===status;const okStage=stage==='ALL'||card.dataset.stage===stage;card.classList.toggle('hidden',!(okQ&&okS&&okStage));});}
+function expandAll(open){document.querySelectorAll('details').forEach(item=>item.open=open);}
+function copyCard(button){const card=button.closest('.validation-card');navigator.clipboard.writeText(card.innerText).then(()=>{button.textContent='Copied';setTimeout(()=>button.textContent='Copy validation',1200);});}
+</script></body></html>

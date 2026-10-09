@@ -1,0 +1,8 @@
+{
+    "CLM-TRANS-CD": "str",
+    "Claim From Date": "str",
+    "Claim Thru Date": "str",
+    "Rectype": "str",
+    "HICN": "str",
+    "Provider": "str"
+}

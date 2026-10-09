@@ -1,0 +1,68 @@
+[
+  {
+    "claimCan": "CAN-101",
+    "claimCanNchEquatable": "HICN-101",
+    "provider": {
+      "providerId": "PRV-101"
+    },
+    "admissionDate": "20260301",
+    "nchWeeklyProcessingDate": "20260310",
+    "accreteDate": "20260311",
+    "conditionCodes": [
+      {
+        "code": "04",
+        "value": "OLD"
+      },
+      {
+        "code": "69",
+        "value": "TEACH"
+      }
+    ],
+    "occurrenceCodes": [
+      {
+        "code": "11",
+        "date": "20260301"
+      }
+    ],
+    "valueLines": [
+      {
+        "code": "73",
+        "amount": "2.345"
+      }
+    ],
+    "MEDPAR-TOT-CHRG-0400": "100.125",
+    "stayFromDate": "20260301",
+    "stayThruDate": "20260331"
+  },
+  {
+    "claimCan": "CAN-102",
+    "claimCanNchEquatable": "HICN-101",
+    "provider": {
+      "providerId": "PRV-101"
+    },
+    "admissionDate": "20260301",
+    "nchWeeklyProcessingDate": "20260312",
+    "accreteDate": "20260313",
+    "conditionCodes": [
+      {
+        "code": "04",
+        "value": "NEW"
+      }
+    ],
+    "occurrenceCodes": [
+      {
+        "code": "11",
+        "date": "20260302"
+      }
+    ],
+    "valueLines": [
+      {
+        "code": "73",
+        "amount": "-0.100"
+      }
+    ],
+    "MEDPAR-TOT-CHRG-0400": "50.250",
+    "stayFromDate": "20260301",
+    "stayThruDate": "20260331"
+  }
+]

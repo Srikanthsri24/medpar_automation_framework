@@ -1,0 +1,1265 @@
+{
+  "run_id": "stay_sample_source_calculation",
+  "run_date": "2026-07-19",
+  "generated_at": "2026-07-19T09:58:24+00:00",
+  "passed": true,
+  "context": {
+    "command_name": "Stay Sample Source Calculation",
+    "stage": "stay",
+    "mode": "calculate",
+    "source_paths": [
+      "sample_data/input/stay/source.json"
+    ],
+    "actual_paths": [],
+    "expected_paths": []
+  },
+  "summary": {
+    "stage_count": 1,
+    "validation_count": 45,
+    "pass": 24,
+    "fail": 0,
+    "blocked": 0,
+    "not_applicable": 21,
+    "record_decisions": 0
+  },
+  "stages": [
+    {
+      "stage": "stay",
+      "passed": true,
+      "rule_results": [
+        {
+          "stage": "stay",
+          "rule_id": "INGEST-DISCOVERY",
+          "status": "PASS",
+          "message": "Discovered 1 file(s) for source",
+          "expected": "One or more matching files",
+          "actual": [
+            "sample_data/input/stay/source.json"
+          ],
+          "field_name": null,
+          "record_ids": [],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "configured_path": "sample_data/input/stay/source.json",
+            "role": "source",
+            "format": "auto",
+            "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+            "source_line": 75,
+            "validator_call_chain": [
+              "medpar_qa.orchestration.pipeline.load_with_diagnostics:75",
+              "medpar_qa.orchestration.pipeline.run:199"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "INGEST-READ-FILE",
+          "status": "PASS",
+          "message": "File was read successfully and produced 2 record(s)",
+          "expected": "Readable file containing at least one record",
+          "actual": {
+            "file": "sample_data/input/stay/source.json",
+            "record_count": 2,
+            "role": "source"
+          },
+          "field_name": null,
+          "record_ids": [
+            "9278d79ef99d458afe7c",
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "file_size_bytes": 1307,
+            "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+            "source_line": 121,
+            "validator_call_chain": [
+              "medpar_qa.orchestration.pipeline.load_with_diagnostics:121",
+              "medpar_qa.orchestration.pipeline.run:199"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-SOURCE",
+          "status": "PASS",
+          "message": "Stay source records were supplied",
+          "expected": null,
+          "actual": null,
+          "field_name": null,
+          "record_ids": [],
+          "source_files": [],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.common.presence_result",
+            "source_line": 94,
+            "validator_call_chain": [
+              "medpar_qa.stages.common.presence_result:94",
+              "medpar_qa.stages.stay.processor.validate:268",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field hicn is supplied",
+          "expected": "Non-blank value",
+          "actual": "HICN-101",
+          "field_name": "hicn",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field provider_id is supplied",
+          "expected": "Non-blank value",
+          "actual": "PRV-101",
+          "field_name": "provider_id",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field stay_from_date is supplied",
+          "expected": "Non-blank value",
+          "actual": "20260301",
+          "field_name": "stay_from_date",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field stay_thru_date is supplied",
+          "expected": "Non-blank value",
+          "actual": "20260331",
+          "field_name": "stay_thru_date",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-STAY-DATE-ORDER",
+          "status": "PASS",
+          "message": "Date order is valid",
+          "expected": "stay_from_date <= stay_thru_date",
+          "actual": {
+            "stay_from_date": "2026-03-01",
+            "stay_thru_date": "2026-03-31"
+          },
+          "field_name": null,
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.date_order_result",
+            "source_line": 145,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.date_order_result:145",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:34",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-ADMISSION-DATE",
+          "status": "PASS",
+          "message": "Date admission_date is valid",
+          "expected": "Valid date",
+          "actual": "2026-03-01",
+          "field_name": "admission_date",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+            "source_line": 84,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.optional_date_result:84",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:45",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "PASS",
+          "message": "condition_codes structure is valid",
+          "expected": {
+            "type": "list",
+            "item_required_keys": []
+          },
+          "actual": {
+            "count": 2,
+            "invalid": []
+          },
+          "field_name": "condition_codes",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 314,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:314",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional collection occurrence_span_lines is not populated",
+          "expected": "List",
+          "actual": null,
+          "field_name": "occurrence_span_lines",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 277,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:277",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "PASS",
+          "message": "occurrence_codes structure is valid",
+          "expected": {
+            "type": "list",
+            "item_required_keys": []
+          },
+          "actual": {
+            "count": 1,
+            "invalid": []
+          },
+          "field_name": "occurrence_codes",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 314,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:314",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "PASS",
+          "message": "value_lines structure is valid",
+          "expected": {
+            "type": "list",
+            "item_required_keys": []
+          },
+          "actual": {
+            "count": 1,
+            "invalid": []
+          },
+          "field_name": "value_lines",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 314,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:314",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional collection revenue_lines is not populated",
+          "expected": "List",
+          "actual": null,
+          "field_name": "revenue_lines",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 277,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:277",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "PASS",
+          "message": "medpar_tot_chrg_0400 is a valid Decimal amount",
+          "expected": "Decimal quantized to 0.001",
+          "actual": "100.125",
+          "field_name": "medpar_tot_chrg_0400",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 240,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:240",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount medpar_drg_price_0380 is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "medpar_drg_price_0380",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount medpar_sqstrtn_rdctn_amt_1130 is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "medpar_sqstrtn_rdctn_amt_1130",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount reimbursement_amount is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "reimbursement_amount",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount primary_payment_amount is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "primary_payment_amount",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount therapy_reduction_amount is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "therapy_reduction_amount",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount reduce_coinsurance is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "reduce_coinsurance",
+          "record_ids": [
+            "9278d79ef99d458afe7c"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field hicn is supplied",
+          "expected": "Non-blank value",
+          "actual": "HICN-101",
+          "field_name": "hicn",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field provider_id is supplied",
+          "expected": "Non-blank value",
+          "actual": "PRV-101",
+          "field_name": "provider_id",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field stay_from_date is supplied",
+          "expected": "Non-blank value",
+          "actual": "20260301",
+          "field_name": "stay_from_date",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field stay_thru_date is supplied",
+          "expected": "Non-blank value",
+          "actual": "20260331",
+          "field_name": "stay_thru_date",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:26",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-STAY-DATE-ORDER",
+          "status": "PASS",
+          "message": "Date order is valid",
+          "expected": "stay_from_date <= stay_thru_date",
+          "actual": {
+            "stay_from_date": "2026-03-01",
+            "stay_thru_date": "2026-03-31"
+          },
+          "field_name": null,
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.date_order_result",
+            "source_line": 145,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.date_order_result:145",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:34",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-ADMISSION-DATE",
+          "status": "PASS",
+          "message": "Date admission_date is valid",
+          "expected": "Valid date",
+          "actual": "2026-03-01",
+          "field_name": "admission_date",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+            "source_line": 84,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.optional_date_result:84",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:45",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "PASS",
+          "message": "condition_codes structure is valid",
+          "expected": {
+            "type": "list",
+            "item_required_keys": []
+          },
+          "actual": {
+            "count": 1,
+            "invalid": []
+          },
+          "field_name": "condition_codes",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 314,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:314",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional collection occurrence_span_lines is not populated",
+          "expected": "List",
+          "actual": null,
+          "field_name": "occurrence_span_lines",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 277,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:277",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "PASS",
+          "message": "occurrence_codes structure is valid",
+          "expected": {
+            "type": "list",
+            "item_required_keys": []
+          },
+          "actual": {
+            "count": 1,
+            "invalid": []
+          },
+          "field_name": "occurrence_codes",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 314,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:314",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "PASS",
+          "message": "value_lines structure is valid",
+          "expected": {
+            "type": "list",
+            "item_required_keys": []
+          },
+          "actual": {
+            "count": 1,
+            "invalid": []
+          },
+          "field_name": "value_lines",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 314,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:314",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-CODE-COLLECTION-STRUCTURE",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional collection revenue_lines is not populated",
+          "expected": "List",
+          "actual": null,
+          "field_name": "revenue_lines",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.collection_structure_result",
+            "source_line": 277,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.collection_structure_result:277",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:61",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "PASS",
+          "message": "medpar_tot_chrg_0400 is a valid Decimal amount",
+          "expected": "Decimal quantized to 0.001",
+          "actual": "50.250",
+          "field_name": "medpar_tot_chrg_0400",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 240,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:240",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount medpar_drg_price_0380 is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "medpar_drg_price_0380",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount medpar_sqstrtn_rdctn_amt_1130 is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "medpar_sqstrtn_rdctn_amt_1130",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount reimbursement_amount is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "reimbursement_amount",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount primary_payment_amount is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "primary_payment_amount",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount therapy_reduction_amount is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "therapy_reduction_amount",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-DECIMAL-PRECISION",
+          "status": "NOT_APPLICABLE",
+          "message": "Optional amount reduce_coinsurance is not populated",
+          "expected": "Decimal quantized to 0.001",
+          "actual": null,
+          "field_name": "reduce_coinsurance",
+          "record_ids": [
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.decimal_field_result",
+            "source_line": 223,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.decimal_field_result:223",
+              "medpar_qa.stages.stay.structural.validate_stay_source_record:79",
+              "medpar_qa.stages.stay.processor.validate:281",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-LATEST-CONDITION-CODES",
+          "status": "NOT_APPLICABLE",
+          "message": "Actual Stay collection not supplied",
+          "expected": [
+            {
+              "code": "04",
+              "value": "NEW"
+            },
+            {
+              "code": "69",
+              "value": "TEACH"
+            }
+          ],
+          "actual": null,
+          "field_name": "condition_codes",
+          "record_ids": [
+            "9278d79ef99d458afe7c",
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+            "source_line": 105,
+            "validator_call_chain": [
+              "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+              "medpar_qa.stages.stay.processor.validate:346",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-LATEST-OCCURRENCE-CODES",
+          "status": "NOT_APPLICABLE",
+          "message": "Actual Stay collection not supplied",
+          "expected": [
+            {
+              "code": "11",
+              "date": "20260302"
+            }
+          ],
+          "actual": null,
+          "field_name": "occurrence_codes",
+          "record_ids": [
+            "9278d79ef99d458afe7c",
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+            "source_line": 105,
+            "validator_call_chain": [
+              "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+              "medpar_qa.stages.stay.processor.validate:346",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-LATEST-SPAN-CODES",
+          "status": "NOT_APPLICABLE",
+          "message": "Actual Stay collection not supplied",
+          "expected": [],
+          "actual": null,
+          "field_name": "occurrence_span_lines",
+          "record_ids": [
+            "9278d79ef99d458afe7c",
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+            "source_line": 105,
+            "validator_call_chain": [
+              "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+              "medpar_qa.stages.stay.processor.validate:346",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-LATEST-VALUE-CODES",
+          "status": "NOT_APPLICABLE",
+          "message": "Actual Stay collection not supplied",
+          "expected": [
+            {
+              "code": "73",
+              "amount": "-0.100"
+            }
+          ],
+          "actual": null,
+          "field_name": "value_lines",
+          "record_ids": [
+            "9278d79ef99d458afe7c",
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [
+            "sample_data/input/stay/source.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.stay.processor._validate_latest_code_collections",
+            "source_line": 105,
+            "validator_call_chain": [
+              "medpar_qa.stages.stay.processor._validate_latest_code_collections:105",
+              "medpar_qa.stages.stay.processor.validate:346",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "ST-GOLDEN-COMPARISON",
+          "status": "NOT_APPLICABLE",
+          "message": "Expected Stay output was not supplied; known derivations and structural checks only",
+          "expected": null,
+          "actual": null,
+          "field_name": null,
+          "record_ids": [
+            "9278d79ef99d458afe7c",
+            "469a3b2d724f66a98b93"
+          ],
+          "source_files": [],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.stay.processor.validate",
+            "source_line": 394,
+            "validator_call_chain": [
+              "medpar_qa.stages.stay.processor.validate:394",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "stay",
+          "rule_id": "STAGE-FINAL-SUMMARY",
+          "status": "PASS",
+          "message": "Stage completed with no failed or blocked validations",
+          "expected": {
+            "FAIL": 0,
+            "BLOCKED": 0
+          },
+          "actual": {
+            "PASS": 23,
+            "FAIL": 0,
+            "NOT_APPLICABLE": 21,
+            "BLOCKED": 0
+          },
+          "field_name": null,
+          "record_ids": [],
+          "source_files": [],
+          "group_key": {},
+          "evidence": {
+            "source_record_count": 2,
+            "decision_count": 0,
+            "validator_function": "medpar_qa.orchestration.pipeline.run",
+            "source_line": 233,
+            "validator_call_chain": [
+              "medpar_qa.orchestration.pipeline.run:233"
+            ]
+          }
+        }
+      ],
+      "decisions": []
+    }
+  ]
+}

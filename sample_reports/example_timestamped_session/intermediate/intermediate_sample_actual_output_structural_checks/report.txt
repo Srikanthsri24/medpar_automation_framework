@@ -1,0 +1,1045 @@
+MEDPAR QA — DETAILED BUSINESS VALIDATION RESULTS
+======================================================================================================================
+Every validation below explains the requirement, check performed, expected result, observed result, and conclusion.
+
+######################################################################################################################
+STAGE: INTERMEDIATE
+STAGE STATUS: PASS
+VALIDATION COUNTS: PASS=36 | FAIL=0 | BLOCKED=0 | NOT_APPLICABLE=3
+######################################################################################################################
+[1] PASS | INGEST-DISCOVERY | Input file discovery
+    Business requirement: Every configured relative file path or wildcard must resolve to at least one input file.
+    What was checked: Resolve the configured source, actual, or expected path and count matching files.
+    Evaluation logic: PASS when one or more files are found; FAIL when no file matches or discovery raises an error.
+    Expected result:
+      "One or more matching files"
+    Observed result:
+      [
+        "sample_data/actual/intermediate/actual.json"
+      ]
+    Final explanation: PASS — Discovered 1 file(s) for source. Observed result ['sample_data/actual/intermediate/actual.json'] satisfied the expected condition 'One or more matching files'. The observed data satisfies the stated business requirement.
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.orchestration.pipeline.load_with_diagnostics
+    Technical evidence:
+      {
+        "configured_path": "sample_data/actual/intermediate/actual.json",
+        "role": "source",
+        "format": "auto",
+        "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+        "source_line": 75,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.load_with_diagnostics:75",
+          "medpar_qa.orchestration.pipeline.run:199"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[2] PASS | INGEST-READ-FILE | Input file readability
+    Business requirement: Every discovered JSON or Parquet file must be readable and parse into records.
+    What was checked: Open the file, parse its content, normalize the root structure, and count records.
+    Evaluation logic: PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.
+    Expected result:
+      "Readable file containing at least one record"
+    Observed result:
+      {
+        "file": "sample_data/actual/intermediate/actual.json",
+        "record_count": 1,
+        "role": "source"
+      }
+    Final explanation: PASS — File was read successfully and produced 1 record(s). Observed result {'file': 'sample_data/actual/intermediate/actual.json', 'record_count': 1, 'role': 'source'} satisfied the expected condition 'Readable file containing at least one record'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.orchestration.pipeline.load_with_diagnostics
+    Technical evidence:
+      {
+        "file_size_bytes": 1320,
+        "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+        "source_line": 121,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.load_with_diagnostics:121",
+          "medpar_qa.orchestration.pipeline.run:199"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[3] PASS | INT-PRE-SOURCE | Intermediate source availability
+    Business requirement: Intermediate validation requires Stay/intermediate source records.
+    What was checked: Confirm source-role records are present.
+    Evaluation logic: PASS when source count is greater than zero.
+    Expected result:
+      Not supplied / not applicable
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: PASS — Intermediate source records were supplied. Observed result None satisfied the expected condition None. The observed data satisfies the stated business requirement.
+    Validator function: medpar_qa.stages.common.presence_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.common.presence_result",
+        "source_line": 94,
+        "validator_call_chain": [
+          "medpar_qa.stages.common.presence_result:94",
+          "medpar_qa.stages.intermediate.processor.validate:84",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[4] PASS | INT-SOURCE-DUPLICATE-IDENTITY | Intermediate duplicate identity validation
+    Business requirement: Each business identity must occur only once in the applicable dataset.
+    What was checked: Index records using configured identity fields and identify repeated keys.
+    Evaluation logic: PASS when duplicate identity count is zero.
+    Expected result:
+      "One record per identity"
+    Observed result:
+      {}
+    Final explanation: PASS — No duplicate Intermediate source identities. Observed result {} satisfied the expected condition 'One record per identity'. The observed data satisfies the stated business requirement.
+    Validator function: medpar_qa.stages.common.duplicate_identity_result
+    Technical evidence:
+      {
+        "identity_fields": [
+          "hicn",
+          "provider_id",
+          "admission_date",
+          "split_year_indicator"
+        ],
+        "validator_function": "medpar_qa.stages.common.duplicate_identity_result",
+        "source_line": 58,
+        "validator_call_chain": [
+          "medpar_qa.stages.common.duplicate_identity_result:58",
+          "medpar_qa.stages.intermediate.processor.validate:105",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[5] PASS | INT-DECIMAL-PRECISION | Intermediate Decimal precision
+    Business requirement: Amount fields must retain configured three-decimal precision without float conversion.
+    What was checked: Parse with Decimal(str(value)), quantize, and compare.
+    Evaluation logic: PASS when the exact Decimal value/scale is correct, including negative numbers.
+    Field: medpar_cov_chrg_0410
+    Expected result:
+      "Valid Decimal quantized to 0.001"
+    Observed result:
+      "100.125"
+    Final explanation: PASS — Decimal value is valid at configured precision. Observed result '100.125' satisfied the expected condition 'Valid Decimal quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_decimal_values
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_decimal_values",
+        "source_line": 36,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_decimal_values:36",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:48",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[6] PASS | INT-DECIMAL-PRECISION | Intermediate Decimal precision
+    Business requirement: Amount fields must retain configured three-decimal precision without float conversion.
+    What was checked: Parse with Decimal(str(value)), quantize, and compare.
+    Evaluation logic: PASS when the exact Decimal value/scale is correct, including negative numbers.
+    Field: medpar_service_charges_0470
+    Expected result:
+      "Valid Decimal quantized to 0.001"
+    Observed result:
+      "200.250"
+    Final explanation: PASS — Decimal value is valid at configured precision. Observed result '200.250' satisfied the expected condition 'Valid Decimal quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_decimal_values
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_decimal_values",
+        "source_line": 36,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_decimal_values:36",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:48",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[7] PASS | INT-DECIMAL-PRECISION | Intermediate Decimal precision
+    Business requirement: Amount fields must retain configured three-decimal precision without float conversion.
+    What was checked: Parse with Decimal(str(value)), quantize, and compare.
+    Evaluation logic: PASS when the exact Decimal value/scale is correct, including negative numbers.
+    Field: medpar_tot_dpt_chrg_0440
+    Expected result:
+      "Valid Decimal quantized to 0.001"
+    Observed result:
+      "300.375"
+    Final explanation: PASS — Decimal value is valid at configured precision. Observed result '300.375' satisfied the expected condition 'Valid Decimal quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_decimal_values
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_decimal_values",
+        "source_line": 36,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_decimal_values:36",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:48",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[8] PASS | INT-DECIMAL-PRECISION | Intermediate Decimal precision
+    Business requirement: Amount fields must retain configured three-decimal precision without float conversion.
+    What was checked: Parse with Decimal(str(value)), quantize, and compare.
+    Evaluation logic: PASS when the exact Decimal value/scale is correct, including negative numbers.
+    Field: medpar_tot_acc_chrg_0430
+    Expected result:
+      "Valid Decimal quantized to 0.001"
+    Observed result:
+      "30.375"
+    Final explanation: PASS — Decimal value is valid at configured precision. Observed result '30.375' satisfied the expected condition 'Valid Decimal quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_decimal_values
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_decimal_values",
+        "source_line": 36,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_decimal_values:36",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:48",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[9] PASS | INT-DECIMAL-PRECISION | Intermediate Decimal precision
+    Business requirement: Amount fields must retain configured three-decimal precision without float conversion.
+    What was checked: Parse with Decimal(str(value)), quantize, and compare.
+    Evaluation logic: PASS when the exact Decimal value/scale is correct, including negative numbers.
+    Field: medpar_drg_price_0380
+    Expected result:
+      "Valid Decimal quantized to 0.001"
+    Observed result:
+      "900.125"
+    Final explanation: PASS — Decimal value is valid at configured precision. Observed result '900.125' satisfied the expected condition 'Valid Decimal quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_decimal_values
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_decimal_values",
+        "source_line": 36,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_decimal_values:36",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:48",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[10] PASS | INT-REPEATED-DECIMAL-PRECISION | Intermediate repeated charge precision
+    Business requirement: Repeated amount arrays must preserve order/duplicates and each value must use Decimal precision.
+    What was checked: Validate every array value in position order.
+    Evaluation logic: PASS when all repeated values are valid and correctly scaled.
+    Field: medpar_accommodation_chrg_0460
+    Expected result:
+      "Every value quantized to 0.001"
+    Observed result:
+      {
+        "normalized": [
+          "10.125",
+          "20.250"
+        ],
+        "invalid": []
+      }
+    Final explanation: PASS — Repeated Decimal values are valid. Observed result {'normalized': ['10.125', '20.250'], 'invalid': []} satisfied the expected condition 'Every value quantized to 0.001'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_decimal_values
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_decimal_values",
+        "source_line": 62,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_decimal_values:62",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:48",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[11] PASS | INT-PROC-CODE-COUNT | Intermediate procedure-code count
+    Business requirement: MEDPAR-NO-SURG-CODES-0511 must equal populated procedure-code count.
+    What was checked: Count valid procedure codes and compare to the reported count.
+    Evaluation logic: PASS when counts match.
+    Field: medpar_no_surg_codes_0511
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_procedure_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_procedure_structure",
+        "source_line": 142,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_procedure_structure:142",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:56",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[12] PASS | INT-PROC-DATE-COUNT | Intermediate procedure-date count
+    Business requirement: MEDPAR-NO-SURG-DATES-0512 must equal populated procedure-date count.
+    What was checked: Count valid procedure dates and compare to the reported count.
+    Evaluation logic: PASS when counts match.
+    Field: medpar_no_surg_dates_0512
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_procedure_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_procedure_structure",
+        "source_line": 142,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_procedure_structure:142",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:56",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[13] PASS | INT-PROC-VERSION-ALIGNMENT | Intermediate procedure version alignment
+    Business requirement: Procedure codes and version codes must align positionally.
+    What was checked: Compare array lengths and each code/version position.
+    Evaluation logic: PASS when each procedure has its corresponding version.
+    Field: medpar_srgcl_prcdr_vrsn_cd
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_procedure_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_procedure_structure",
+        "source_line": 142,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_procedure_structure:142",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:56",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[14] PASS | INT-PROC-CODE-DATE-ALIGNMENT | Int Proc Code Date Alignment
+    Business requirement: The Intermediate process must satisfy validation INT-PROC-CODE-DATE-ALIGNMENT for medpar_surg_date_0514.
+    What was checked: Execute the configured business check for medpar_surg_date_0514 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_surg_date_0514
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Procedure field matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_procedure_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_procedure_structure",
+        "source_line": 142,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_procedure_structure:142",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:56",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[15] PASS | INT-PROC-SURGICAL-INDICATOR | Int Proc Surgical Indicator
+    Business requirement: The Intermediate process must satisfy validation INT-PROC-SURGICAL-INDICATOR for medpar_surg_ind_0500.
+    What was checked: Execute the configured business check for medpar_surg_ind_0500 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_surg_ind_0500
+    Expected result:
+      "Y"
+    Observed result:
+      "Y"
+    Final explanation: PASS — Procedure field matches. Observed result 'Y' satisfied the expected condition 'Y'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_procedure_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_procedure_structure",
+        "source_line": 142,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_procedure_structure:142",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:56",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[16] PASS | INT-PROC-DATE-WINDOW | Intermediate procedure date window
+    Business requirement: Procedure dates must be inside the January-aligned five-year window.
+    What was checked: Calculate January 1 of run-year minus four years through run date and test each procedure date.
+    Evaluation logic: PASS when every applicable date is within the window.
+    Field: medpar_surg_date_0514
+    Expected result:
+      "2022-01-01 through 2026-07-19"
+    Observed result:
+      []
+    Final explanation: PASS — Procedure dates are valid. Observed result [] satisfied the expected condition '2022-01-01 through 2026-07-19'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_procedure_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_procedure_structure",
+        "source_line": 163,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_procedure_structure:163",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:56",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[17] PASS | INT-DIAG-COUNT | Int Diag Count
+    Business requirement: The Intermediate process must satisfy validation INT-DIAG-COUNT for medpar_no_diag_codes_0491.
+    What was checked: Execute the configured business check for medpar_no_diag_codes_0491 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_no_diag_codes_0491
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_diagnosis_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure",
+        "source_line": 221,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:58",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[18] PASS | INT-DIAG-VERSION-ALIGNMENT | Int Diag Version Alignment
+    Business requirement: The Intermediate process must satisfy validation INT-DIAG-VERSION-ALIGNMENT for medpar_dgns_vrsn_cd.
+    What was checked: Execute the configured business check for medpar_dgns_vrsn_cd and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_dgns_vrsn_cd
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_diagnosis_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure",
+        "source_line": 221,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:58",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[19] PASS | INT-POA-COUNT | Int Poa Count
+    Business requirement: The Intermediate process must satisfy validation INT-POA-COUNT for medpar_poa_dgns_cd_cnt.
+    What was checked: Execute the configured business check for medpar_poa_dgns_cd_cnt and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_poa_dgns_cd_cnt
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_diagnosis_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure",
+        "source_line": 221,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:58",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[20] PASS | INT-POA-DIAG-ALIGNMENT | Int Poa Diag Alignment
+    Business requirement: The Intermediate process must satisfy validation INT-POA-DIAG-ALIGNMENT for medpar_poa_dgns_ind_cd.
+    What was checked: Execute the configured business check for medpar_poa_dgns_ind_cd and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_poa_dgns_ind_cd
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Diagnosis/POA structure matches. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_diagnosis_structure
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure",
+        "source_line": 221,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_diagnosis_structure:221",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:58",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[21] PASS | INT-ADM-DIAG-CODE | Int Adm Diag Code
+    Business requirement: The Intermediate process must satisfy validation INT-ADM-DIAG-CODE for medpar_adm_diag_code_0590.
+    What was checked: Execute the configured business check for medpar_adm_diag_code_0590 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_adm_diag_code_0590
+    Expected result:
+      "Non-blank value <= 10 characters"
+    Observed result:
+      "A001"
+    Final explanation: PASS — medpar_adm_diag_code_0590 format is valid. Observed result 'A001' satisfied the expected condition 'Non-blank value <= 10 characters'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.direct_fields._optional_scalar_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result",
+        "source_line": 42,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:65",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[22] PASS | INT-ADM-DIAG-VERSION | Int Adm Diag Version
+    Business requirement: The Intermediate process must satisfy validation INT-ADM-DIAG-VERSION for medpar_admtg_dgns_vrsn_cd.
+    What was checked: Execute the configured business check for medpar_admtg_dgns_vrsn_cd and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_admtg_dgns_vrsn_cd
+    Expected result:
+      "Non-blank value <= 2 characters"
+    Observed result:
+      "10"
+    Final explanation: PASS — medpar_admtg_dgns_vrsn_cd format is valid. Observed result '10' satisfied the expected condition 'Non-blank value <= 2 characters'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.direct_fields._optional_scalar_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result",
+        "source_line": 42,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:66",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[23] PASS | INT-MBI | Int Mbi
+    Business requirement: The Intermediate process must satisfy validation INT-MBI for medpar_mbi_id_1420.
+    What was checked: Execute the configured business check for medpar_mbi_id_1420 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_mbi_id_1420
+    Expected result:
+      "Non-blank value <= 11 characters"
+    Observed result:
+      "1EG4TE5MK73"
+    Final explanation: PASS — medpar_mbi_id_1420 format is valid. Observed result '1EG4TE5MK73' satisfied the expected condition 'Non-blank value <= 11 characters'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.direct_fields._optional_scalar_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result",
+        "source_line": 42,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:67",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[24] PASS | INT-PROVIDER-FULL-NUM | Int Provider Full Num
+    Business requirement: The Intermediate process must satisfy validation INT-PROVIDER-FULL-NUM for medpar_prvdr_full_num_1660.
+    What was checked: Execute the configured business check for medpar_prvdr_full_num_1660 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_prvdr_full_num_1660
+    Expected result:
+      "Non-blank value <= 20 characters"
+    Observed result:
+      "PRV201"
+    Final explanation: PASS — medpar_prvdr_full_num_1660 format is valid. Observed result 'PRV201' satisfied the expected condition 'Non-blank value <= 20 characters'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.direct_fields._optional_scalar_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result",
+        "source_line": 42,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:68",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[25] PASS | INT-PRIMARY-PAYER | Int Primary Payer
+    Business requirement: The Intermediate process must satisfy validation INT-PRIMARY-PAYER for medpar_primry_pyr_0540.
+    What was checked: Execute the configured business check for medpar_primry_pyr_0540 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_primry_pyr_0540
+    Expected result:
+      "Non-blank value <= 10 characters"
+    Observed result:
+      "A"
+    Final explanation: PASS — medpar_primry_pyr_0540 format is valid. Observed result 'A' satisfied the expected condition 'Non-blank value <= 10 characters'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.direct_fields._optional_scalar_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result",
+        "source_line": 42,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.direct_fields._optional_scalar_result:42",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:69",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[26] PASS | INT-SNF-QUAL-THRU-DATE | Int Snf Qual Thru Date
+    Business requirement: The Intermediate process must satisfy validation INT-SNF-QUAL-THRU-DATE for medpar_snf_qual_thru_date_0190.
+    What was checked: Execute the configured business check for medpar_snf_qual_thru_date_0190 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_snf_qual_thru_date_0190
+    Expected result:
+      "2022-01-01 through 2026-07-19"
+    Observed result:
+      "2026-03-10"
+    Final explanation: PASS — Date medpar_snf_qual_thru_date_0190 is valid. Observed result '2026-03-10' satisfied the expected condition '2022-01-01 through 2026-07-19'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 84,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:84",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:73",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[27] PASS | INT-CALENDAR-ALIGNED-DATE-WINDOW | Int Calendar Aligned Date Window
+    Business requirement: The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for admission_date.
+    What was checked: Execute the configured business check for admission_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: admission_date
+    Expected result:
+      "2022-01-01 through 2026-07-19"
+    Observed result:
+      "2026-03-01"
+    Final explanation: PASS — Date admission_date is valid. Observed result '2026-03-01' satisfied the expected condition '2022-01-01 through 2026-07-19'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 84,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:84",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[28] NOT_APPLICABLE | INT-CALENDAR-ALIGNED-DATE-WINDOW | Int Calendar Aligned Date Window
+    Business requirement: The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for discharge_date.
+    What was checked: Execute the configured business check for discharge_date and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: discharge_date
+    Expected result:
+      Not supplied / not applicable
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional date discharge_date is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 61,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:61",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[29] PASS | INT-CALENDAR-ALIGNED-DATE-WINDOW | Int Calendar Aligned Date Window
+    Business requirement: The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for date_of_death.
+    What was checked: Execute the configured business check for date_of_death and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: date_of_death
+    Expected result:
+      "2022-01-01 through 2026-07-19"
+    Observed result:
+      "2026-03-05"
+    Final explanation: PASS — Date date_of_death is valid. Observed result '2026-03-05' satisfied the expected condition '2022-01-01 through 2026-07-19'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 84,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:84",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[30] NOT_APPLICABLE | INT-CALENDAR-ALIGNED-DATE-WINDOW | Int Calendar Aligned Date Window
+    Business requirement: The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for medpar_snf_qual_from_date_0180.
+    What was checked: Execute the configured business check for medpar_snf_qual_from_date_0180 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_snf_qual_from_date_0180
+    Expected result:
+      Not supplied / not applicable
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Optional date medpar_snf_qual_from_date_0180 is not populated. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 61,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:61",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[31] PASS | INT-CALENDAR-ALIGNED-DATE-WINDOW | Int Calendar Aligned Date Window
+    Business requirement: The Intermediate process must satisfy validation INT-CALENDAR-ALIGNED-DATE-WINDOW for medpar_snf_qual_thru_date_0190.
+    What was checked: Execute the configured business check for medpar_snf_qual_thru_date_0190 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_snf_qual_thru_date_0190
+    Expected result:
+      "2022-01-01 through 2026-07-19"
+    Observed result:
+      "2026-03-10"
+    Final explanation: PASS — Date medpar_snf_qual_thru_date_0190 is valid. Observed result '2026-03-10' satisfied the expected condition '2022-01-01 through 2026-07-19'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.field_checks.optional_date_result
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.field_checks.optional_date_result",
+        "source_line": 84,
+        "validator_call_chain": [
+          "medpar_qa.stages.field_checks.optional_date_result:84",
+          "medpar_qa.stages.intermediate.direct_fields.validate_intermediate_direct_fields:92",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:60",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[32] PASS | INT-ACCOMMODATION-ARRAY-ALIGNMENT | Intermediate accommodation array alignment
+    Business requirement: Accommodation charge and day arrays must preserve corresponding positions.
+    What was checked: Compare array lengths and positional relationships.
+    Evaluation logic: PASS when arrays align exactly.
+    Field: medpar_accommodation_days_0450
+    Expected result:
+      2
+    Observed result:
+      2
+    Final explanation: PASS — Accommodation charges and days align. Observed result 2 satisfied the expected condition 2. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment",
+        "source_line": 135,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment:135",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:64",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[33] PASS | INT-ACCOMMODATION-DAYS | Int Accommodation Days
+    Business requirement: The Intermediate process must satisfy validation INT-ACCOMMODATION-DAYS for medpar_accommodation_days_0450.
+    What was checked: Execute the configured business check for medpar_accommodation_days_0450 and record expected versus observed evidence.
+    Evaluation logic: PASS when the observed condition satisfies the configured expectation; FAIL otherwise.
+    Field: medpar_accommodation_days_0450
+    Expected result:
+      "Non-negative integers"
+    Observed result:
+      []
+    Final explanation: PASS — Accommodation days are valid. Observed result [] satisfied the expected condition 'Non-negative integers'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment",
+        "source_line": 146,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.direct_fields.validate_repeated_alignment:146",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:64",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[34] PASS | INT-DEATH-AFTER-ADMISSION | Intermediate death-after-admission indicator
+    Business requirement: medparDeathAfterAdm0611 must be derived from admission date and date of death.
+    What was checked: Compare date of death with admission date and expected indicator.
+    Evaluation logic: PASS when the populated indicator matches the date relationship.
+    Field: medpar_death_after_adm_0611
+    Expected result:
+      "Y"
+    Observed result:
+      "Y"
+    Final explanation: PASS — Death-after-admission indicator matches. Observed result 'Y' satisfied the expected condition 'Y'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_death_after_admission
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_death_after_admission",
+        "source_line": 253,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_death_after_admission:253",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:65",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[35] PASS | INT-AGE | Intermediate age
+    Business requirement: MEDPAR-AGE-0030 must be a valid integer in the approved range.
+    What was checked: Parse age and validate configured range, currently 0 through 120.
+    Evaluation logic: PASS when age is a valid in-range integer.
+    Field: medpar_age_0030
+    Expected result:
+      "0..120"
+    Observed result:
+      70
+    Final explanation: PASS — Age is valid. Observed result 70 satisfied the expected condition '0..120'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_age_and_ndc
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_age_and_ndc",
+        "source_line": 280,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_age_and_ndc:280",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:67",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[36] PASS | INT-NDC | Intermediate NDC number
+    Business requirement: MEDPAR-REV-CNTR-NDC-NUM-1550 must follow configured normalization and length.
+    What was checked: Normalize characters/leading zeros and validate the configured length.
+    Evaluation logic: PASS when normalized NDC equals the expected format.
+    Field: medpar_rev_cntr_ndc_num_1550
+    Expected result:
+      "10 numeric characters"
+    Observed result:
+      "0012345678"
+    Final explanation: PASS — NDC format is valid. Observed result '0012345678' satisfied the expected condition '10 numeric characters'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_age_and_ndc
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_age_and_ndc",
+        "source_line": 302,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_age_and_ndc:302",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:67",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[37] PASS | INT-ACCOMMODATION-TOTAL | Intermediate total accommodation charge
+    Business requirement: MEDPAR-TOT-ACC-CHRG-0430 must equal the Decimal sum of repeated accommodation charges.
+    What was checked: Sum eligible repeated charges and compare with total.
+    Evaluation logic: PASS when exact quantized totals match.
+    Field: medpar_tot_acc_chrg_0430
+    Expected result:
+      "30.375"
+    Observed result:
+      "30.375"
+    Final explanation: PASS — Total accommodation charge matches repeated charges. Observed result '30.375' satisfied the expected condition '30.375'. The observed data satisfies the stated business requirement.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Relative source files:
+      - sample_data/actual/intermediate/actual.json
+    Validator function: medpar_qa.stages.intermediate.structural.validate_accommodation_totals
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.structural.validate_accommodation_totals",
+        "source_line": 338,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.structural.validate_accommodation_totals:338",
+          "medpar_qa.stages.intermediate.processor._validate_actual_structure:70",
+          "medpar_qa.stages.intermediate.processor.validate:161",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[38] NOT_APPLICABLE | INT-GOLDEN-COMPARISON | Intermediate golden regression availability
+    Business requirement: Golden field comparison requires both actual and approved expected Intermediate output.
+    What was checked: Confirm actual and expected roles are supplied.
+    Evaluation logic: NOT_APPLICABLE without both; detailed field results are emitted when supplied.
+    Expected result:
+      Not supplied / not applicable
+    Observed result:
+      Not supplied / not applicable
+    Final explanation: NOT APPLICABLE — Expected and actual Intermediate outputs were not both supplied; structural checks only. This validation was evaluated but its prerequisite did not apply to the current record or execution mode.
+    Record IDs (1): f4553cccdf12a37c16d7
+    Validator function: medpar_qa.stages.intermediate.processor.validate
+    Technical evidence:
+      {
+        "validator_function": "medpar_qa.stages.intermediate.processor.validate",
+        "source_line": 178,
+        "validator_call_chain": [
+          "medpar_qa.stages.intermediate.processor.validate:178",
+          "medpar_qa.orchestration.pipeline.run:211"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+[39] PASS | STAGE-FINAL-SUMMARY | Stage completion summary
+    Business requirement: A stage passes only when it has no FAIL or BLOCKED validation results.
+    What was checked: Count PASS, FAIL, BLOCKED, and NOT_APPLICABLE results emitted by the stage.
+    Evaluation logic: PASS when FAIL=0 and BLOCKED=0; otherwise FAIL.
+    Expected result:
+      {
+        "FAIL": 0,
+        "BLOCKED": 0
+      }
+    Observed result:
+      {
+        "PASS": 35,
+        "FAIL": 0,
+        "NOT_APPLICABLE": 3,
+        "BLOCKED": 0
+      }
+    Final explanation: PASS — Stage completed with no failed or blocked validations. Observed result {'PASS': 35, 'FAIL': 0, 'NOT_APPLICABLE': 3, 'BLOCKED': 0} satisfied the expected condition {'FAIL': 0, 'BLOCKED': 0}. The observed data satisfies the stated business requirement.
+    Validator function: medpar_qa.orchestration.pipeline.run
+    Technical evidence:
+      {
+        "source_record_count": 1,
+        "decision_count": 0,
+        "validator_function": "medpar_qa.orchestration.pipeline.run",
+        "source_line": 233,
+        "validator_call_chain": [
+          "medpar_qa.orchestration.pipeline.run:233"
+        ]
+      }
+----------------------------------------------------------------------------------------------------------------------
+
+RULE COVERAGE SUMMARY
+    Configured/catalogued rules: 28
+    Rules that emitted results: 31
+    Rules not triggered by this input: INGEST-NO-RECORDS, INT-ACTUAL-DUPLICATE-IDENTITY, INT-EXPECTED-DUPLICATE-IDENTITY, INT-MISSING-ACTUAL-OUTPUT, INT-MISSING-EXPECTED-OUTPUT, INT-OUTPUT-RECONCILIATION, INT-SELECTED-DECIMAL
+    Note: 'not triggered' is not a PASS; its business prerequisites were absent in this data.
+======================================================================================================================
+OVERALL RESULT: PASS

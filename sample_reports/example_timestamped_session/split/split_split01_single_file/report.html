@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEDPAR Split Detailed Validation Report — split_split01_single_file</title>
+<style>
+:root{--navy:#102a43;--navy2:#243b53;--ink:#172033;--muted:#667085;--line:#d0d5dd;--bg:#f4f6f9;--green:#087f5b;--red:#c92a2a;--amber:#b05a00;--blue:#1864ab;--purple:#5f3dc4}
+*{box-sizing:border-box} body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.48}
+header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:30px 34px} header h1{margin:8px 0;font-size:30px} header p{margin:4px 0} .back-link{color:#fff;text-decoration:none;font-weight:700}
+.container{max-width:1600px;margin:auto;padding:24px} .overall-badge{display:inline-block;margin-top:14px;padding:10px 18px;border-radius:999px;font-size:19px;font-weight:900;background:#d3f9d8;color:#087f5b}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0} .summary-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px;box-shadow:0 2px 9px rgba(16,42,67,.06)} .summary-card strong{display:block;font-size:27px;margin-top:5px}
+.guide,.failure-overview,.run-inputs{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0} .guide h2,.failure-overview h2{margin-top:0} .guide ol{columns:2;column-gap:36px}
+.toolbar{position:sticky;top:0;z-index:20;display:flex;gap:9px;flex-wrap:wrap;padding:11px;background:#e9eef5;border:1px solid var(--line);border-radius:10px;margin:18px 0} .toolbar input,.toolbar select,.toolbar button{padding:9px 11px;border:1px solid #98a2b3;border-radius:7px;background:#fff} .toolbar input{flex:1;min-width:300px}
+.stage-section{background:#fff;border:1px solid var(--line);border-radius:13px;margin:16px 0;overflow:hidden} .stage-section>summary{cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:17px;background:#edf2f7;font-weight:800} .stage-number{color:var(--muted)} .stage-name{font-size:19px} .stage-status{margin-left:auto;padding:5px 10px;border-radius:999px} .stage-status.pass{background:#d3f9d8;color:var(--green)} .stage-status.fail{background:#ffe3e3;color:var(--red)} .stage-counts{color:var(--muted);font-weight:600} .stage-content{padding:2px 12px 18px} .stage-intro{margin:14px 2px;padding:12px;background:#eef6ff;border-left:5px solid var(--blue);border-radius:8px}
+.validation-card{background:#fff;border:1px solid var(--line);border-left:7px solid #98a2b3;border-radius:11px;margin:14px 2px;padding:17px;box-shadow:0 2px 7px rgba(16,42,67,.04)} .validation-card.status-pass{border-left-color:var(--green)} .validation-card.status-fail{border-left-color:var(--red)} .validation-card.status-blocked{border-left-color:var(--amber)} .validation-card.status-not_applicable{border-left-color:var(--blue)}
+.validation-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap} .identity-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .sequence{color:var(--muted)} .badge,.field-chip,.decision{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:900} .badge.pass,.decision.keep{background:#d3f9d8;color:var(--green)} .badge.fail,.decision.drop{background:#ffe3e3;color:var(--red)} .badge.blocked{background:#fff3bf;color:#8d5500} .badge.not_applicable{background:#dbeafe;color:var(--blue)} .field-chip{background:#ede9fe;color:var(--purple)} .rule-id{font-weight:800}
+.copy-button{border:1px solid #98a2b3;background:#fff;border-radius:7px;padding:7px 10px;cursor:pointer} .validation-card h3{margin:14px 0 10px;font-size:21px}
+.explanation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px} .explanation-block{border:1px solid var(--line);border-radius:9px;padding:12px;background:#fafbfc} .explanation-block h4{margin:0 0 7px} .runtime-message{padding-top:7px;border-top:1px dashed var(--line)}
+.expected-actual-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;margin:12px 0} .value-panel{border:1px solid var(--line);border-radius:9px;overflow:hidden} .value-panel h5{margin:0;padding:10px 12px;background:#eef2f7;font-size:15px} .value-panel.expected{border-left:5px solid var(--blue)} .value-panel.actual{border-left:5px solid var(--amber)} pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;background:#172033;color:#f8fafc;padding:12px;max-height:420px;overflow:auto}
+.conclusion{border-radius:9px;padding:13px;margin:12px 0} .conclusion h4{margin:0 0 6px} .conclusion.pass{background:#e6fcf5;border:1px solid #96f2d7} .conclusion.fail{background:#fff0f0;border:1px solid #ffc9c9} .conclusion.blocked{background:#fff9db;border:1px solid #ffec99} .conclusion.not_applicable{background:#e7f5ff;border:1px solid #a5d8ff} .recommended{padding:12px;background:#fff4e6;border-left:5px solid var(--amber);border-radius:8px}
+.traceability{margin-top:12px;border-top:1px solid var(--line);padding-top:10px} .traceability>summary{cursor:pointer;font-weight:800} .trace-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:10px} .trace-grid section{min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px} .trace-grid h5{margin:0 0 7px} ul{margin:4px 0;padding-left:20px} .muted{color:var(--muted)}
+.table-wrap{overflow:auto} table{width:100%;border-collapse:collapse} th,td{border:1px solid var(--line);padding:9px;text-align:left;vertical-align:top} th{background:#edf2f7} .rule-catalogue{margin:14px 2px;padding:0 12px 12px;border:1px solid var(--line);border-radius:9px;background:#fafbfc} .rule-catalogue>summary{cursor:pointer;font-weight:800;padding:12px 0} .catalogue-status{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800} .catalogue-status.executed{background:#d3f9d8;color:var(--green)} .catalogue-status.not-triggered{background:#f1f3f5;color:var(--muted)} .decision-section{margin:18px 2px} .hidden{display:none!important} footer{text-align:center;color:var(--muted);padding:30px}
+@media(max-width:800px){.guide ol{columns:1}.stage-status{margin-left:0}} @media print{.toolbar,.copy-button{display:none}details{display:block}details>summary{list-style:none}.validation-card,.stage-section{break-inside:avoid}body{background:#fff}}
+</style></head>
+<body><header><a class="back-link" href="../../master/index.html">← Back to master report</a><h1>MEDPAR Split Detailed Validation Report</h1><p><strong>Run ID:</strong> split_split01_single_file</p><p><strong>Business run date:</strong> 2024-04-04</p><p><strong>Generated:</strong> 2026-07-19T09:58:22+00:00</p><span class="overall-badge">OVERALL PASS</span></header>
+<main class="container">
+<section class="summary-grid"><div class="summary-card">Stages<strong>1</strong></div><div class="summary-card">Validations<strong>12</strong></div><div class="summary-card">Passed<strong>12</strong></div><div class="summary-card">Failed<strong>0</strong></div><div class="summary-card">Blocked<strong>0</strong></div><div class="summary-card">Not applicable<strong>0</strong></div><div class="summary-card">Record decisions<strong>0</strong></div></section>
+<section class="guide"><h2>How to read this report</h2><ol><li>Open the required stage.</li><li>Use status filters to focus on failures.</li><li>Read the business requirement and exact validation performed.</li><li>Compare Expected result with Observed result.</li><li>Read the conclusion explaining why it passed, failed, or was blocked.</li><li>Open source evidence for relative file paths, record IDs, group keys, and validator function.</li></ol></section>
+<section class="failure-overview"><h2>Failure / blocked overview</h2><p>No failed or blocked validations were recorded.</p></section>
+<section class="toolbar"><input id="search" type="search" placeholder="Search stage, rule, field, requirement, source file..." oninput="applyFilters()"><select id="statusFilter" onchange="applyFilters()"><option value="ALL">All statuses</option><option>PASS</option><option>FAIL</option><option>BLOCKED</option><option>NOT_APPLICABLE</option></select><select id="stageFilter" onchange="applyFilters()"><option value="ALL">All stages</option><option value="split">Split</option></select><button onclick="expandAll(true)">Expand all</button><button onclick="expandAll(false)">Collapse all</button><button onclick="window.print()">Print / Save PDF</button></section>
+
+        <details class="run-inputs">
+          <summary>Run inputs and configuration</summary>
+          <p>All paths below are project-relative paths.</p>
+          <div class="table-wrap"><table><thead><tr><th>Stage</th><th>Role</th><th>Format</th><th>Relative path / wildcard</th></tr></thead><tbody><tr><td>split</td><td>source</td><td>auto</td><td><code>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</code></td></tr></tbody></table></div>
+          <h3>Configured settings</h3><pre>{
+  &quot;split&quot;: {
+    &quot;window_years&quot;: 4,
+    &quot;skip_transaction_codes&quot;: [
+      0,
+      4
+    ],
+    &quot;require_actual_output&quot;: false
+  }
+}</pre>
+        </details>
+        
+    <details class="stage-section" open data-stage-container="split">
+      <summary>
+        <span class="stage-number">Stage 1</span>
+        <span class="stage-name">Split</span>
+        <span class="stage-status pass">PASS</span>
+        <span class="stage-counts">12 pass · 0 fail · 0 blocked · 0 N/A</span>
+      </summary>
+      <div class="stage-content">
+        <div class="stage-intro">
+          <strong>How to review this stage:</strong> Read validations in order. Each card states the business requirement, exact check, expected result, observed result, conclusion, and source evidence.
+        </div>
+        <details class='rule-catalogue'><summary>Complete stage rule catalogue and coverage</summary><p><strong>Executed</strong> means the rule/function emitted a result for this run. <strong>Not triggered</strong> means its prerequisites did not occur in this input; it is not a hidden pass.</p><div class='table-wrap'><table><thead><tr><th>Rule ID</th><th>Rule / validation</th><th>Run state</th><th>Business requirement</th></tr></thead><tbody><tr><td><code>INGEST-DISCOVERY</code></td><td>Input file discovery</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every configured relative file path or wildcard must resolve to at least one input file.</td></tr><tr><td><code>INGEST-NO-RECORDS</code></td><td>Input record availability</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>A requested stage cannot run without at least one valid input record.</td></tr><tr><td><code>INGEST-READ-FILE</code></td><td>Input file readability</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Every discovered JSON or Parquet file must be readable and parse into records.</td></tr><tr><td><code>SP-ACTUAL-DUPLICATE-IDENTITY</code></td><td>Split duplicate output identity</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Each Split output identity must be unique.</td></tr><tr><td><code>SP-OUTPUT-RECONCILIATION</code></td><td>Split output reconciliation</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Actual Split output cannot contain missing, unexpected, or duplicate claim identities.</td></tr><tr><td><code>SP-PRE-DATE-ORDER</code></td><td>Split stay date order</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Stay-from date must not be later than stay-thru date.</td></tr><tr><td><code>SP-PRE-DATES</code></td><td>Split date validation</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Admission, stay-from, and stay-thru dates must use supported valid formats.</td></tr><tr><td><code>SP-PRE-SOURCE</code></td><td>Split source availability</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Split validation requires source claim records.</td></tr><tr><td><code>SP-REC-TYPE-BYPASS</code></td><td>Split transaction-code bypass</td><td><span class='catalogue-status not-triggered'>NOT TRIGGERED BY THIS DATA</span></td><td>Configured transaction codes, normally 0 and 4, bypass slicing.</td></tr><tr><td><code>SP-RULE-INDICATOR</code></td><td>Split-year indicator derivation</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>Eligible claims must derive Y#0109, Y#1012, or Y99999 according to date window and reference month.</td></tr><tr><td><code>STAGE-FINAL-SUMMARY</code></td><td>Stage completion summary</td><td><span class='catalogue-status executed'>EXECUTED</span></td><td>A stage passes only when it has no FAIL or BLOCKED validation results.</td></tr></tbody></table></div></details>
+        
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass ingest-discovery input file discovery every configured relative file path or wildcard must resolve to at least one input file. resolve the configured source, actual, or expected path and count matching files.  discovered 1 file(s) for source data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#1</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-DISCOVERY</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file discovery</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every configured relative file path or wildcard must resolve to at least one input file.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Resolve the configured source, actual, or expected path and count matching files.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Discovered 1 file(s) for source</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when one or more files are found; FAIL when no file matches or discovery raises an error.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;One or more matching files&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>[
+  &quot;data/user_inputs/split/source/Split01_claim.r1.a_20210103.json&quot;
+]</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Discovered 1 file(s) for source. Observed result [&#x27;data/user_inputs/split/source/Split01_claim.r1.a_20210103.json&#x27;] satisfied the expected condition &#x27;One or more matching files&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;configured_path&quot;: &quot;data/user_inputs/split/source/Split01_claim.r1.a_20210103.json&quot;,
+  &quot;role&quot;: &quot;source&quot;,
+  &quot;format&quot;: &quot;auto&quot;,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 75,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:75&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass ingest-read-file input file readability every discovered json or parquet file must be readable and parse into records. open the file, parse its content, normalize the root structure, and count records.  file was read successfully and produced 1 record(s) data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#2</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">INGEST-READ-FILE</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Input file readability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Every discovered JSON or Parquet file must be readable and parse into records.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Open the file, parse its content, normalize the root structure, and count records.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> File was read successfully and produced 1 record(s)</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when parsing succeeds; FAIL for malformed JSON, unreadable Parquet, unsupported format, or read errors.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Readable file containing at least one record&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;file&quot;: &quot;data/user_inputs/split/source/Split01_claim.r1.a_20210103.json&quot;,
+  &quot;record_count&quot;: 1,
+  &quot;role&quot;: &quot;source&quot;
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — File was read successfully and produced 1 record(s). Observed result {&#x27;file&#x27;: &#x27;data/user_inputs/split/source/Split01_claim.r1.a_20210103.json&#x27;, &#x27;record_count&#x27;: 1, &#x27;role&#x27;: &#x27;source&#x27;} satisfied the expected condition &#x27;Readable file containing at least one record&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.load_with_diagnostics</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;file_size_bytes&quot;: 1913501,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics&quot;,
+  &quot;source_line&quot;: 121,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.load_with_diagnostics:121&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:199&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-source split source availability split validation requires source claim records. confirm source-role records are present.  split source records were supplied ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#3</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-SOURCE</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Split source availability</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Split validation requires source claim records.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Confirm source-role records are present.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Split source records were supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when source count is greater than zero.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>Not supplied / not applicable</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>Not supplied / not applicable</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Split source records were supplied. Observed result None satisfied the expected condition None. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.common.presence_result</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.common.presence_result&quot;,
+  &quot;source_line&quot;: 94,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.common.presence_result:94&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:79&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-required-field sp pre required field the split process must satisfy validation sp-pre-required-field for claim_can. execute the configured business check for claim_can and record expected versus observed evidence. claim_can required field claim_can is supplied data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#4</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-REQUIRED-FIELD</code>
+          <span class="field-chip">claim_can</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Sp Pre Required Field</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for claim_can.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for claim_can and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Required field claim_can is supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;900500013&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Required field claim_can is supplied. Observed result &#x27;900500013&#x27; satisfied the expected condition &#x27;Non-blank value&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.required_fields_results</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.required_fields_results&quot;,
+  &quot;source_line&quot;: 29,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.required_fields_results:29&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:92&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-required-field sp pre required field the split process must satisfy validation sp-pre-required-field for hicn. execute the configured business check for hicn and record expected versus observed evidence. hicn required field hicn is supplied data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#5</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-REQUIRED-FIELD</code>
+          <span class="field-chip">hicn</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Sp Pre Required Field</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for hicn.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for hicn and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Required field hicn is supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;BC&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Required field hicn is supplied. Observed result &#x27;BC&#x27; satisfied the expected condition &#x27;Non-blank value&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.required_fields_results</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.required_fields_results&quot;,
+  &quot;source_line&quot;: 29,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.required_fields_results:29&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:92&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-required-field sp pre required field the split process must satisfy validation sp-pre-required-field for provider_id. execute the configured business check for provider_id and record expected versus observed evidence. provider_id required field provider_id is supplied data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#6</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-REQUIRED-FIELD</code>
+          <span class="field-chip">provider_id</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Sp Pre Required Field</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for provider_id.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for provider_id and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Required field provider_id is supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;334455&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Required field provider_id is supplied. Observed result &#x27;334455&#x27; satisfied the expected condition &#x27;Non-blank value&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.required_fields_results</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.required_fields_results&quot;,
+  &quot;source_line&quot;: 29,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.required_fields_results:29&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:92&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-required-field sp pre required field the split process must satisfy validation sp-pre-required-field for stay_from_date. execute the configured business check for stay_from_date and record expected versus observed evidence. stay_from_date required field stay_from_date is supplied data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#7</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-REQUIRED-FIELD</code>
+          <span class="field-chip">stay_from_date</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Sp Pre Required Field</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for stay_from_date.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for stay_from_date and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Required field stay_from_date is supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;20200111&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Required field stay_from_date is supplied. Observed result &#x27;20200111&#x27; satisfied the expected condition &#x27;Non-blank value&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.required_fields_results</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.required_fields_results&quot;,
+  &quot;source_line&quot;: 29,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.required_fields_results:29&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:92&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-required-field sp pre required field the split process must satisfy validation sp-pre-required-field for stay_thru_date. execute the configured business check for stay_thru_date and record expected versus observed evidence. stay_thru_date required field stay_thru_date is supplied data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#8</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-REQUIRED-FIELD</code>
+          <span class="field-chip">stay_thru_date</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Sp Pre Required Field</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for stay_thru_date.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for stay_thru_date and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Required field stay_thru_date is supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;20200121&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Required field stay_thru_date is supplied. Observed result &#x27;20200121&#x27; satisfied the expected condition &#x27;Non-blank value&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.required_fields_results</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.required_fields_results&quot;,
+  &quot;source_line&quot;: 29,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.required_fields_results:29&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:92&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-required-field sp pre required field the split process must satisfy validation sp-pre-required-field for transaction_code. execute the configured business check for transaction_code and record expected versus observed evidence. transaction_code required field transaction_code is supplied data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#9</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-REQUIRED-FIELD</code>
+          <span class="field-chip">transaction_code</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Sp Pre Required Field</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>The Split process must satisfy validation SP-PRE-REQUIRED-FIELD for transaction_code.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Execute the configured business check for transaction_code and record expected versus observed evidence.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Required field transaction_code is supplied</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when the observed condition satisfies the configured expectation; FAIL otherwise.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Non-blank value&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;3&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Required field transaction_code is supplied. Observed result &#x27;3&#x27; satisfied the expected condition &#x27;Non-blank value&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.required_fields_results</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.required_fields_results&quot;,
+  &quot;source_line&quot;: 29,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.required_fields_results:29&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:92&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-pre-date-order split stay date order stay-from date must not be later than stay-thru date. compare parsed stay-from and stay-thru dates.  date order is valid data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#10</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-PRE-DATE-ORDER</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Split stay date order</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Stay-from date must not be later than stay-thru date.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Compare parsed stay-from and stay-thru dates.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Date order is valid</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when from &lt;= thru.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;stay_from_date &lt;= stay_thru_date&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;stay_from_date&quot;: &quot;2020-01-11&quot;,
+  &quot;stay_thru_date&quot;: &quot;2020-01-21&quot;
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Date order is valid. Observed result {&#x27;stay_from_date&#x27;: &#x27;2020-01-11&#x27;, &#x27;stay_thru_date&#x27;: &#x27;2020-01-21&#x27;} satisfied the expected condition &#x27;stay_from_date &lt;= stay_thru_date&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.field_checks.date_order_result</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.field_checks.date_order_result&quot;,
+  &quot;source_line&quot;: 145,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.field_checks.date_order_result:145&quot;,
+    &quot;medpar_qa.stages.split.processor.validate:104&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass sp-rule-indicator split-year indicator derivation eligible claims must derive y#0109, y#1012, or y99999 according to date window and reference month. calculate the expected indicator and compare it with the populated indicator. splityearindicator split indicator matches expected data/user_inputs/split/source/split01_claim.r1.a_20210103.json">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#11</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">SP-RULE-INDICATOR</code>
+          <span class="field-chip">splitYearIndicator</span>
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Split-year indicator derivation</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>Eligible claims must derive Y#0109, Y#1012, or Y99999 according to date window and reference month.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Calculate the expected indicator and compare it with the populated indicator.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Split indicator matches expected</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when actual indicator exactly equals the calculated value.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>&quot;Y99999&quot;</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>&quot;Y99999&quot;</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Split indicator matches expected. Observed result &#x27;Y99999&#x27; satisfied the expected condition &#x27;Y99999&#x27;. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.stages.split.processor.validate</code></section>
+          <section><h5>Relative source files</h5><ul><li>data/user_inputs/split/source/Split01_claim.r1.a_20210103.json</li></ul></section>
+          <section><h5>Record IDs</h5><ul><li>e64de48ba4c000654375</li></ul></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;window&quot;: [
+    &quot;2021-01-01&quot;,
+    &quot;2024-04-04&quot;
+  ],
+  &quot;validator_function&quot;: &quot;medpar_qa.stages.split.processor.validate&quot;,
+  &quot;source_line&quot;: 187,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.stages.split.processor.validate:187&quot;,
+    &quot;medpar_qa.orchestration.pipeline.run:211&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+    <article class="validation-card status-pass"
+             data-status="PASS" data-stage="split"
+             data-search="split pass stage-final-summary stage completion summary a stage passes only when it has no fail or blocked validation results. count pass, fail, blocked, and not_applicable results emitted by the stage.  stage completed with no failed or blocked validations ">
+      <div class="validation-topline">
+        <div class="identity-line">
+          <span class="sequence">#12</span>
+          <span class="badge pass">PASS</span>
+          <code class="rule-id">STAGE-FINAL-SUMMARY</code>
+          
+        </div>
+        <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
+      </div>
+
+      <h3>Stage completion summary</h3>
+
+      <div class="explanation-grid">
+        <section class="explanation-block requirement">
+          <h4>1. Business requirement</h4>
+          <p>A stage passes only when it has no FAIL or BLOCKED validation results.</p>
+        </section>
+        <section class="explanation-block checked">
+          <h4>2. What was validated</h4>
+          <p>Count PASS, FAIL, BLOCKED, and NOT_APPLICABLE results emitted by the stage.</p>
+          <p class="runtime-message"><strong>Execution message:</strong> Stage completed with no failed or blocked validations</p>
+        </section>
+        <section class="explanation-block logic">
+          <h4>3. How the result was evaluated</h4>
+          <p>PASS when FAIL=0 and BLOCKED=0; otherwise FAIL.</p>
+        </section>
+      </div>
+
+      <div class="expected-actual-grid">
+        <section class="value-panel expected"><h5>4. Expected result</h5><pre>{
+  &quot;FAIL&quot;: 0,
+  &quot;BLOCKED&quot;: 0
+}</pre></section>
+        <section class="value-panel actual"><h5>5. Observed result</h5><pre>{
+  &quot;PASS&quot;: 11,
+  &quot;FAIL&quot;: 0,
+  &quot;NOT_APPLICABLE&quot;: 0,
+  &quot;BLOCKED&quot;: 0
+}</pre></section>
+      </div>
+
+      <section class="conclusion pass">
+        <h4>6. Why this is correct — PASS</h4>
+        <p>PASS — Stage completed with no failed or blocked validations. Observed result {&#x27;PASS&#x27;: 11, &#x27;FAIL&#x27;: 0, &#x27;NOT_APPLICABLE&#x27;: 0, &#x27;BLOCKED&#x27;: 0} satisfied the expected condition {&#x27;FAIL&#x27;: 0, &#x27;BLOCKED&#x27;: 0}. The observed data satisfies the stated business requirement.</p>
+      </section>
+      
+
+      <details class="traceability">
+        <summary>7. Source evidence and technical traceability</summary>
+        <div class="trace-grid">
+          <section><h5>Stage</h5><code>split</code></section>
+          <section><h5>Validator function</h5><code>medpar_qa.orchestration.pipeline.run</code></section>
+          <section><h5>Relative source files</h5><span class="muted">None</span></section>
+          <section><h5>Record IDs</h5><span class="muted">None</span></section>
+          <section><h5>Claim/group key</h5><pre>{}</pre></section>
+          <section><h5>Technical evidence</h5><pre>{
+  &quot;source_record_count&quot;: 1,
+  &quot;decision_count&quot;: 0,
+  &quot;validator_function&quot;: &quot;medpar_qa.orchestration.pipeline.run&quot;,
+  &quot;source_line&quot;: 233,
+  &quot;validator_call_chain&quot;: [
+    &quot;medpar_qa.orchestration.pipeline.run:233&quot;
+  ]
+}</pre></section>
+        </div>
+      </details>
+    </article>
+    
+        
+      </div>
+    </details>
+    </main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
+<script>
+function applyFilters(){const q=document.getElementById('search').value.toLowerCase();const status=document.getElementById('statusFilter').value;const stage=document.getElementById('stageFilter').value;document.querySelectorAll('.validation-card').forEach(card=>{const okQ=!q||card.dataset.search.includes(q);const okS=status==='ALL'||card.dataset.status===status;const okStage=stage==='ALL'||card.dataset.stage===stage;card.classList.toggle('hidden',!(okQ&&okS&&okStage));});}
+function expandAll(open){document.querySelectorAll('details').forEach(item=>item.open=open);}
+function copyCard(button){const card=button.closest('.validation-card');navigator.clipboard.writeText(card.innerText).then(()=>{button.textContent='Copied';setTimeout(()=>button.textContent='Copy validation',1200);});}
+</script></body></html>

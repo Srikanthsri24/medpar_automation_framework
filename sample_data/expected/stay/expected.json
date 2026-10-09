@@ -1,0 +1,40 @@
+[
+  {
+    "claimCanNchEquatable": "HICN-101",
+    "provider": {
+      "providerId": "PRV-101"
+    },
+    "admissionDate": "20260301",
+    "conditionCodes": [
+      {
+        "code": "04",
+        "value": "NEW"
+      },
+      {
+        "code": "69",
+        "value": "TEACH"
+      }
+    ],
+    "occurrenceCodes": [
+      {
+        "code": "11",
+        "date": "20260302"
+      }
+    ],
+    "MEDPAR-DTE-CR-ENDED-0220": "20260331",
+    "MEDPAR-TOT-CHRG-0400": "150.375",
+    "MEDPAR-DRG-PRICE-0380": "900.125",
+    "MEDPAR-SQSTRTN-RDCTN-AMT-1130": "2.245",
+    "MEDPAR-INFOR-ENCTR-IND-SW-0800": "Y",
+    "MEDPAR-MA-TEACH-IND-SW-0810": "Y",
+    "MEDPAR-SNF-QUAL-FROM-DATE-0180": "20260301",
+    "occurrenceSpanLines": [],
+    "valueLines": [
+      {
+        "code": "73",
+        "amount": "-0.100"
+      }
+    ],
+    "MEDPAR-SNF-QUAL-THRU-DATE-0190": "20260310"
+  }
+]

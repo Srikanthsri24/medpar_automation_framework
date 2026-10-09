@@ -1,0 +1,58 @@
+stage: intermediate
+window_rule: January 1 of run_year minus four years through run date
+selected_fields:
+  - MEDPAR-TOT-CHRG-0400
+  - MEDPAR-DRG-PRICE-0380
+  - MEDPAR-SQSTRTN-RDCTN-AMT-1130
+  - MEDPAR-DTE-CR-ENDED-0220
+  - medparAdmDay0090
+  - MEDPAR-ORGAN-IND-0487
+  - MEDPAR-DRG-CODE
+  - MEDPAR-TOT-ACC-CHRG-0430
+  - MEDPAR-BILL-TOT-PERDIEM-0381
+  - MEDPAR-INTENSIVE-CARE-IND-0481
+  - MEDPAR-COV-CHRG-0410
+  - MEDPAR-SERVICE-CHARGES-0470
+  - MEDPAR-TOT-DPT-CHRG-0440
+  - MEDPAR-ACCOMMODATION-CHRG-0460
+  - MEDPAR-ACCOMMODATION-DAYS-0450
+  - MEDPAR-ADM-DIAG-CODE-0590
+  - MEDPAR-ADMTG-DGNS-VRSN-CD
+  - MEDPAR-MBI-ID-1420
+  - MEDPAR-PRVDR-FULL-NUM-1660
+  - MEDPAR-PRIMRY-PYR-0540
+  - medparSnfQualThruDate0190
+  - MEDPAR-SURG-IND-0500
+  - MEDPAR-NO-SURG-CODES-0511
+  - MEDPAR-NO-SURG-DATES-0512
+  - MEDPAR-SRGCL-PRCDR-VRSN-CD
+  - MEDPAR-SURG-CODE-0513
+  - MEDPAR-SURG-DATE-0514
+  - MEDPAR-AGE-0030
+  - MEDPAR-REV-CNTR-NDC-NUM-1550
+  - medparDeathAfterAdm0611
+  - MEDPAR-DGNS-VRSN-CD
+  - MEDPAR-DIAG-CODE-0492
+  - MEDPAR-NO-DIAG-CODES-0491
+  - MEDPAR-POA-DGNS-CD-CNT
+  - MEDPAR-POA-DGNS-IND-CD
+business_validations:
+  - each accommodation charge is rounded to three decimals before MEDPAR-TOT-ACC-CHRG-0430 summation
+  - passThruPerDiem is rounded before multiplication by utilizationDays for MEDPAR-BILL-TOT-PERDIEM-0381
+  - revenue codes 0200 and 0201 are included in the intensive-care indicator search family
+  - MEDPAR-ORGAN-IND-0487 is derived from the configured legacy organ-acquisition revenue-code list
+  - medparAdmDay0090 is derived from admissionDate using Sunday=1 through Saturday=7
+  - all amount fields use Decimal and explicit three-decimal precision
+  - negative amount signs are preserved and rounded using configured mode
+  - repeated accommodation arrays retain order and duplicates
+  - total accommodation charge equals the sum of individually rounded eligible charges
+  - procedure code/date/version groups align, include all claims, and do not exceed 25
+  - procedure dates are inside the January-aligned five-year window
+  - diagnosis, version and POA arrays align and counts match
+  - condition switches are derived from configured condition codes
+  - revenue-center line subfields are validated field by field
+  - direct-move fields remain unchanged from Stay to Intermediate
+  - selected Intermediate fields are verified again in Final MEDPAR golden comparison
+configuration_notes:
+  organ_revenue_codes: configurable; default 0810 through 0819 pending legacy-owner confirmation
+  emergency_use_switch: source condition-code mapping was not supplied and remains an open requirement

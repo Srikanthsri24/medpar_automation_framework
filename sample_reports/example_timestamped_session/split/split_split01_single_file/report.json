@@ -1,0 +1,346 @@
+{
+  "run_id": "split_split01_single_file",
+  "run_date": "2024-04-04",
+  "generated_at": "2026-07-19T09:58:22+00:00",
+  "passed": true,
+  "context": {
+    "command_name": "Split Split01 Single File",
+    "stage": "split",
+    "mode": "calculate",
+    "source_paths": [
+      "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+    ],
+    "actual_paths": [],
+    "expected_paths": []
+  },
+  "summary": {
+    "stage_count": 1,
+    "validation_count": 12,
+    "pass": 12,
+    "fail": 0,
+    "blocked": 0,
+    "not_applicable": 0,
+    "record_decisions": 0
+  },
+  "stages": [
+    {
+      "stage": "split",
+      "passed": true,
+      "rule_results": [
+        {
+          "stage": "split",
+          "rule_id": "INGEST-DISCOVERY",
+          "status": "PASS",
+          "message": "Discovered 1 file(s) for source",
+          "expected": "One or more matching files",
+          "actual": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "field_name": null,
+          "record_ids": [],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "configured_path": "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json",
+            "role": "source",
+            "format": "auto",
+            "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+            "source_line": 75,
+            "validator_call_chain": [
+              "medpar_qa.orchestration.pipeline.load_with_diagnostics:75",
+              "medpar_qa.orchestration.pipeline.run:199"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "INGEST-READ-FILE",
+          "status": "PASS",
+          "message": "File was read successfully and produced 1 record(s)",
+          "expected": "Readable file containing at least one record",
+          "actual": {
+            "file": "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json",
+            "record_count": 1,
+            "role": "source"
+          },
+          "field_name": null,
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "file_size_bytes": 1913501,
+            "validator_function": "medpar_qa.orchestration.pipeline.load_with_diagnostics",
+            "source_line": 121,
+            "validator_call_chain": [
+              "medpar_qa.orchestration.pipeline.load_with_diagnostics:121",
+              "medpar_qa.orchestration.pipeline.run:199"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-SOURCE",
+          "status": "PASS",
+          "message": "Split source records were supplied",
+          "expected": null,
+          "actual": null,
+          "field_name": null,
+          "record_ids": [],
+          "source_files": [],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.common.presence_result",
+            "source_line": 94,
+            "validator_call_chain": [
+              "medpar_qa.stages.common.presence_result:94",
+              "medpar_qa.stages.split.processor.validate:79",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field claim_can is supplied",
+          "expected": "Non-blank value",
+          "actual": "900500013",
+          "field_name": "claim_can",
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.split.processor.validate:92",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field hicn is supplied",
+          "expected": "Non-blank value",
+          "actual": "BC",
+          "field_name": "hicn",
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.split.processor.validate:92",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field provider_id is supplied",
+          "expected": "Non-blank value",
+          "actual": "334455",
+          "field_name": "provider_id",
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.split.processor.validate:92",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field stay_from_date is supplied",
+          "expected": "Non-blank value",
+          "actual": "20200111",
+          "field_name": "stay_from_date",
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.split.processor.validate:92",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field stay_thru_date is supplied",
+          "expected": "Non-blank value",
+          "actual": "20200121",
+          "field_name": "stay_thru_date",
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.split.processor.validate:92",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-REQUIRED-FIELD",
+          "status": "PASS",
+          "message": "Required field transaction_code is supplied",
+          "expected": "Non-blank value",
+          "actual": "3",
+          "field_name": "transaction_code",
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.required_fields_results",
+            "source_line": 29,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.required_fields_results:29",
+              "medpar_qa.stages.split.processor.validate:92",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-PRE-DATE-ORDER",
+          "status": "PASS",
+          "message": "Date order is valid",
+          "expected": "stay_from_date <= stay_thru_date",
+          "actual": {
+            "stay_from_date": "2020-01-11",
+            "stay_thru_date": "2020-01-21"
+          },
+          "field_name": null,
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "validator_function": "medpar_qa.stages.field_checks.date_order_result",
+            "source_line": 145,
+            "validator_call_chain": [
+              "medpar_qa.stages.field_checks.date_order_result:145",
+              "medpar_qa.stages.split.processor.validate:104",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "SP-RULE-INDICATOR",
+          "status": "PASS",
+          "message": "Split indicator matches expected",
+          "expected": "Y99999",
+          "actual": "Y99999",
+          "field_name": "splitYearIndicator",
+          "record_ids": [
+            "e64de48ba4c000654375"
+          ],
+          "source_files": [
+            "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+          ],
+          "group_key": {},
+          "evidence": {
+            "window": [
+              "2021-01-01",
+              "2024-04-04"
+            ],
+            "validator_function": "medpar_qa.stages.split.processor.validate",
+            "source_line": 187,
+            "validator_call_chain": [
+              "medpar_qa.stages.split.processor.validate:187",
+              "medpar_qa.orchestration.pipeline.run:211"
+            ]
+          }
+        },
+        {
+          "stage": "split",
+          "rule_id": "STAGE-FINAL-SUMMARY",
+          "status": "PASS",
+          "message": "Stage completed with no failed or blocked validations",
+          "expected": {
+            "FAIL": 0,
+            "BLOCKED": 0
+          },
+          "actual": {
+            "PASS": 11,
+            "FAIL": 0,
+            "NOT_APPLICABLE": 0,
+            "BLOCKED": 0
+          },
+          "field_name": null,
+          "record_ids": [],
+          "source_files": [],
+          "group_key": {},
+          "evidence": {
+            "source_record_count": 1,
+            "decision_count": 0,
+            "validator_function": "medpar_qa.orchestration.pipeline.run",
+            "source_line": 233,
+            "validator_call_chain": [
+              "medpar_qa.orchestration.pipeline.run:233"
+            ]
+          }
+        }
+      ],
+      "decisions": []
+    }
+  ]
+}

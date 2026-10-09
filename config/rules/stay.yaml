@@ -1,0 +1,28 @@
+stage: stay
+change_request: LD-3137
+group_key: [hicn, provider_id, split_year_indicator]
+sort_order: [hicn, provider_id, split_year_indicator, stay_from_date, stay_thru_date, processing_date, accrete_date, source_sequence]
+excluded_sort_fields: [admission_date]
+selected_fields:
+  - MEDPAR-DTE-CR-ENDED-0220
+  - MEDPAR-TOT-CHRG-0400
+  - MEDPAR-DRG-PRICE-0380
+  - MEDPAR-SQSTRTN-RDCTN-AMT-1130
+  - MEDPAR-INFOR-ENCTR-IND-SW-0800
+  - MEDPAR-MA-TEACH-IND-SW-0810
+  - MEDPAR-SNF-QUAL-FROM-DATE-0180
+  - MEDPAR-SNF-QUAL-THRU-DATE-0190
+known_derivations:
+  condition_code_04: MEDPAR-INFOR-ENCTR-IND-SW-0800
+  condition_code_69: MEDPAR-MA-TEACH-IND-SW-0810
+  value_code_73: MEDPAR-SQSTRTN-RDCTN-AMT-1130
+business_validations:
+  - latest record wins when duplicate Condition Codes occur
+  - latest record wins when duplicate Occurrence Codes occur
+  - unique Span Code/date groups from all claims are retained up to 10
+  - unique older codes are retained
+  - Decimal calculations use explicit three-decimal precision
+  - total charge reconciles to eligible source claim charges when supplied
+  - approved expected output is compared field by field when supplied
+  - actual output contains no duplicate or unexpected Stay identities
+  - admissionDate is excluded from the Stay input sort/group configuration

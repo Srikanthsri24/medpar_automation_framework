@@ -1,0 +1,1 @@
+required: [hicn, provider_id, stay_from_date, stay_thru_date, transaction_code, query_code, icn, processing_date]

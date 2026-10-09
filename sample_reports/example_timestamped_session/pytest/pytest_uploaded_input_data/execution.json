@@ -1,0 +1,17 @@
+{
+  "name": "Pytest - Uploaded input data",
+  "stage": "input_data",
+  "command": "python -m pytest -v -m input_data --medpar-report-session reports/20260719_095819 --medpar-report-name pytest_uploaded_input_data",
+  "returncode": 0,
+  "expected_exit_codes": [
+    0
+  ],
+  "completed_as_expected": true,
+  "outcome": "COMPLETED AS EXPECTED",
+  "report_files": [
+    "reports/20260719_095819/pytest/index.html",
+    "reports/20260719_095819/pytest/pytest_uploaded_input_data/report.html",
+    "reports/20260719_095819/pytest/pytest_uploaded_input_data/report.json",
+    "reports/20260719_095819/pytest/pytest_uploaded_input_data/report.txt"
+  ]
+}
