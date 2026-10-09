@@ -1,0 +1,58 @@
+version: "2026-08"
+status_values: [IMPLEMENTED, REGISTERED_GOLDEN_COMPARISON, CONFIGURABLE_CONFIRMATION_REQUIRED, OPEN_BLOCKED]
+requirements:
+  - id: INT-ACC-0430
+    stage: intermediate
+    fields: [MEDPAR-TOT-ACC-CHRG-0430, MEDPAR-ACCOMMODATION-CHRG-0460]
+    status: IMPLEMENTED
+    rule_id: INT-ACCOMMODATION-TOTAL
+    logic: Round each accommodation charge to 0.001 before summation.
+  - id: INT-PERDIEM-0381
+    stage: intermediate
+    fields: [MEDPAR-BILL-TOT-PERDIEM-0381, passThruPerDiem, utilizationDays]
+    status: IMPLEMENTED
+    rule_id: INT-BILL-TOT-PERDIEM-ROUNDING
+    logic: Round passThruPerDiem before multiplying by utilizationDays.
+  - id: INT-INTENSIVE-0481
+    stage: intermediate
+    fields: [MEDPAR-INTENSIVE-CARE-IND-0481, REV-CNTR-CD]
+    status: IMPLEMENTED
+    rule_id: INT-INTENSIVE-CARE-IND-0481
+    logic: Search the configured 0200-0209 family, including 0200 and 0201.
+  - id: INT-ADM-DAY-0090
+    stage: intermediate
+    fields: [medparAdmDay0090, admissionDate]
+    status: IMPLEMENTED
+    rule_id: INT-ADMISSION-DAY-0090
+    logic: Sunday=1 through Saturday=7.
+  - id: INT-ORGAN-0487
+    stage: intermediate
+    fields: [MEDPAR-ORGAN-IND-0487, REV-CNTR-CD]
+    status: CONFIGURABLE_CONFIRMATION_REQUIRED
+    rule_id: INT-ORGAN-IND-0487
+    logic: Y when any configured Legacy organ-acquisition revenue code is present.
+  - id: INT-SELECTED-FINAL-FIELDS
+    stage: [intermediate, final_medpar]
+    fields: [MEDPAR-TOT-CHRG-0400, MEDPAR-DRG-PRICE-0380, MEDPAR-SQSTRTN-RDCTN-AMT-1130, MEDPAR-DTE-CR-ENDED-0220, MEDPAR-DRG-CODE]
+    status: REGISTERED_GOLDEN_COMPARISON
+    rule_id: [INT-SOURCE-TO-TARGET, INT-REGRESSION-*, FM-REGRESSION-*]
+    logic: Validate structure/direct movement and compare actual against approved golden output.
+  - id: FINAL-ACTION-RULE-6
+    stage: final_action
+    status: IMPLEMENTED
+    rule_id: FA-RULE-06
+    logic: Matching control numbers plus QC0 Action/Transaction code 4 or 6 drop both; otherwise keep QC5.
+  - id: LD-3137
+    stage: [final_action, split, stay, final_medpar]
+    status: IMPLEMENTED
+    rule_id: [FA-SORT-ORDER-LD3137, SP-SORT-ORDER-LD3137, ST-SORT-ORDER-LD3137, FM-SORT-ORDER-LD3137]
+    logic: admissionDate is excluded from configured sort/group identities.
+  - id: FINAL-3050-3000
+    stage: final_medpar
+    status: OPEN_BLOCKED
+    rule_id: FM-BYTE-LENGTH
+    logic: Exact conversion map not supplied; validate final 3000 bytes and configurable offsets only.
+  - id: FINAL-HICN-MERGE
+    stage: final_medpar
+    status: OPEN_BLOCKED
+    logic: Field-level HICN merge precedence not supplied; duplicate identities are detected rather than guessed.

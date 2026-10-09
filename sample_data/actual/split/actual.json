@@ -1,0 +1,11 @@
+[
+  {
+    "claimCan": "CAN-001",
+    "claimCanNchEquatable": "HICN-001",
+    "provider": {"providerId": "PRV-001"},
+    "admissionDate": "20260403",
+    "stayFromDate": "20260403",
+    "stayThruDate": "20260405",
+    "splitYearIndicator": "Y60109"
+  }
+]

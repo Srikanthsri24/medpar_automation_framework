@@ -1,0 +1,15 @@
+stage: split
+change_request: LD-3137
+sort_order: [hicn, provider_id, stay_from_date, stay_thru_date, processing_date, accrete_date, source_sequence]
+excluded_sort_fields: [admission_date]
+rules:
+  - id: SP-PRE-SCHEMA
+    validations: [required identity fields, valid admission/from/thru dates, from_not_after_thru]
+  - id: SP-REC-TYPE-BYPASS
+    description: Transaction codes 0 and 4 bypass slicing by default; configurable
+  - id: SP-RULE-INDICATOR
+    description: January-September uses Y#0109; October-December uses Y#1012; outside window uses Y99999
+  - id: SP-SORT-ORDER-LD3137
+    description: admissionDate must not be in the Split input sort order
+  - id: SP-OUTPUT-RECONCILIATION
+    description: No duplicate, missing, or unexpected actual-output identities

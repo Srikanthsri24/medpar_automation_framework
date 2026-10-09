@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "medpar-qa-automation"
+version = "0.5.0"
+description = "Stage-aware MEDPAR business-rule validation and regression framework"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "PyYAML>=6.0",
+  "pandas>=2.0",
+  "pyarrow>=15.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+  "pytest-html>=4.1",
+  "pytest-cov>=5.0",
+]
+
+[project.scripts]
+medpar-qa = "medpar_qa.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers -p medpar_qa.reporting.pytest_plugin"
+markers = [
+  "unit: fast isolated validation tests",
+  "integration: multi-component tests",
+  "regression: approved business regression tests",
+  "byte_by_byte: fixed-width or field-level byte comparison",
+  "final_action: Final Action stage",
+  "split: Four-Year Split stage",
+  "stay: Stay stage",
+  "intermediate: Intermediate stage",
+  "final_medpar: Final MEDPAR stage",
+  "decimal_precision: Decimal precision and rounding tests",
+  "condition_codes: condition-code validations",
+  "occurrence_codes: occurrence-code validations",
+  "procedure_codes: procedure-code/date validations",
+  "diagnosis_codes: diagnosis and POA validations",
+  "input_data: tests that execute supplied JSON or Parquet business files",
+]

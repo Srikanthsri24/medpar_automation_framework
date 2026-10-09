@@ -1,0 +1,140 @@
+run_id: all-stages-example
+run_date: '2026-07-19'
+settings:
+  final_action:
+    rule1_keep_qcs:
+    - 1
+    - 2
+    - 3
+    - 5
+    allowed_query_codes:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 5
+    allowed_transaction_codes:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 6
+    block_ambiguous_ordering: true
+    rule6_enabled: true
+    rule6_drop_codes:
+    - 4
+    - 6
+    sort_fields:
+    - hicn
+    - provider_id
+    - stay_from_date
+    - stay_thru_date
+    - processing_date
+    - accrete_date
+    - source_sequence
+  split:
+    window_years: 4
+    skip_transaction_codes:
+    - 0
+    - 4
+    require_actual_output: true
+    sort_fields:
+    - hicn
+    - provider_id
+    - stay_from_date
+    - stay_thru_date
+    - processing_date
+    - accrete_date
+    - source_sequence
+  stay:
+    decimal_scale: '0.001'
+    require_actual_output: true
+    require_expected_output: true
+    identity_fields:
+    - hicn
+    - provider_id
+    - split_year_indicator
+    sort_fields:
+    - hicn
+    - provider_id
+    - split_year_indicator
+    - stay_from_date
+    - stay_thru_date
+    - processing_date
+    - accrete_date
+    - source_sequence
+  intermediate:
+    window_years: 5
+    decimal_scale: '0.001'
+    require_actual_output: true
+    require_expected_output: true
+    ndc_length: 10
+  final_medpar:
+    expected_bytes: 3000
+    encoding: ascii
+    require_actual_output: true
+    require_expected_output: true
+    require_fixed_width: true
+    allowed_classifications:
+    - SS
+    - LS
+    - SNF
+    identity_fields:
+    - hicn
+    - provider_id
+    - split_year_indicator
+    sort_fields:
+    - hicn
+    - provider_id
+    - split_year_indicator
+    - medpar_ss_ls_snf_ind_0140
+files:
+- path: sample_data/input/final_action/sample_claims.json
+  stage: final_action
+  role: source
+  format: json
+- path: sample_data/input/split/source.json
+  stage: split
+  role: source
+  format: json
+- path: sample_data/actual/split/actual.json
+  stage: split
+  role: actual_output
+  format: json
+- path: sample_data/input/stay/source.json
+  stage: stay
+  role: source
+  format: json
+- path: sample_data/actual/stay/actual.json
+  stage: stay
+  role: actual_output
+  format: json
+- path: sample_data/expected/stay/expected.json
+  stage: stay
+  role: expected_output
+  format: json
+- path: sample_data/input/intermediate/source.json
+  stage: intermediate
+  role: source
+  format: json
+- path: sample_data/actual/intermediate/actual.json
+  stage: intermediate
+  role: actual_output
+  format: json
+- path: sample_data/expected/intermediate/expected.json
+  stage: intermediate
+  role: expected_output
+  format: json
+- path: sample_data/input/final_medpar/source.json
+  stage: final_medpar
+  role: source
+  format: json
+- path: sample_data/actual/final_medpar/actual.json
+  stage: final_medpar
+  role: actual_output
+  format: json
+- path: sample_data/expected/final_medpar/expected.json
+  stage: final_medpar
+  role: expected_output
+  format: json

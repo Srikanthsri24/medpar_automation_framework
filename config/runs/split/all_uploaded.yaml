@@ -1,0 +1,28 @@
+run_id: split_all_uploaded
+run_date: "2024-04-04"
+settings:
+  split:
+    window_years: 4
+    skip_transaction_codes: [0, 4]
+    require_actual_output: false
+files:
+  - path: "data/user_inputs/split/source/Split drop_T.CVM.CWFCB.D240404.T1438012-000000001.json"
+    stage: split
+    role: source
+    format: json
+  - path: "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"
+    stage: split
+    role: source
+    format: json
+  - path: "data/user_inputs/split/source/Split02_claim.r1.a_20230103.json"
+    stage: split
+    role: source
+    format: json
+  - path: "data/user_inputs/split/source/Split03_claim.r1.b_20220103.json"
+    stage: split
+    role: source
+    format: json
+  - path: "data/user_inputs/split/source/Split04_claim.r1.b_20200104.json"
+    stage: split
+    role: source
+    format: json

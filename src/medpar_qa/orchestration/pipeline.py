@@ -1,0 +1,255 @@
+from __future__ import annotations
+
+from collections import defaultdict
+from pathlib import Path
+
+from medpar_qa.enums import Stage, ValidationStatus
+from medpar_qa.ingestion.discovery import discover_files
+from medpar_qa.ingestion.readers import read_records
+from medpar_qa.models import RuleResult, RunManifest, SourceRecord, StageResult
+from medpar_qa.normalization.fields import FieldResolver
+from medpar_qa.reporting.path_utils import relative_display
+from medpar_qa.stages.final_action.processor import FinalActionProcessor
+from medpar_qa.stages.final_action.settings import FinalActionSettings
+from medpar_qa.stages.final_medpar.processor import FinalMedparProcessor
+from medpar_qa.stages.final_medpar.settings import FinalMedparSettings
+from medpar_qa.stages.intermediate.processor import IntermediateProcessor
+from medpar_qa.stages.intermediate.settings import IntermediateSettings
+from medpar_qa.stages.split.processor import SplitProcessor
+from medpar_qa.stages.split.settings import SplitSettings
+from medpar_qa.stages.stay.processor import StayProcessor
+from medpar_qa.stages.stay.settings import StaySettings
+
+
+class Pipeline:
+    def __init__(self, manifest: RunManifest, field_resolver: FieldResolver) -> None:
+        self.manifest = manifest
+        self.field_resolver = field_resolver
+
+    def load_with_diagnostics(
+        self,
+    ) -> tuple[dict[Stage, list[SourceRecord]], dict[Stage, StageResult]]:
+        """Load all manifest files while creating reportable PASS/FAIL checks.
+
+        A missing, unreadable, or malformed file is converted to a RuleResult instead
+        of terminating before an HTML report can be created.
+        """
+        grouped: dict[Stage, list[SourceRecord]] = defaultdict(list)
+        diagnostics: dict[Stage, StageResult] = {}
+
+        for entry in self.manifest.files:
+            stage_result = diagnostics.setdefault(entry.stage, StageResult(stage=entry.stage))
+            try:
+                paths = discover_files(entry.path, self.manifest.base_directory)
+            except Exception as exc:  # defensive: path/glob implementation errors
+                stage_result.rule_results.append(
+                    RuleResult(
+                        stage=entry.stage,
+                        rule_id="INGEST-DISCOVERY",
+                        status=ValidationStatus.FAIL,
+                        message=f"File discovery failed: {exc}",
+                        expected="At least one readable file matching the configured path",
+                        actual=entry.path,
+                        source_files=[entry.path],
+                        evidence={"role": entry.role.value, "format": entry.format or "auto"},
+                    )
+                )
+                continue
+
+            if not paths:
+                stage_result.rule_results.append(
+                    RuleResult(
+                        stage=entry.stage,
+                        rule_id="INGEST-DISCOVERY",
+                        status=ValidationStatus.FAIL,
+                        message="No files matched the configured path or glob",
+                        expected="At least one matching file",
+                        actual=entry.path,
+                        source_files=[entry.path],
+                        evidence={"role": entry.role.value, "format": entry.format or "auto"},
+                    )
+                )
+                continue
+
+            stage_result.rule_results.append(
+                RuleResult(
+                    stage=entry.stage,
+                    rule_id="INGEST-DISCOVERY",
+                    status=ValidationStatus.PASS,
+                    message=f"Discovered {len(paths)} file(s) for {entry.role.value}",
+                    expected="One or more matching files",
+                    actual=[relative_display(path, project_root=self.manifest.base_directory) for path in paths],
+                    source_files=[relative_display(path, project_root=self.manifest.base_directory) for path in paths],
+                    evidence={
+                        "configured_path": entry.path,
+                        "role": entry.role.value,
+                        "format": entry.format or "auto",
+                    },
+                )
+            )
+
+            for path in paths:
+                try:
+                    records = read_records(
+                        path,
+                        entry.stage,
+                        entry.role,
+                        entry.format,
+                        display_base=self.manifest.base_directory,
+                    )
+                except Exception as exc:
+                    stage_result.rule_results.append(
+                        RuleResult(
+                            stage=entry.stage,
+                            rule_id="INGEST-READ-FILE",
+                            status=ValidationStatus.FAIL,
+                            message=f"Could not read or parse input file: {exc}",
+                            expected="Valid JSON or Parquet content",
+                            actual={
+                                "file": relative_display(path, project_root=self.manifest.base_directory),
+                                "error_type": type(exc).__name__,
+                                "error": str(exc),
+                            },
+                            source_files=[relative_display(path, project_root=self.manifest.base_directory)],
+                            evidence={"role": entry.role.value, "format": entry.format or path.suffix.lstrip(".")},
+                        )
+                    )
+                    continue
+
+                grouped[entry.stage].extend(records)
+                stage_result.rule_results.append(
+                    RuleResult(
+                        stage=entry.stage,
+                        rule_id="INGEST-READ-FILE",
+                        status=ValidationStatus.PASS,
+                        message=f"File was read successfully and produced {len(records)} record(s)",
+                        expected="Readable file containing at least one record",
+                        actual={
+                            "file": relative_display(path, project_root=self.manifest.base_directory),
+                            "record_count": len(records),
+                            "role": entry.role.value,
+                        },
+                        source_files=[relative_display(path, project_root=self.manifest.base_directory)],
+                        record_ids=[record.record_id for record in records],
+                        evidence={"file_size_bytes": Path(path).stat().st_size},
+                    )
+                )
+
+        return dict(grouped), diagnostics
+
+    def load(self) -> dict[Stage, list[SourceRecord]]:
+        """Backward-compatible record loading API.
+
+        Unlike the previous implementation, missing files do not throw here. Use
+        ``run()`` to receive the corresponding failed ingestion validation.
+        """
+        records, _ = self.load_with_diagnostics()
+        return records
+
+    def _processors(self):
+        return {
+            Stage.FINAL_ACTION: FinalActionProcessor(
+                self.field_resolver,
+                FinalActionSettings.from_mapping(
+                    self.manifest.settings.get("final_action")
+                ),
+            ),
+            Stage.SPLIT: SplitProcessor(
+                self.field_resolver,
+                self.manifest.run_date,
+                settings=SplitSettings.from_mapping(
+                    self.manifest.settings.get("split")
+                    or {
+                        "window_years": self.manifest.settings.get(
+                            "split_window_years", 4
+                        )
+                    }
+                ),
+            ),
+            Stage.STAY: StayProcessor(
+                self.field_resolver,
+                StaySettings.from_mapping(self.manifest.settings.get("stay")),
+            ),
+            Stage.INTERMEDIATE: IntermediateProcessor(
+                self.field_resolver,
+                self.manifest.run_date,
+                IntermediateSettings.from_mapping(
+                    self.manifest.settings.get("intermediate")
+                    or {
+                        "window_years": self.manifest.settings.get(
+                            "intermediate_window_years", 5
+                        )
+                    }
+                ),
+            ),
+            Stage.FINAL_MEDPAR: FinalMedparProcessor(
+                self.field_resolver,
+                FinalMedparSettings.from_mapping(
+                    self.manifest.settings.get("final_medpar")
+                    or {
+                        "expected_bytes": self.manifest.settings.get(
+                            "final_medpar_bytes", 3000
+                        )
+                    }
+                ),
+            ),
+        }
+
+    def run(self) -> list[StageResult]:
+        records_by_stage, diagnostics = self.load_with_diagnostics()
+        processors = self._processors()
+        results: list[StageResult] = []
+
+        requested_stages = {entry.stage for entry in self.manifest.files}
+        for stage in Stage:
+            if stage not in requested_stages:
+                continue
+
+            preliminary = diagnostics.get(stage, StageResult(stage=stage))
+            records = records_by_stage.get(stage, [])
+            if records:
+                processed = processors[stage].validate(records)
+                processed.rule_results = [
+                    *preliminary.rule_results,
+                    *processed.rule_results,
+                ]
+            else:
+                processed = preliminary
+                if not processed.rule_results:
+                    processed.rule_results.append(
+                        RuleResult(
+                            stage=stage,
+                            rule_id="INGEST-NO-RECORDS",
+                            status=ValidationStatus.FAIL,
+                            message="No records were available for stage validation",
+                            expected="One or more valid records",
+                            actual=0,
+                        )
+                    )
+
+            pre_summary_passed = processed.passed
+            counts = processed.status_counts
+            processed.rule_results.append(
+                RuleResult(
+                    stage=stage,
+                    rule_id="STAGE-FINAL-SUMMARY",
+                    status=(
+                        ValidationStatus.PASS
+                        if pre_summary_passed
+                        else ValidationStatus.FAIL
+                    ),
+                    message=(
+                        "Stage completed with no failed or blocked validations"
+                        if pre_summary_passed
+                        else "Stage completed with failed or blocked validations"
+                    ),
+                    expected={"FAIL": 0, "BLOCKED": 0},
+                    actual=counts,
+                    evidence={
+                        "source_record_count": len(records),
+                        "decision_count": len(processed.decisions),
+                    },
+                )
+            )
+            results.append(processed)
+        return results

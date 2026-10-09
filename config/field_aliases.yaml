@@ -1,0 +1,638 @@
+claim_can:
+- claimCan
+- CLAIM-CAN
+- claim_can
+hicn:
+- claimCanNchEquatable
+- HICN
+- hicn
+- beneficiaryId
+provider_id:
+- provider.providerId
+- provider.providerid
+- providerId
+- PRVDR-NUM
+- MEDPAR-PRVDR-FULL-NUM-1660
+- medparProvider0130
+- MEDPAR-PROVIDER-0130
+stay_from_date:
+- stayFromDate
+- claimFromDate
+- CLM-FROM-DATE
+stay_thru_date:
+- stayThruDate
+- claimThruDate
+- CLM-THRU-DATE
+admission_date:
+- admissionDate
+- MEDPAR-ADMSN-DATE
+- medparAdmissionDate
+- AdmissionDate
+- MEDPAR-ADMSN-DT
+discharge_date:
+- dischargeDate
+- stayThruDate
+- MEDPAR-DSCHRG-DATE
+date_of_death:
+- dateOfDeath
+- medparDateOfDeath
+- MEDPAR-DOD
+- medparhimasterdod0230
+- MEDPAR-HIMASTER-DOD-0230
+- MEDPAR-DOD-0230
+transaction_code:
+- transactionCode
+- CLM-TRANS-CD
+query_code:
+- queryCode
+- QC
+icn:
+- internalControlNumber
+- icn
+- ICN
+processing_date:
+- nchWeeklyProcessingDate
+- nchweeklyprocessingdate
+- processDate
+accrete_date:
+- accreteDate
+- accretedate
+action_code:
+- actionCode
+- action_code
+source_sequence:
+- sourceSequence
+- sequenceNumber
+- claimSequence
+- sequence
+split_year_indicator:
+- splitYearIndicator
+- medparSplitYearIndicator
+- MEDPAR-SPLIT-YR-IND
+condition_codes:
+- conditionCodes
+- ConditionCodes
+- condition_codes
+occurrence_codes:
+- occurrenceCodes
+- OccurrenceCodes
+- occurrence_codes
+occurrence_span_lines:
+- occurrenceSpanLines
+- spanCodes
+- occurrenceSpans
+value_lines:
+- valueLines
+- valueCodes
+- ValueCodes
+revenue_lines:
+- revenueLines
+- revenueCenterLines
+medpar_dte_cr_ended_0220:
+- MEDPAR-DTE-CR-ENDED-0220
+- medparDteCrEnded0220
+medpar_tot_chrg_0400:
+- MEDPAR-TOT-CHRG-0400
+- medparTotChrg0400
+- totalCharge
+- totalCharges
+medpar_drg_price_0380:
+- MEDPAR-DRG-PRICE-0380
+- medparDrgPrice0380
+- drgPrice
+medpar_sqstrtn_rdctn_amt_1130:
+- MEDPAR-SQSTRTN-RDCTN-AMT-1130
+- MEDPAR-SQSTRTN-RDCTN-AMT-113
+- medparSqstrtnRdctnAmt1130
+medpar_infor_enctr_ind_sw_0800:
+- MEDPAR-INFOR-ENCTR-IND-SW-0800
+- medparInforEnctrIndSw0800
+medpar_ma_teach_ind_sw_0810:
+- MEDPAR-MA-TEACH-IND-SW-0810
+- medparMaTeachIndSw0810
+medpar_snf_qual_from_date_0180:
+- MEDPAR-SNF-QUAL-FROM-DATE-0180
+- medparSnfQualFromDate0180
+medpar_snf_qual_thru_date_0190:
+- medparSnfQualThruDate0190
+- MEDPAR-SNF-QUAL-THRU-DATE-0190
+medpar_cov_chrg_0410:
+- MEDPAR-COV-CHRG-0410
+- medparCovChrg0410
+medpar_service_charges_0470:
+- MEDPAR-SERVICE-CHARGES-0470
+- medparServiceCharges0470
+medpar_tot_dpt_chrg_0440:
+- MEDPAR-TOT-DPT-CHRG-0440
+- medparTotDptChrg0440
+medpar_accommodation_chrg_0460:
+- MEDPAR-ACCOMMODATION-CHRG-0460
+- medparAccommodationChrg0460
+medpar_accommodation_days_0450:
+- MEDPAR-ACCOMMODATION-DAYS-0450
+- medparAccommodationDays0450
+medpar_tot_acc_chrg_0430:
+- MEDPAR-TOT-ACC-CHRG-0430
+- medparTotAccChrg0430
+- MEDPAR-TOT-ACC-CHRG-043
+medpar_adm_diag_code_0590:
+- MEDPAR-ADM-DIAG-CODE-0590
+- medparAdmDiagCode0590
+medpar_admtg_dgns_vrsn_cd:
+- MEDPAR-ADMTG-DGNS-VRSN-CD
+- medparAdmtgDgnsVrsnCd
+medpar_mbi_id_1420:
+- MEDPAR-MBI-ID-1420
+- medparMbiId1420
+medpar_prvdr_full_num_1660:
+- MEDPAR-PRVDR-FULL-NUM-1660
+- medparPrvdrFullNum1660
+medpar_primry_pyr_0540:
+- MEDPAR-PRIMRY-PYR-0540
+- medparPrimryPyr0540
+medpar_age_0030:
+- MEDPAR-AGE-0030
+- medparAge0030
+medpar_rev_cntr_ndc_num_1550:
+- MEDPAR-REV-CNTR-NDC-NUM-1550
+- medparRevCntrNdcNum1550
+medpar_death_after_adm_0611:
+- medparDeathAfterAdm0611
+- MEDPAR-DEATH-AFTER-ADM-0611
+medpar_surg_ind_0500:
+- MEDPAR-SURG-IND-0500
+- medparSurgInd0500
+medpar_no_surg_codes_0511:
+- MEDPAR-NO-SURG-CODES-0511
+- medparNoSurgCodes0511
+medpar_no_surg_dates_0512:
+- MEDPAR-NO-SURG-DATES-0512
+- medparNoSurgDates0512
+medpar_srgcl_prcdr_vrsn_cd:
+- MEDPAR-SRGCL-PRCDR-VRSN-CD
+- medparSrgclPrcdrVrsnCd
+medpar_surg_code_0513:
+- MEDPAR-SURG-CODE-0513
+- medparSurgCode0513
+medpar_surg_date_0514:
+- MEDPAR-SURG-DATE-0514
+- medparSurgDate0514
+medpar_dgns_vrsn_cd:
+- MEDPAR-DGNS-VRSN-CD
+- medparDgnsVrsnCd
+medpar_diag_code_0492:
+- MEDPAR-DIAG-CODE-0492
+- medparDiagCode0492
+medpar_no_diag_codes_0491:
+- MEDPAR-NO-DIAG-CODES-0491
+- medparNoDiagCodes0491
+medpar_poa_dgns_cd_cnt:
+- MEDPAR-POA-DGNS-CD-CNT
+- medparPoaDgnsCdCnt
+medpar_poa_dgns_ind_cd:
+- MEDPAR-POA-DGNS-IND-CD
+- medparPoaDgnsIndCd
+fixed_width_record:
+- fixedWidthRecord
+- recordText
+- outputRecord
+- medpar3000ByteRecord
+medpar_ss_ls_snf_ind_0140:
+- MEDPAR-SS-LS-SNF-IND-0140
+- medparSSLSSNFIND0140
+- medparSsLsSnfInd0140
+medpar_bic:
+- BIC
+- bic
+- medparBic
+- MEDPAR-BIC-CODE-0022
+- medparBicCode0022
+medpar_ssi_data:
+- ssiData
+- medparSsiData
+- medparSSIData0252
+- MEDPAR-SSI-DATA-0252
+medpar_q1_payment_reduction:
+- q1PaymentReduction
+- medparQ1PaymentReduction
+- medparValQ1PmtRdctnAmt1470
+- MEDPAR-VALQ1-PMT-RDCTN-AM-1470
+bill_count:
+- billCount
+- noBillsMedpar0150
+- NO-BILLS-MEDPAR-0150
+- MEDPAR-NO-BILLS-0150
+discharge_destination:
+- dischargeDestination
+- MEDPAR-DSCHRG-DSTNTN-CD
+drg_code:
+- drgCode
+- initialDrg
+- MEDPAR-DRG-CD
+qualified_stay_from_date:
+- qualifiedStayFromDate
+- medparSnfQualFromDate0180
+- MEDPAR-SNF-QUAL-FROM-DATE-0180
+qualified_stay_thru_date:
+- qualifiedStayThruDate
+- medparSnfQualThruDate0190
+- MEDPAR-SNF-QUAL-THRU-DATE-0190
+non_coverage_from_date:
+- nonCoverageFromDate
+mqa_date:
+- mqaDate
+proc_from_date:
+- procFromDate
+reimbursement_amount:
+- reimbursementAmount
+- ReimbursementAmount
+primary_payment_amount:
+- primaryPaymentAmount
+- PrimaryPaymentAmount
+therapy_reduction_amount:
+- therapyReductionAmount
+reduce_coinsurance:
+- reduceCoinsurance
+warning_indicators:
+- warningIndicators
+- MEDPAR-WARNING-INDICATORS
+diagnosis_lines:
+- diagnosisLines
+- diagnoses
+- diagnosisCodes
+procedure_lines:
+- procedureLines
+- procedures
+- surgicalProcedures
+covered_charges_source:
+- coveredCharges
+- totalCoveredCharges
+- covCharges
+service_charges_source:
+- serviceCharges
+- totalServiceCharges
+department_charges_source:
+- departmentCharges
+- totalDepartmentCharges
+accommodation_charges_source:
+- accommodationCharges
+accommodation_days_source:
+- accommodationDays
+admitting_diagnosis:
+- admittingDiagnosis
+- admissionDiagnosis
+- admDiagnosis
+admitting_diagnosis_version:
+- admittingDiagnosisVersion
+- admissionDiagnosisVersion
+primary_payer:
+- primaryPayer
+- primaryPaymentCode.paymentCode
+procedure_codes_source:
+- procedureCodes
+- surgicalCodes
+procedure_dates_source:
+- procedureDates
+- surgicalDates
+procedure_versions_source:
+- procedureVersions
+- surgicalProcedureVersions
+diagnosis_codes_source:
+- diagnosisCodes
+- diagnoses
+diagnosis_versions_source:
+- diagnosisVersions
+poa_indicators_source:
+- poaIndicators
+- presentOnAdmissionIndicators
+medpar_ssa_no_0021:
+- MEDPAR-SSA-NO-0021
+- medparSsaNo0021
+- HICN
+medpar_no_bills_0150:
+- NO-BILLS-MEDPAR-0150
+- MEDPAR-NO-BILLS-0150
+- noBillsMedpar0150
+positive_test_switch:
+- positiveTestSwitch
+- medparPositiveTestSwitch
+final_warning_indicator:
+- finalWarningIndicator
+- medparWarningIndicator
+record_bytes:
+- recordBytes
+- fixedWidthBytes
+medpar_bill_tot_perdiem_0381:
+- MEDPAR-BILL-TOT-PERDIEM-0381
+- medparBillTotPerdiem0381
+pass_thru_per_diem:
+- passThruPerDiem
+- passThruPerDiemAmount
+- MEDPAR-PASS-THRU-PER-DIEM
+utilization_days:
+- utilizationDays
+- utilizationDayCount
+- coveredDays
+- MEDPAR-UTILIZATION-DAYS
+medpar_intensive_care_ind_0481:
+- MEDPAR-INTERSIVE-CARE-IND-0481
+- MEDPAR-INTENSIVE-CARE-IND-0481
+- medparIntersiveCareInd0481
+- medparIntensiveCareInd0481
+medpar_adm_day_0090:
+- medparAdmDay0090
+- MEDPAR-ADM-DAY-0090
+- MEDPAR-ADMSN-DAY-CD-0090
+medpar_organ_ind_0487:
+- MEDPAR-ORGAN-IND-0487
+- medparOrganInd0487
+medpar_drg_code:
+- MEDPAR-DRG-CODE
+- MEDPAR-DRG-CD
+- medparDrgCode
+- drgCode
+- initialDrg
+- DRG code
+- DRG-CODE
+medpar_nch_clm_type_cd:
+- medparNchClmTypeCd
+- MEDPAR-NCH-CLM-TYPE-CD
+- claimTypeCode
+- typeCode
+medpar_race_0050:
+- medparRace0050
+- MEDPAR-RACE-0050
+- beneficiaryRace
+medpar_dischg_status_0100:
+- medparDischgStatus0100
+- MEDPAR-DISCHG-STATUS-0100
+- dischargeStatusCd
+- dischargeStatus
+medpar_bic_code_0022:
+- medparBicCode0022
+- MEDPAR-BIC-CODE-0022
+- BIC
+- bic
+- medparBic
+medpar_val_q1_pmt_rdctn_amt_1470:
+- medparValQ1PmtRdctnAmt1470
+- MEDPAR-VALQ1-PMT-RDCTN-AM-1470
+- q1PaymentReduction
+- medparQ1PaymentReduction
+medpar_ssi_data_0252:
+- medparSSIData0252
+- MEDPAR-SSI-DATA-0252
+- ssiData
+- medparSsiData
+medpar_himaster_dod_0230:
+- medparhimasterdod0230
+- medparHiMasterDod0230
+- MEDPAR-HIMASTER-DOD-0230
+- MEDPAR-DOD-0230
+- dateOfDeath
+- medparDateOfDeath
+medpar_dod_ind_0240:
+- MEDPAR-DOD-IND-0240
+- medparDodInd0240
+medpar_provider_0130:
+- medparProvider0130
+- MEDPAR-PROVIDER-0130
+warning_indicator_04:
+- WARNING-INDICATOR-04
+- warningIndicator04
+warning_indicator_05:
+- WARNING-INDICATOR-05
+- warningIndicator05
+warning_indicator_09:
+- MEDPAR-WARNING-IND-09
+- warningIndicator09
+warning_indicator_10:
+- MEDPAR-WARNING-IND-10
+- warningIndicator10
+warning_indicator_11:
+- MEDPAR-WARNING-IND-11
+- warningIndicator11
+warning_indicator_12:
+- MEDPAR-WARNING-IND-12
+- warningIndicator12
+warning_indicator_13:
+- MEDPAR-WARNING-IND-13
+- warningIndicator13
+warning_indicator_14:
+- MEDPAR-WARNING-IND-14
+- warningIndicator14
+warning_indicator_15:
+- MEDPAR-WARNING-IND-15
+- warningIndicator15
+warning_indicator_16:
+- MEDPAR-WARNING-IND-16
+- warningIndicator16
+warning_indicator_17:
+- MEDPAR-WARNING-IND-17
+- warningIndicator17
+medpar_hosp_home_from_dt_1630:
+- medparHospHomeFromDt1630
+- MEDPAR-HOSP-HOME-FROM-DT-1630
+medpar_hosp_home_thru_dt_1640:
+- medparHospHomThruDt1640
+- medparHospHomeThruDt1640
+- MEDPAR-HOSP-HOME-THRU-DT-1640
+medpar_2_midnight_stay_ind_1280:
+- medpar2MidnghtStayInd1280
+- MEDPAR-2-MIDNGHT-STAY-IND-1280
+medpar_dgns_e_cd:
+- medparDgnsECd
+- MEDPAR-DGNS-E-CD
+medpar_dgns_e_vrsn_cd:
+- medparDgnsEVrsnCd
+- MEDPAR-DGNS-E-VRSN-CD
+medpar_poa_dgns_e_ind_cd:
+- medparPoaDgnsEIndCd
+- MEDPAR-POA-DGNS-E-IND-CD
+hac_reduction_indicator_switch:
+- hacReductionIndicatorSwitch
+- MEDPAR-HAC-RDCTN-IND-SW
+hrr_adjustment_percent:
+- hrrAdjustmentPercent
+- MEDPAR-HRR-ADJSTMT-PCT
+vbp_adjustment_percent:
+- vbpAdjustmentPercent
+- MEDPAR-VBP-ADJSTMT-PCT
+bundled_m1_percent:
+- bundledM1Percent
+- MEDPAR-BUNDLED-M1-PCT
+care_improvement_model:
+- careImprovementModel
+- careImprovementModel1
+- careImprovementModel2
+- MEDPAR-CARE-IMPRVMNT-MODEL
+low_volume_payment_amount:
+- lowVolumePaymentAmount
+- MEDPAR-LOW-VOL-PMT-AMT
+investigational_device_exemption:
+- investigationalDeviceExemption
+- MEDPAR-IDE
+cancel_only_adjustment_code:
+- cancelOnlyAdjustmentCode
+- MEDPAR-CANCEL-ONLY-ADJ-CD
+beneficiary_date_of_birth:
+- beneficiaryDateOfBirth
+- MEDPAR-BENE-DOB
+beneficiary_gender:
+- beneficiaryGender
+- MEDPAR-BENE-SEX-CD
+beneficiary_race:
+- beneficiaryRace
+- MEDPAR-RACE-0050
+beneficiary_zip_code:
+- beneficiaryZipCode
+- MEDPAR-ZIP-0080
+- medparZip0080
+benefits_exhausted_date:
+- benefitsExhaustedDate
+- MEDPAR-BNFT-EXHST-DT
+county_code:
+- countyCode
+- MEDPAR-CNTY-CD
+state_code:
+- stateCode
+- MEDPAR-STATE-CD
+fiscal_intermediary:
+- fiscalIntermediary.id
+- fiscalIntermediary
+- MEDPAR-FI-NUM
+medicare_status:
+- medicareStatus
+- MEDPAR-MDCR-STATUS-CD
+medical_record:
+- medicalRecord
+- MEDPAR-MED-REC-NUM
+host_site:
+- hostSite
+- MEDPAR-HOST-SITE
+forwarded_date:
+- fiscalIntermediary.forwardedDate
+- forwardedDate
+hcfa_received:
+- hcfaReceived
+- MEDPAR-HCFA-RCVD-DT
+patient_first_initial:
+- patientFirstInitial
+- MEDPAR-PTNT-FRST-INIT
+patient_surname:
+- patientSurName
+- MEDPAR-PTNT-SRNAME
+patient_relationship:
+- patientRelationship
+- MEDPAR-PTNT-RLTNSHP-CD
+pro_approval:
+- proApproval
+- MEDPAR-PRO-APRVL
+medpar_bene_st_0071:
+- medparBeneSt0071
+- MEDPAR-BENE-ST-0071
+medpar_zip_0080:
+- medparZip0080
+- MEDPAR-ZIP-0080
+- beneficiaryZipCode
+rev_cntr_cd:
+- revCntrCd
+- revenueCode
+- code
+- REV-CNTR-CD
+rev_cntr_ide_ndc_upc_num:
+- revCntrIdeNdcUpcNum
+- REV-CNTR-IDE-NDC-UPC-NUM
+- ndc
+- ndcNumber
+rev_cntr_tot_chrg_amt:
+- revCntrTotChrgAmt
+- REV-CNTR-TOT-CHRG-AMT
+- totalCharge
+- charge
+rev_cntr_ncvr_chrg_amt:
+- revCntrNcvrChrgAmt
+- REV-CNTR-NCVR-CHRG-AMT
+- nonCoveredCharge
+rev_cntr_unit_cnt:
+- revCntrUnitCnt
+- REV-CNTR-UNIT-CNT
+- units
+- unitCount
+rev_cntr_ptnt_add_on_pmt_amt:
+- revCntrPtntAddOnPmtAmt
+- REV-CNTR-PTNT-ADD-ON-PMT-AMT
+rev_cntr_rp_ind_cd:
+- rpInd
+- rpIndCd
+- rpIndicator
+- REV-CNTR-RP-IND-CD
+rev_cntr_model_reimbrsmt_amt:
+- revCntrModelReimbrsmtAmt
+- REV-CNTR-MODEL-REIMBRSMT-AMT
+clm_poa_dgns_grp:
+- CLM-POA-DGNS-GRP
+- clmPoaDgnsGrp
+clm_poa_dgns_e_grp:
+- CLM-POA-DGNS-E-GRP
+- clmPoaDgnsEGrp
+clm_dgns_e_grp:
+- CLM-DGNS-E-GRP
+- clmDgnsEGrp
+clm_dgns_grp:
+- CLM-DGNS-GRP
+- clmDgnsGrp
+clm_val_grp:
+- CLM-VAL-GRP
+- clmValGrp
+- valueLines
+- valueCodes
+clm_rlt_ocrnc_grp:
+- CLM-RLT-OCRNC-GRP
+- clmRltOcrncGrp
+- occurrenceCodes
+medpar_pr_repl_lifecyc_sw_0820:
+- medparPrReplLifecycSw0820
+- MEDPAR-PR-REPL-LIFECYC-SW-0820
+medpar_pr_repl_recall_sw_0830:
+- medparPrReplRecallSw0830
+- MEDPAR-PR-REPL-RECALL-SW-0830
+medpar_no_pstv_test_sw_1560:
+- medparNoPstvTestSw1560
+- MEDPAR-NO-PSTV-TEST-SW-1560
+medpar_expndd_acc_sw_1570:
+- medparExpnddAccSw1570
+- MEDPAR-EXPNDD-ACC-SW-1570
+medpar_othr_clncl_tril_sw_1580:
+- medparOthrClnclTrilSw1580
+- MEDPAR-OTHR-CLNCL-TRIL-SW-1580
+medpar_emer_use_sw_1590:
+- medparEmerUseSw1590
+- MEDPAR-EMER-USE-SW-1590
+medpar_new_tech_add_on_amt_0860:
+- medparNewTechAddOAmt0860
+- MEDPAR-NEW-TECH-ADD-ON-AMT-0860
+medpar_islet_addon_pmt_amt_1450:
+- medparIsletAddonPmtamt1450
+- MEDPAR-ISLET-ADDON-PMT-AMT-1450
+medpar_val_qb_pmt_adj_amt_1500:
+- medparValqbPmtAdjAmt1500
+- MEDPAR-VALQB-PMT-ADJ-AMT-1500
+medpar_disproportionate_0360:
+- medparDisproportionate0360
+- MEDPAR-DISPROPORTIONATE-0360
+medpar_ime_amount_0370:
+- medparImeAmount0370
+- MEDPAR-IME-AMOUNT-0370
+medpar_vbp_adjstmt_amt_1160:
+- MEDPAR-VBP-ADJSTMT-AMT-1160
+- medparVbpAdjstmtAmt1160
+unique_tracking_number:
+- uniqueTrackingNumber
+- MEDPAR-UNIQUE-TRACKING-NUM
+payment_and_record_ric:
+- paymentAndRecordRic
+qc7:
+- qc7
+internal_control_number_origin:
+- internalControlNumberOrigin

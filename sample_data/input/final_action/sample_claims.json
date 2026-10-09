@@ -1,0 +1,14 @@
+[
+  {
+    "claimCan": "CAN-001",
+    "claimCanNchEquatable": "HICN-001",
+    "provider": {"providerId": "PRV-001"},
+    "stayFromDate": "20260101",
+    "stayThruDate": "20260105",
+    "transactionCode": 1,
+    "queryCode": 5,
+    "internalControlNumber": "ICN-001",
+    "nchWeeklyProcessingDate": "20260120",
+    "accreteDate": "20260121"
+  }
+]

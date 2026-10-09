@@ -1,0 +1,21 @@
+required_identity_fields: [hicn, provider_id, admission_date, split_year_indicator]
+repeated_fields:
+  - medpar_accommodation_chrg_0460
+  - medpar_accommodation_days_0450
+  - medpar_surg_code_0513
+  - medpar_surg_date_0514
+  - medpar_srgcl_prcdr_vrsn_cd
+  - medpar_diag_code_0492
+  - medpar_dgns_vrsn_cd
+  - medpar_poa_dgns_ind_cd
+limits:
+  procedure_groups: 25
+revenue_line_subfields:
+  - rev_cntr_cd
+  - rev_cntr_ide_ndc_upc_num
+  - rev_cntr_unit_cnt
+  - rev_cntr_tot_chrg_amt
+  - rev_cntr_ncvr_chrg_amt
+  - rev_cntr_ptnt_add_on_pmt_amt
+  - rev_cntr_rp_ind_cd
+  - rev_cntr_model_reimbrsmt_amt
