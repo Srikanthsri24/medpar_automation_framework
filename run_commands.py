@@ -20,6 +20,9 @@ Run everything enabled with:  python run_commands.py
 from __future__ import annotations
 
 import json
+import html
+from collections import Counter
+from datetime import datetime, timezone
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -380,6 +383,44 @@ def _command_output_directory(session: ReportSession, command: Command) -> Path:
     return directory
 
 
+def write_quality_summary(session_root: Path, executions: list[dict[str, Any]]) -> None:
+    """Generate a self-contained, honest execution dashboard and machine-readable audit."""
+    rows = []
+    for item in executions:
+        expected_codes = tuple(item["expected_exit_codes"])
+        code = item["returncode"]
+        if code == 0:
+            result = "PASS" if item["expected"] else "UNEXPECTED_PASS"
+        elif code == 1 and 1 in expected_codes:
+            result = "EXPECTED_VALIDATION_FAILURE"
+        else:
+            result = "FAIL" if code == 1 else "ERROR"
+        rows.append({
+            "name": item["name"], "stage": item["stage"],
+            "command": item["command"], "exit_code": code,
+            "expected_exit_codes": list(expected_codes), "result": result,
+            "reports": [relative_display(x, project_root=PROJECT_ROOT) for x in item["report_files"]],
+            "console_log": item["output"][-20000:],
+        })
+    counts = Counter(row["result"] for row in rows)
+    payload = {
+        "generated_utc": datetime.now(timezone.utc).isoformat(),
+        "execution_counts": dict(counts), "total_commands": len(rows),
+        "business_compliance_verified": False,
+        "disclaimer": "Passing execution checks does not prove V3 rule or field-level compliance. A calculate-only run without actual output is not an end-to-end comparison.",
+        "executions": rows,
+    }
+    (session_root / "quality_summary.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    table_rows = []
+    for row in rows:
+        links = " ".join(f'<a href="{html.escape(str(Path(r).relative_to(Path(session_root).relative_to(PROJECT_ROOT))), quote=True)}">report</a>' for r in row["reports"] if Path(r).is_relative_to(Path(session_root).relative_to(PROJECT_ROOT)))
+        cells = [row["stage"], row["name"], row["result"], str(row["exit_code"])]
+        table_rows.append('<tr>'+''.join('<td>'+html.escape(str(x))+'</td>' for x in cells)+'<td>'+links+'</td></tr>')
+    page = """<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MEDPAR Run Quality Summary</title><style>body{font:15px system-ui,Arial;margin:36px auto;max-width:1200px;padding:0 20px;color:#182536;background:#f7f9fc}h1{font-size:28px}section{background:white;padding:24px;border:1px solid #dce4ee;border-radius:12px;margin:18px 0}table{border-collapse:collapse;width:100%}th,td{padding:12px;text-align:left;border-bottom:1px solid #e5eaf1}th{background:#edf3f9}a{color:#1359ac}.warning{border-left:5px solid #bb7722;padding:12px;background:#fff6e6}</style><h1>MEDPAR QA — Execution Quality Summary</h1><section><h2>Run overview</h2><p>Commands: __TOTAL__</p><p>__COUNTS__</p><p class="warning">Execution success is not proof of MEDPAR V3 compliance. Expected validation failures are reported separately from passing validations. Runs without actual outputs cannot verify final extract correctness.</p></section><section><h2>Stage and command results</h2><table><thead><tr><th>Stage</th><th>Command</th><th>Result</th><th>Exit</th><th>Details</th></tr></thead><tbody>__ROWS__</tbody></table></section><section><h2>Next verification steps</h2><p>Compare source JSON with actual output JSON for every stage; verify approved decision-tree outcomes, field derivations, record-level reconciliation, external lookup inputs, and exception counts. Unresolved specification conflicts remain unverified.</p><p><a href="master/index.html">Existing master report</a> · <a href="quality_summary.json">Machine-readable summary</a></p></section></html>"""
+    page = page.replace("__TOTAL__", str(len(rows))).replace("__COUNTS__", html.escape(', '.join(f'{k}: {v}' for k,v in sorted(counts.items())))).replace("__ROWS__", ''.join(table_rows))
+    (session_root / "quality_summary.html").write_text(page, encoding="utf-8")
+
+
 def main() -> int:
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
@@ -468,11 +509,12 @@ def main() -> int:
             break
 
     master = refresh_session_indexes(session.root, executions=executions)
+    write_quality_summary(session.root, executions)
     print("\n" + "=" * 118)
     print(f"FINISHED. Unexpected command results: {unexpected_failures}")
     print(f"Timestamped report folder: {session_relative}")
     print(f"Master HTML report: {relative_display(master, project_root=PROJECT_ROOT)}")
-    print("Open master/index.html first, then navigate stage-wise.")
+    print("Open quality_summary.html for execution overview, then master/index.html for stage details.")
     print("=" * 118)
     return 1 if unexpected_failures else 0
 
