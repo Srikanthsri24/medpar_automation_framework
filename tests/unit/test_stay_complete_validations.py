@@ -13,7 +13,7 @@ from medpar_qa.stages.stay.structural import (
 
 def valid_stay_source():
     return {
-        "claimCanNchEquatable": "H1",
+        "claimCanNchEquatable": "H001",
         "provider": {"providerId": "P1"},
         "admissionDate": "20260101",
         "stayFromDate": "20260101",

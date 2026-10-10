@@ -45,6 +45,15 @@ class FieldResolver:
         for candidate in candidates:
             value = nested_get(data, candidate, default=None)
             if value is not None:
+                if canonical_name == "hicn" and _key_form(candidate) == "claimcannchequatable":
+                    # Some claim extracts carry only EQ-BIC in this field.
+                    # Join it to the nine-character account; keep full HICNs intact.
+                    bic = str(value).strip()
+                    if len(bic) in (1, 2):
+                        account = self.get(data, "claim_can")
+                        if account is not None and len(str(account).strip()) == 9:
+                            return str(account).strip() + bic
+                        continue
                 return value
         if canonical_name == "hicn":
             ssa = self.get(data,"medpar_ssa_no_0021")

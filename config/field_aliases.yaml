@@ -12,9 +12,9 @@ provider_id:
 - provider.providerid
 - providerId
 - PRVDR-NUM
-- MEDPAR-PRVDR-FULL-NUM-1660
 - medparProvider0130
 - MEDPAR-PROVIDER-0130
+- MEDPAR-PRVDR-FULL-NUM-1660
 stay_from_date:
 - stayFromDate
 - claimFromDate

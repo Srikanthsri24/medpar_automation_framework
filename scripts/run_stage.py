@@ -61,10 +61,10 @@ def _stage_settings(stage: Stage, mode: str) -> dict:
             "block_ambiguous_ordering": True,
             "rule6_enabled": True,
         },
-        "split": {"window_years": 4, "skip_transaction_codes": [0, 4], "require_actual_output": require_actual},
+        "split": {"window_years": 4, "skip_transaction_codes": [], "require_actual_output": require_actual},
         "stay": {"decimal_scale": "0.001", "require_actual_output": require_actual, "require_expected_output": require_expected},
         "intermediate": {"window_years": 5, "decimal_scale": "0.001", "require_actual_output": require_actual, "require_expected_output": require_expected, "ndc_length": 10},
-        "final_medpar": {"expected_bytes": 3000, "encoding": "ascii", "require_actual_output": require_actual, "require_expected_output": require_expected, "allowed_classifications": ["SS", "LS", "SNF"]},
+        "final_medpar": {"expected_bytes": 3000, "encoding": "ascii", "require_actual_output": require_actual, "require_expected_output": require_expected, "allowed_classifications": ["S", "L", "N"]},
     }
     return {stage.value: all_settings[stage.value]}
 

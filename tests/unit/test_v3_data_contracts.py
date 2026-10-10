@@ -33,6 +33,18 @@ def test_ambiguous_aliases_fail_closed():
     resolver = FieldResolver({})
     assert resolver.get({"query-code": 3, "QUERY_CODE": 5}, "querycode") is None
 
+def test_claim_account_and_eq_bic_form_distinct_hicns():
+    resolver = FieldResolver.from_yaml("config/field_aliases.yaml")
+    assert resolver.get({"claimCan": "123456789", "claimCanNchEquatable": "A"}, "hicn") == "123456789A"
+    assert resolver.get({"claimCan": "987654321", "claimCanNchEquatable": "A"}, "hicn") == "987654321A"
+    assert resolver.get({"claimCanNchEquatable": "A"}, "hicn") is None
+    assert resolver.get({"claimCanNchEquatable": "H001"}, "hicn") == "H001"
+    assert resolver.get({"hicn": "explicit", "claimCan": "123456789", "claimCanNchEquatable": "A"}, "hicn") == "explicit"
+
+def test_medpar_identity_uses_ccn_before_extended_provider_field():
+    resolver = FieldResolver.from_yaml("config/field_aliases.yaml")
+    assert resolver.get({"medparProvider0130": "123456", "medparPrvdrFullNum1660": "0000000000000"}, "provider_id") == "123456"
+
 def test_parquet_nested_groups(tmp_path):
     pa = pytest.importorskip("pyarrow")
     pq = pytest.importorskip("pyarrow.parquet")
