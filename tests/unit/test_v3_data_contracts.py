@@ -58,3 +58,9 @@ def test_parquet_nested_groups(tmp_path):
     record = read_parquet_records(path, Stage.FINAL_ACTION, FileRole.SOURCE)[0].data
     assert record["value_codes"] == [{"code": "18", "amount": 12.5}]
     assert record["revenue"][0]["code"] == "0200"
+
+@pytest.mark.parametrize('raw', [0, '0', '0000000', '00000000', '   '])
+def test_optional_zero_dates_are_missing_but_required_dates_fail(raw):
+    assert parse_date(raw) is None
+    with pytest.raises(ValueError, match='required'):
+        parse_date(raw, allow_none=False)

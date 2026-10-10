@@ -60,7 +60,7 @@ def accommodation_totals(lines: Any) -> tuple[list[int], list[Decimal]]:
     days = [0]*5
     charges = [Decimal(0) for _ in range(5)]
     for line in normalize_collection(lines):
-        code = str(line_value(line,"code","revenueCode","revCntrCd","REV-CNTR-CD")).zfill(4)
+        code = str(line_value(line,"code","revenueCode","revCntrCd","REV-CNTR-CD","revenueCenter.revenueCenterId")).zfill(4)
         if not code.isdigit():
             raise ValueError("Invalid accommodation revenue code")
         number=int(code)
@@ -69,7 +69,7 @@ def accommodation_totals(lines: Any) -> tuple[list[int], list[Decimal]]:
         if group is None:
             continue
         units=line_value(line,"units","unitCount","revCntrUnitCnt","REV-CNTR-UNIT-CNT")
-        charge=line_value(line,"charges","amount","totalCharge","charge","revCntrTotChrgAmt","REV-CNTR-TOT-CHRG-AMT")
+        charge=line_value(line,"charges","amount","totalCharge","charge","revCntrTotChrgAmt","REV-CNTR-TOT-CHRG-AMT","totalAmount")
         if units is None or charge is None:
             raise LookupError("Accommodation line requires units and total charge")
         unit_decimal=to_decimal(units)
@@ -86,7 +86,20 @@ def line_value(line: Any, *keys: str) -> Any:
     for key in keys:
         value = nested_get(line, key)
         if value is not None:
+            if isinstance(value, dict):
+                for identifier in ("revenueCenterId", "conditionCodeId", "occurrenceSpanCodeId", "valueCodeId"):
+                    code = nested_get(value, identifier)
+                    if code is not None:
+                        return code
+                continue
             return value
+    # Production extract code groups wrap the code in an identifier object.
+    if "code" in keys:
+        for path in ("revenueCenter.revenueCenterId", "conditionCodeId",
+                     "occurrenceSpanCode.occurrenceSpanCodeId", "occurrenceSpanCodeId"):
+            value = nested_get(line, path)
+            if value is not None:
+                return value
     return None
 
 
@@ -166,6 +179,13 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
             raise LookupError(f"Missing source operand: {field}")
         return value
 
+    def required_date(field: str, *alternates: str) -> date:
+        from medpar_qa.normalization.dates import is_missing_date
+        value = required(field, *alternates)
+        if is_missing_date(value):
+            raise LookupError(f"Missing source date operand: {field}")
+        return parse_date(value, allow_none=False)
+
     def check(rule: str, field: str, calculate: Callable[[], Any], numeric: bool = False) -> None:
         observed = resolver.get(target.data, field)
         calculated=False
@@ -203,7 +223,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         return required("discharge_status", "patient_discharge_status", "patientStatus")
 
     check("INT-LOS-CALCULATION", "medpar_lgth_stay_0260", lambda: length_of_stay(admission(), thru(), status()), True)
-    check("INT-AGE-CALCULATION", "medpar_age_0030", lambda: age_at_admission(parse_date(required("beneficiary_date_of_birth", "date_of_birth", "birthDate", "beneficiaryBirthDate"), allow_none=False), admission(), get("medicare_status")), True)
+    check("INT-AGE-CALCULATION", "medpar_age_0030", lambda: age_at_admission(required_date("beneficiary_date_of_birth", "date_of_birth", "birthDate", "beneficiaryBirthDate"), admission(), get("medicare_status")), True)
     check("INT-DISCHARGE-STATUS-CALCULATION", "medpar_dischg_status_0100", lambda: "B" if str(status()).strip() in {"20","B"} else "C" if str(status()).strip() in {"30","C"} else "A")
 
     # DOD lookup requires the external EDB match. This explicitly provided source
@@ -248,7 +268,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-RADIOLOGY-INDICATORS", "medpar_radiology_ind_0485", lambda: "".join("1" if any(lo <= int(c) <= hi for c in revenue_codes()) else "0" for lo, hi in ((280,289),(320,329),(330,339),(340,349),(350,359),(400,409))))
     def condition_codes() -> list[str]:
         return codes(required("condition_codes"), "conditionCode", "CLM-RLT-COND-CD")
-    check("INT-ESRD-CONDITION", "medpar_esrd_condition_0550", lambda: max((c for c in condition_codes() if c in {str(n) for n in range(71,77)}), default="00"))
+    check("INT-ESRD-CONDITION", "medpar_esrd_condition_0550", lambda: max((c for c in condition_codes() if c in {str(n) for n in range(71,77)}), default="00"), True)
     check("INT-PPS-CALCULATION", "medpar_pps_ind_0120", lambda: "2" if "65" not in condition_codes() and str(required("provider_id"))[2:3].isdigit() else "0")
     check("INT-BASE-FACILITY-CCN", "medpar_prvdr_base_fac_ccn_1650", lambda:base_facility_ccn(required("provider_id")))
     for field, index in (("medpar_accommodation_days_0450",0),("medpar_accommodation_chrg_0460",1)):

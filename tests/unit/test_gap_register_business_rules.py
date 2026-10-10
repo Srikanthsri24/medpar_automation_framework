@@ -341,3 +341,75 @@ def test_unconfirmed_no_organ_default_is_blocked(resolver,make_record):
     actual=make_record({'medparOrganInd0487':'00'},stage=Stage.INTERMEDIATE,row=2)
     rule=next(r for r in validate_business_rules(source,actual,resolver) if r.rule_id=='INT-ORGAN-TYPE-CALCULATION')
     assert rule.status==ValidationStatus.BLOCKED
+
+
+def test_nested_production_code_groups_and_accommodation_amounts():
+    from medpar_qa.stages.intermediate.business_rules import accommodation_totals, codes
+    lines=[{'revenueCenter': {'revenueCenterId':'0200'}, 'units':2, 'totalAmount':'12.500'},
+           {'revenueCenter': {'revenueCenterId':'0300'}, 'units':1, 'totalAmount':'999'}]
+    days, amounts=accommodation_totals(lines)
+    assert days==[0,0,0,2,0] and amounts==[Decimal(0),Decimal(0),Decimal(0),Decimal(13),Decimal(0)]
+    assert codes([{'conditionCodeId':'71'}], 'conditionCode')==['71']
+    assert codes([{'occurrenceSpanCode':{'occurrenceSpanCodeId':'70'}}], 'occurrenceSpanCode')==['70']
+
+
+def test_zero_birth_date_blocks_age_instead_of_inventing_birth(resolver,make_record):
+    source=make_record({'beneficiaryDateOfBirth':0,'admissionDate':'20260101'},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparAge0030':-1},stage=Stage.INTERMEDIATE,row=2)
+    rule=next(r for r in validate_business_rules(source,target,resolver) if r.rule_id=='INT-AGE-CALCULATION')
+    assert rule.status==ValidationStatus.BLOCKED
+
+
+def test_repeated_service_charges_validate_each_entry(resolver,make_record):
+    from medpar_qa.stages.intermediate.settings import IntermediateSettings
+    from medpar_qa.stages.intermediate.structural import validate_decimal_values
+    settings=IntermediateSettings()
+    for values,expected in [([0,'12.500'],ValidationStatus.PASS),([0,'invalid'],ValidationStatus.FAIL)]:
+        record=make_record({'medparServiceCharges0470':values},stage=Stage.INTERMEDIATE)
+        rules=validate_decimal_values(record,resolver,settings.decimal_fields,settings.repeated_decimal_fields,settings.decimal_scale)
+        assert len(rules)==1 and rules[0].status==expected
+
+
+def test_indicator_derivations_use_source_arrays_not_output(resolver,make_record):
+    from medpar_qa.stages.intermediate.legacy_discrepancies import validate_condition_switches, validate_revenue_indicator
+    source=make_record({'conditionCodes':[{'conditionCodeId':'04'}], 'revenueLines':[{'revenueCenter':{'revenueCenterId':'0200'}}]},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparInforEnctrIndSw0800':'Y', 'medparIntensiveCareInd0481':'Y'},stage=Stage.INTERMEDIATE,row=2)
+    rules=validate_condition_switches(target,resolver,{'medpar_infor_enctr_ind_sw_0800':('04',)},source=source)
+    assert rules[0].status==ValidationStatus.PASS
+    rule=validate_revenue_indicator(target,resolver,field_name='medpar_intensive_care_ind_0481',rule_id='TEST',search_codes=['0200'],source=source)
+    assert rule.status==ValidationStatus.PASS
+    missing=make_record({},stage=Stage.INTERMEDIATE,row=3)
+    assert validate_condition_switches(target,resolver,{'medpar_infor_enctr_ind_sw_0800':('04',)},source=missing)[0].status==ValidationStatus.BLOCKED
+    assert validate_revenue_indicator(target,resolver,field_name='medpar_intensive_care_ind_0481',rule_id='TEST',search_codes=['0200'],source=missing).status==ValidationStatus.BLOCKED
+
+
+def test_ndc_arrays_validate_entries_without_concatenation(resolver,make_record):
+    from medpar_qa.stages.intermediate.structural import validate_age_and_ndc
+    for values,expected in [(['01234567890','12345678901'],ValidationStatus.PASS),(['01234567890','1234567890X'],ValidationStatus.FAIL)]:
+        target=make_record({'medparAge0030':65,'medparRevCntrNdcNum1550':values},stage=Stage.INTERMEDIATE)
+        rule=next(r for r in validate_age_and_ndc(target,resolver,11) if r.rule_id=='INT-NDC')
+        assert rule.status==expected
+
+
+def test_missing_intermediate_output_never_validates_source_as_output(resolver,make_record,monkeypatch):
+    from medpar_qa.stages.intermediate.processor import IntermediateProcessor
+    from medpar_qa.stages.intermediate.settings import IntermediateSettings
+    processor=IntermediateProcessor(resolver,date(2026,5,14),IntermediateSettings(require_actual_output=True))
+    source=make_record({'hicn':'H001','providerId':'123456','admissionDate':'20260101','splitYearIndicator':'Y0'},stage=Stage.INTERMEDIATE)
+    def unexpected(*args,**kwargs):
+        raise AssertionError('Missing output must not fall back to source structural validation')
+    monkeypatch.setattr(processor,'_validate_actual_structure',unexpected)
+    result=processor.validate([source])
+    assert any(r.rule_id=='INT-MISSING-ACTUAL-OUTPUT' and r.status==ValidationStatus.FAIL for r in result.rule_results)
+    assert not any(r.rule_id=='INT-PROC-CODE-COUNT' for r in result.rule_results)
+
+
+def test_duplicate_archive_diagnostic_preserves_real_data_differences(tmp_path):
+    import json, runpy
+    select=runpy.run_path('scripts/review_production_intermediate.py',run_name='review_test')['distinct_payload_paths']
+    paths=[]
+    for index,payload in enumerate([{'filename':'one','amount':1},{'filename':'two','amount':1},{'filename':'three','amount':2}]):
+        path=tmp_path/f'{index}.json';path.write_text(json.dumps(payload));paths.append(path)
+    selected,copies=select(paths)
+    assert len(selected)==2 and copies==1
+    assert len(paths)==3 and all(path.exists() for path in paths)

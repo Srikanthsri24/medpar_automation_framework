@@ -99,7 +99,6 @@ class IntermediateSettings:
     )
     decimal_fields: tuple[str, ...] = (
         "medpar_cov_chrg_0410",
-        "medpar_service_charges_0470",
         "medpar_tot_dpt_chrg_0440",
         "medpar_tot_acc_chrg_0430",
         "medpar_drg_price_0380",
@@ -116,6 +115,7 @@ class IntermediateSettings:
     )
     repeated_decimal_fields: tuple[str, ...] = (
         "medpar_accommodation_chrg_0460",
+        "medpar_service_charges_0470",
     )
     required_selected_fields: tuple[str, ...] = ()
     source_to_target_fields: tuple[str, ...] = (

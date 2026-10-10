@@ -256,6 +256,9 @@ class FinalMedparProcessor(BaseStageProcessor):
                     )
                 )
 
+            if actual is None and (self.settings.require_actual_output or actuals):
+                continue
+
             result.rule_results.extend(self._validate_record(target))
             if actual is not None:
                 result.rule_results.append(validate_trailer_removal(source, actual, self.resolver, self.settings.encoding))

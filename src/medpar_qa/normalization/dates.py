@@ -7,8 +7,16 @@ from typing import Any
 DATE_FORMATS = ("%Y%m%d", "%Y-%m-%d", "%m/%d/%Y", "%Y%j", "%y%j")
 
 
+def is_missing_date(value: Any) -> bool:
+    """Blank/zero dates are unpopulated, not Gregorian or Julian dates."""
+    if value is None:
+        return True
+    text = str(value).strip()
+    return not text or (text.isdigit() and set(text) == {"0"})
+
+
 def parse_date(value: Any, *, allow_none: bool = True) -> date | None:
-    if value is None or value == "":
+    if is_missing_date(value):
         if allow_none:
             return None
         raise ValueError("Date is required")

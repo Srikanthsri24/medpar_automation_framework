@@ -1,5 +1,39 @@
 # Production archive validation review — 11 October 2026
 
+## Latest follow-up validation
+
+Additional framework defects have been fixed: nested revenue/condition/span identifier objects; production `totalAmount` charges; repeated service charges and NDC values; blank/zero optional date sentinels while required zero dates still fail; zero birth dates block age calculation; source-based revenue/condition derivations; verified gender/state/county aliases. Missing required outputs no longer trigger structural checks against source records. Original production inputs remain unchanged.
+
+`run_commands.py` now pairs preceding-stage sources with actual outputs. Full suite: **242 passed**. The five-stage synthetic demonstration passes. Production acceptance remains open.
+
+Latest paired run: `reports/20261011_013602/master/index.html`.
+
+| Stage | PASS checks | FAIL checks | BLOCKED checks | N/A checks |
+| --- | ---: | ---: | ---: | ---: |
+| Final Action | 164 | 1,250 | 130 | 0 |
+| Split | 5,913 | 624 | 0 | 1 |
+| Stay | 10,015 | 198 | 0 | 16,836 |
+| Intermediate | 503 | 85 | 0 | 0 |
+| Final MEDPAR | Not run | Not run | Not run | Not run |
+
+Stay source and output are different snapshots: Split `yearQuarter=2025Q3/rundate=20260320`, Stay `yearQuarter=2026Q2/rundate=20260514`. There are 196 distinct source Stay identities and 83 output identities with zero full-identity overlap; 41 beneficiary/provider pairs overlap. This is a cross-snapshot diagnostic, not a valid merge acceptance baseline. Matching May Split inputs are missing.
+
+Final Action has 265 tied ordering buckets whose complete input payloads are identical copies, affecting 130 blocked claim groups. The framework reports the ambiguity; an approved replay/deduplication policy or a clean source extraction is needed before changing decision counts. Split additionally reports duplicate actual identities and 263 year-back indicator mismatches.
+
+Intermediate full-archive validation reports duplicate actual identities and 83 unavailable unique matches. A separate, explicitly selected distinct-payload diagnostic compares all 83 Stay sources to 83 representative outputs. It reports **16,245 PASS, 1,694 FAIL, 415 BLOCKED and 1,490 N/A** checks, versus the initial 3,062 failures. Remaining findings include missing DOB/invalid age, date windows, indicator/CCN/span/value mismatches and output mappings. Templates currently configure NDC width 10 while this archive carries repeated 11-character entries; approved MPRPARL/layout evidence is needed to settle width rather than infer it from observed output. Missing DOD/SSI/reference operands and the no-organ default still block checks.
+
+Reproduce the aggregate-only diagnostic with:
+
+```sh
+.venv/bin/python scripts/review_production_intermediate.py --distinct-payloads
+```
+
+The flag explicitly selects one copy per identical payload excluding filename metadata, and preserves every original file. Omitting the flag validates the full duplicate archive. `reports/production_intermediate_review/summary.json` contains only aggregate evidence; no golden files were supplied.
+
+See `TEAM_DEMO_GUIDE.md` for the demonstration and team handoff. The following section preserves the initial review for comparison.
+
+## Initial validation (historical)
+
 The exact enabled STAGE_RUNS entries in run_commands.py were executed against the local q61 archive. Final MEDPAR is disabled because no identifiable Final MEDPAR dataset is available. These are calculation/structural runs: actual and expected lists are empty. They do not certify source-to-output equivalence.
 
 After correcting runner settings and identity adapters, the run completed with failures. Reports are local, ignored by Git, and may contain sensitive record-level evidence.

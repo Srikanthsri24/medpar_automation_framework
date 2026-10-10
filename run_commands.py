@@ -1026,14 +1026,16 @@ def _production_paths(*folders: str, suffixes: tuple[str, ...] = (".json", ".par
 
 
 def _production_run(name: str, folders: tuple[str, ...], *, enabled: bool = True,
-                    suffixes: tuple[str, ...] = (".json", ".parquet")) -> dict[str, Any]:
+                    suffixes: tuple[str, ...] = (".json", ".parquet"),
+                    actual_folders: tuple[str, ...] = ()) -> dict[str, Any]:
     paths = _production_paths(*folders, suffixes=suffixes)
+    actual_paths = _production_paths(*actual_folders, suffixes=suffixes)
     return {
         "name": f"{name} ({len(paths)} files)",
         "enabled": enabled and bool(paths),
-        "mode": "calculate",  # Not a production-to-expected reconciliation.
+        "mode": "reconcile" if actual_folders else "calculate",
         "source": paths,
-        "actual": [],
+        "actual": actual_paths,
         "expected": [],
         "expected_exit_codes": (0,),
     }
@@ -1045,7 +1047,7 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
         "run_date": "2026-03-20",
         "single_files": [],
         "folder_paths": [
-            _production_run("Final Action - quarterly claim inputs", ("1-quarterly-claims-parquet",)),
+            _production_run("Final Action - quarterly claims to retained output", ("1-quarterly-claims-parquet",), actual_folders=("2-final-action-rules-parquet",)),
             _production_run("Final Action - retained output structural checks", ("2-final-action-rules-parquet",), enabled=False),
             _production_run("Final Action - dropped output structural checks", ("2-final-action-rules-dropped",), enabled=False),
         ],
@@ -1055,7 +1057,7 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
         "run_date": "2026-03-20",
         "single_files": [],
         "folder_paths": [
-            _production_run("Split - retained Final Action records as input", ("2-final-action-rules-parquet",)),
+            _production_run("Split - retained Final Action to 4-year output", ("2-final-action-rules-parquet",), actual_folders=("3-4yr-window-parquet",)),
             _production_run("Split - retained 4-year window structural checks", ("3-4yr-window-parquet",), enabled=False),
             _production_run("Split - dropped 4-year window structural checks", ("3-4yr-window-parquet-dropped",), enabled=False),
         ],
@@ -1065,7 +1067,7 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
         "run_date": "2026-05-14",
         "single_files": [],
         "folder_paths": [
-            _production_run("Stay - processing JSON records", ("4-stay-processing",)),
+            _production_run("Stay - split bills to merged JSON output", ("3-4yr-window-parquet",), actual_folders=("4-stay-processing",)),
             _production_run("Stay - output Parquet structural checks", ("4-stay-processing-parquet",), enabled=False),
         ],
     },
@@ -1074,7 +1076,7 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
         "run_date": "2026-05-14",
         "single_files": [],
         "folder_paths": [
-            _production_run("Intermediate - extracted JSON records", ("5-intermediate-processing",)),
+            _production_run("Intermediate - merged Stay to extracted JSON output", ("4-stay-processing",), actual_folders=("5-intermediate-processing",)),
             _production_run("Intermediate - output Parquet structural checks", ("5-intermediate-processing-parquet",), enabled=False),
         ],
     },

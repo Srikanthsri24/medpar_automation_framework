@@ -1809,13 +1809,15 @@
       ]
     }
   },
-  "testsPassed": 227,
-  "testReport": "reports/20261011_010812/pytest/pytest_complete_suite/report.html",
+  "testsPassed": 242,
+  "testReport": "reports/20261011_013550/pytest/pytest_complete_suite/report.html",
   "definitions": {
     "Implemented": "Documented check implemented with regression evidence; CMS production certification still separate.",
     "Existing": "Required behaviour already present and verified; original finding retained.",
     "Partial": "Useful checks added; row lists remaining specification or acceptance work.",
     "Needs input": "Cannot finish correctly without approved external rules, data, scope or environment.",
     "Not required": "Removed or outside IP/SNF scope under supplied requirements."
-  }
+  },
+  "productionReview": "docs/PRODUCTION_VALIDATION_REVIEW.md",
+  "productionCertified": false
 }

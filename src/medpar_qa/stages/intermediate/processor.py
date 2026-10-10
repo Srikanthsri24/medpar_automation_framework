@@ -321,7 +321,7 @@ class IntermediateProcessor(BaseStageProcessor):
         self.run_date = run_date
         self.settings = settings or IntermediateSettings()
 
-    def _validate_actual_structure(self, record: SourceRecord) -> list[RuleResult]:
+    def _validate_actual_structure(self, record: SourceRecord, source: SourceRecord | None = None) -> list[RuleResult]:
         start, end = january_aligned_window(
             self.run_date, self.settings.window_years
         )
@@ -363,13 +363,14 @@ class IntermediateProcessor(BaseStageProcessor):
                 field_name="medpar_intensive_care_ind_0481",
                 rule_id="INT-INTENSIVE-CARE-IND-0481",
                 search_codes=self.settings.intensive_care_revenue_codes,
+                source=source,
             )
         )
         # Organ acquisition is a two-character type, checked from source below.
         results.append(validate_admission_day(record, self.resolver))
         results.extend(
             validate_condition_switches(
-                record, self.resolver, self.settings.condition_switch_map
+                record, self.resolver, self.settings.condition_switch_map, source=source
             )
         )
         results.extend(
@@ -506,8 +507,12 @@ class IntermediateProcessor(BaseStageProcessor):
                     )
                 )
 
+            if actual is None and (self.settings.require_actual_output or actuals):
+                # Report the missing output once; source fields are not output values.
+                continue
+
             from .business_rules import validate_business_rules
-            result.rule_results.extend(self._validate_actual_structure(target))
+            result.rule_results.extend(self._validate_actual_structure(target, source=source))
             result.rule_results.extend(validate_business_rules(source, target, self.resolver))
             from medpar_qa.stages.v3_fields import validate_whole_dollar_fields
             result.rule_results.extend(validate_whole_dollar_fields(source,target,self.resolver))

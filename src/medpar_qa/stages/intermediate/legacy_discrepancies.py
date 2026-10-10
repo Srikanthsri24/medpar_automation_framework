@@ -15,11 +15,9 @@ from medpar_qa.stages.comparison import compare_values
 
 def _line_code(line: Any) -> str | None:
     if isinstance(line, dict):
-        for key in ("code", "revenueCode", "revCntrCd", "REV-CNTR-CD"):
-            value = line.get(key)
-            if value is not None and str(value).strip():
-                return str(value).strip().zfill(4)
-        return None
+        from .business_rules import line_value
+        value = line_value(line, "code", "revenueCode", "revCntrCd", "REV-CNTR-CD")
+        return str(value).strip().zfill(4) if value is not None and str(value).strip() else None
     if line is None or not str(line).strip():
         return None
     return str(line).strip().zfill(4)
@@ -124,11 +122,21 @@ def validate_revenue_indicator(
     search_codes: Iterable[str],
     positive_value: str = "Y",
     negative_value: str = "N",
+    source: SourceRecord | None = None,
 ) -> RuleResult:
     configured = tuple(sorted({str(code).strip().zfill(4) for code in search_codes if str(code).strip()}))
     actual = resolver.get(record.data, field_name)
-    lines = normalize_collection(resolver.get(record.data, "revenue_lines"))
+    operand_record = source if source is not None else record
+    raw_lines = resolver.get(operand_record.data, "revenue_lines")
+    lines = normalize_collection(raw_lines)
     source_codes = [code for code in (_line_code(line) for line in lines) if code]
+    if raw_lines is None and actual not in (None, ""):
+        return RuleResult(stage=Stage.INTERMEDIATE, rule_id=rule_id,
+                          status=ValidationStatus.BLOCKED,
+                          message="Revenue indicator requires source revenue lines",
+                          field_name=field_name, actual=actual,
+                          record_ids=[operand_record.record_id, record.record_id],
+                          source_files=[operand_record.source.file_path, record.source.file_path])
     if not configured:
         return RuleResult(
             stage=Stage.INTERMEDIATE,
@@ -158,12 +166,14 @@ def validate_revenue_indicator(
     expected = positive_value if matched else negative_value
     normalized_actual = None if actual is None else str(actual).strip().upper()
     valid = normalized_actual == expected
+    absent = actual in (None, "")
     return RuleResult(
         stage=Stage.INTERMEDIATE,
         rule_id=rule_id,
-        status=ValidationStatus.PASS if valid else ValidationStatus.FAIL,
+        status=ValidationStatus.NOT_APPLICABLE if absent else ValidationStatus.PASS if valid else ValidationStatus.FAIL,
         message=(
-            f"{field_name} matches revenue-code derivation"
+            f"Calculated {field_name}; output field absent"
+            if absent else f"{field_name} matches revenue-code derivation"
             if valid
             else f"{field_name} does not match revenue-code derivation"
         ),
@@ -251,12 +261,16 @@ def validate_condition_switches(
     record: SourceRecord,
     resolver: FieldResolver,
     mappings: Mapping[str, tuple[str, ...]],
+    *, source: SourceRecord | None = None,
 ) -> list[RuleResult]:
-    lines = normalize_collection(resolver.get(record.data, "condition_codes"))
+    operand_record = source if source is not None else record
+    raw_lines = resolver.get(operand_record.data, "condition_codes")
+    lines = normalize_collection(raw_lines)
     codes: set[str] = set()
     for line in lines:
         if isinstance(line, dict):
-            value = line.get("code", line.get("conditionCode"))
+            from .business_rules import line_value
+            value = line_value(line, "code", "conditionCode")
         else:
             value = line
         if value is not None and str(value).strip():
@@ -264,6 +278,13 @@ def validate_condition_switches(
     results: list[RuleResult] = []
     for field_name, mapped_codes in mappings.items():
         actual = resolver.get(record.data, field_name)
+        if raw_lines is None and actual not in (None, ""):
+            results.append(RuleResult(stage=Stage.INTERMEDIATE, rule_id="INT-CONDITION-SWITCH",
+                           status=ValidationStatus.BLOCKED, field_name=field_name,
+                           message="Condition switch requires source condition codes", actual=actual,
+                           record_ids=[operand_record.record_id, record.record_id],
+                           source_files=[operand_record.source.file_path, record.source.file_path]))
+            continue
         if actual in (None, "") and not lines:
             results.append(
                 RuleResult(
@@ -298,6 +319,9 @@ def validate_condition_switches(
                 "source_condition_codes": sorted(codes),
             }
         )
+        if actual in (None, ""):
+            results[-1].status = ValidationStatus.NOT_APPLICABLE
+            results[-1].message = f"Calculated {field_name}; output field absent"
     return results
 
 

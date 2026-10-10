@@ -486,6 +486,7 @@ beneficiary_date_of_birth:
 beneficiary_gender:
 - beneficiaryGender
 - MEDPAR-BENE-SEX-CD
+- medparSex0040
 beneficiary_race:
 - beneficiaryRace
 - MEDPAR-RACE-0050
@@ -499,9 +500,11 @@ benefits_exhausted_date:
 county_code:
 - countyCode
 - MEDPAR-CNTY-CD
+- medparBeneCoun0072
 state_code:
 - stateCode
 - MEDPAR-STATE-CD
+- medparBeneSt0071
 fiscal_intermediary:
 - fiscalIntermediary.id
 - fiscalIntermediary

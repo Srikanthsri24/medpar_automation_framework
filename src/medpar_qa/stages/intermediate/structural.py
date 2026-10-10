@@ -318,9 +318,10 @@ def validate_age_and_ndc(
         ndc_valid = False
         normalized_ndc = None
     else:
-        normalized_ndc = "".join(character for character in str(ndc) if character.isdigit())
-        normalized_ndc = normalized_ndc.zfill(ndc_length)
-        ndc_valid = len(normalized_ndc) == ndc_length
+        values = ndc if isinstance(ndc, list) else [ndc]
+        normalized_values = [str(value).strip().zfill(ndc_length) for value in values]
+        ndc_valid = bool(values) and all(value.isdigit() and len(value) == ndc_length for value in normalized_values)
+        normalized_ndc = normalized_values if isinstance(ndc, list) else normalized_values[0]
     results.append(
         RuleResult(
             stage=Stage.INTERMEDIATE,

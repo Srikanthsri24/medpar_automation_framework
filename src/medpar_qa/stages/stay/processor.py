@@ -383,6 +383,9 @@ class StayProcessor(BaseStageProcessor):
                     )
                 )
 
+            if actual is None and (self.settings.require_actual_output or actuals):
+                continue
+
             result.rule_results.extend(
                 self._validate_latest_code_collections(source_group, actual)
             )

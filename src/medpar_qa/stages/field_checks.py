@@ -57,7 +57,8 @@ def optional_date_result(
     window_end: date | None = None,
 ) -> RuleResult:
     raw = resolver.get(record.data, field_name)
-    if raw is None or raw == "":
+    from medpar_qa.normalization.dates import is_missing_date
+    if is_missing_date(raw):
         return RuleResult(
             stage=stage,
             rule_id=rule_id,
