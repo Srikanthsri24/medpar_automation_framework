@@ -1,3 +1,6 @@
+"""Coordinate final action validation: separate file roles, check prerequisites/structure, derive
+source expectations, match output identities and compare available golden fields.
+"""
 from __future__ import annotations
 
 from typing import Any
@@ -19,6 +22,9 @@ from .settings import FinalActionSettings
 
 
 class FinalActionProcessor(BaseStageProcessor):
+    """Implement this stage through the BaseStageProcessor validation interface and hold its
+    resolver/settings.
+    """
     stage = Stage.FINAL_ACTION
 
     def __init__(
@@ -26,33 +32,43 @@ class FinalActionProcessor(BaseStageProcessor):
         resolver: FieldResolver,
         settings: FinalActionSettings | None = None,
     ) -> None:
+        """Initialize this FinalActionProcessor with the supplied dependencies/configuration and
+        the assignments in its constructor.
+        """
         self.resolver = resolver
         self.settings = settings or FinalActionSettings()
         self.router = FinalActionRuleRouter(self.settings)
 
     @staticmethod
     def derive_record_type(transaction_code: Any) -> str:
+        """Map the transaction code to the approved IP/SNF type for Final Action grouping."""
         from .grouping import derive_record_type
 
         return derive_record_type(transaction_code)
 
     def group_key(self, record: SourceRecord) -> tuple[Any, ...]:
+        """Expose the Final Action business grouping key for one source record."""
         return build_group_key(record, self.resolver)
 
     def order_group(self, group: list[SourceRecord]) -> list[SourceRecord]:
+        """Return the group records in approved newest-first order."""
         return list(order_newest_first(group, self.resolver).ordered_records)
 
     def _qc(self, record: SourceRecord) -> int:
+        """Resolve and convert the claim query code to an integer."""
         return int(self.resolver.get(record.data, "query_code"))
 
     def _icn(self, record: SourceRecord) -> str:
+        """Resolve and trim the claim internal control number."""
         return str(self.resolver.get(record.data, "icn")).strip()
 
     def _action_code(self, record: SourceRecord) -> str | None:
+        """Resolve the cancellation action code without replacing it with the transaction code."""
         value = self.resolver.get(record.data, "action_code")
         return None if value is None else str(value).strip()
 
     def _transaction_code(self, record: SourceRecord) -> str | None:
+        """Resolve the transaction code and normalize it using this stage implementation."""
         value = self.resolver.get(record.data, "transaction_code")
         return None if value is None else str(value).strip()
 
@@ -61,6 +77,9 @@ class FinalActionProcessor(BaseStageProcessor):
         ordered: tuple[SourceRecord, ...],
         group_key: dict[str, Any],
     ) -> FinalActionGroupContext:
+        """Build the immutable rule context with ordered claims, identity and
+        QC/ICN/action/transaction features.
+        """
         return FinalActionGroupContext(
             records=ordered,
             group_key=group_key,
@@ -71,6 +90,9 @@ class FinalActionProcessor(BaseStageProcessor):
         )
 
     def validate_group(self, group: list[SourceRecord]) -> StageResult:
+        """Check schema/table limits/bypass/order and Rule-2 prerequisites, select one rule,
+        evaluate decisions and reconcile the group.
+        """
         result = StageResult(stage=self.stage)
         if not group:
             result.rule_results.append(
@@ -226,6 +248,9 @@ class FinalActionProcessor(BaseStageProcessor):
         return result
 
     def validate(self, records: list[SourceRecord]) -> StageResult:
+        """Coordinate final action checks and return StageResult with auditable outcomes/decisions;
+        source records remain distinct from actual/expected roles.
+        """
         overall = StageResult(stage=self.stage)
         overall.rule_results.append(
             ld3137_sort_order_result(

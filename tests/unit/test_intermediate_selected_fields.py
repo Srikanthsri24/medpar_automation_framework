@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for intermediate selected fields. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 from datetime import date
 
 import pytest
@@ -23,6 +26,9 @@ from medpar_qa.stages.intermediate.selected_fields import (
     ],
 )
 def test_intermediate_charge_precision(make_record, field_name):
+    """Verify intermediate charge precision. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     record = make_record({}, stage=Stage.INTERMEDIATE)
     result = validate_intermediate_decimal_field(
         record,
@@ -39,6 +45,9 @@ def test_intermediate_charge_precision(make_record, field_name):
 @pytest.mark.regression
 @pytest.mark.decimal_precision
 def test_negative_amount_rounding_is_preserved(make_record):
+    """Verify negative amount rounding is preserved. The assertions below state exactly what this
+    test proves for its fixtures.
+    """
     record = make_record({}, stage=Stage.INTERMEDIATE)
     result = validate_intermediate_decimal_field(
         record,
@@ -54,6 +63,9 @@ def test_negative_amount_rounding_is_preserved(make_record):
 @pytest.mark.regression
 @pytest.mark.procedure_codes
 def test_procedure_codes_dates_versions_and_indicator(make_record):
+    """Verify procedure codes dates versions and indicator. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     record = make_record({}, stage=Stage.INTERMEDIATE)
     results = validate_procedure_fields(
         record,
@@ -73,6 +85,9 @@ def test_procedure_codes_dates_versions_and_indicator(make_record):
 @pytest.mark.regression
 @pytest.mark.diagnosis_codes
 def test_diagnosis_counts_versions_and_poa_alignment(make_record):
+    """Verify diagnosis counts versions and poa alignment. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     record = make_record({}, stage=Stage.INTERMEDIATE)
     results = validate_diagnosis_fields(
         record,

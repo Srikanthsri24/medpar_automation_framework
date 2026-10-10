@@ -1,3 +1,6 @@
+"""Typed stay configuration defaults and mapping parser: identities, sort fields, domains,
+precision, required output roles and selected field coverage.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +10,9 @@ from typing import Any, Mapping
 
 @dataclass(frozen=True)
 class StaySettings:
+    """Store the typed Stay options. Defaults are declared in this class; from_mapping applies
+    explicit manifest overrides.
+    """
     identity_fields: tuple[str, ...] = ("hicn", "provider_id", "admission_date", "split_year_indicator")
     sort_fields: tuple[str, ...] = (
         "hicn", "provider_id", "split_year_indicator",
@@ -37,6 +43,9 @@ class StaySettings:
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, Any] | None) -> "StaySettings":
+        """Convert supplied stage options into typed settings, applying only the documented
+        defaults for omitted options.
+        """
         raw = raw or {}
         return cls(
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),

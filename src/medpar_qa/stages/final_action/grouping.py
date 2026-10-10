@@ -1,3 +1,6 @@
+"""Derive IP/SNF record type and group Final Action claims by approved identity; admission date is
+deliberately absent from this Final Action key.
+"""
 from __future__ import annotations
 
 from collections import defaultdict
@@ -13,6 +16,7 @@ GroupKey = tuple[str, str, str, date, date]
 
 
 def derive_record_type(transaction_code: Any) -> str:
+    """Map the transaction code to the approved IP/SNF type for Final Action grouping."""
     try:
         code = int(transaction_code)
     except (TypeError, ValueError) as exc:
@@ -26,6 +30,9 @@ def derive_record_type(transaction_code: Any) -> str:
 
 
 def build_group_key(record: SourceRecord, resolver: FieldResolver) -> GroupKey:
+    """Build the Final Action record-type/HICN/provider/from/thru identity; admission date does not
+    split this claim group.
+    """
     rec_type = derive_record_type(resolver.get(record.data, "transaction_code"))
     hicn = str(resolver.get(record.data, "hicn", "")).strip()
     provider_id = str(resolver.get(record.data, "provider_id", "")).strip()
@@ -35,6 +42,7 @@ def build_group_key(record: SourceRecord, resolver: FieldResolver) -> GroupKey:
 
 
 def group_key_to_dict(key: GroupKey) -> dict[str, Any]:
+    """Label the Final Action identity tuple so the report explains each group-key component."""
     return {
         "rec_type": key[0],
         "hicn": key[1],
@@ -47,6 +55,7 @@ def group_key_to_dict(key: GroupKey) -> dict[str, Any]:
 def group_records(
     records: list[SourceRecord], resolver: FieldResolver
 ) -> dict[GroupKey, list[SourceRecord]]:
+    """Bucket source claims under their Final Action business group key."""
     grouped: dict[GroupKey, list[SourceRecord]] = defaultdict(list)
     for record in records:
         grouped[build_group_key(record, resolver)].append(record)

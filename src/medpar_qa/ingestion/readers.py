@@ -1,3 +1,6 @@
+"""Read JSON/Parquet into SourceRecord objects, normalize nested values and attach file, row, role,
+stage and record ID lineage.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -13,6 +16,7 @@ from medpar_qa.models import SourceLocation, SourceRecord
 
 
 def _display_path(path: Path, display_base: Path | None) -> str:
+    """Convert the physical file path into a readable project-relative lineage path when possible."""
     if display_base is None:
         return str(path)
     try:
@@ -22,12 +26,16 @@ def _display_path(path: Path, display_base: Path | None) -> str:
 
 
 def _record_id(path: Path, row_number: int, data: dict[str, Any]) -> str:
+    """Build a stable record ID from business data when present, otherwise use file/row lineage."""
     content = json.dumps(data, sort_keys=True, default=str, separators=(",", ":"))
     digest = hashlib.sha256(f"{path}:{row_number}:{content}".encode("utf-8")).hexdigest()
     return digest[:20]
 
 
 def _normalize_json_payload(payload: Any) -> list[dict[str, Any]]:
+    """Accept the supported JSON root shapes and produce a sequence of record dictionaries; reject
+    unsupported roots.
+    """
     if isinstance(payload, list):
         if not all(isinstance(item, dict) for item in payload):
             raise InputReadError("JSON list must contain only objects")
@@ -50,6 +58,7 @@ def read_json_records(
     *,
     display_base: Path | None = None,
 ) -> list[SourceRecord]:
+    """Read a JSON payload, normalize its records and attach source lineage to every record."""
     try:
         with path.open("r", encoding="utf-8-sig") as handle:
             payload = json.load(handle)
@@ -78,6 +87,7 @@ def read_json_records(
 
 
 def _nested_to_python(value: Any) -> Any:
+    """Recursively convert Parquet/numpy nested values into ordinary Python values."""
     if hasattr(value, "tolist") and not isinstance(value, (str, bytes)):
         value = value.tolist()
     if isinstance(value, dict):
@@ -100,6 +110,9 @@ def read_parquet_records(
     *,
     display_base: Path | None = None,
 ) -> list[SourceRecord]:
+    """Read Parquet columns and nested values, then create SourceRecord objects with file/row
+    lineage.
+    """
     try:
         import pandas as pd
 
@@ -145,6 +158,9 @@ def read_records(
     *,
     display_base: Path | None = None,
 ) -> list[SourceRecord]:
+    """Choose the JSON or Parquet reader from the explicit format or file suffix; reject an
+    unsupported format.
+    """
     file_format = (declared_format or path.suffix.lstrip(".")).lower()
     if file_format == "json":
         return read_json_records(path, stage, role, display_base=display_base)

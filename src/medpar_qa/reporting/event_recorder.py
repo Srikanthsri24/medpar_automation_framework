@@ -1,3 +1,6 @@
+"""Capture emitted validation and decision events during a command/test. Reporting capture is
+separate from the business decision itself.
+"""
 from __future__ import annotations
 
 import json
@@ -13,28 +16,35 @@ _CAPTURED_EVENTS: ContextVar[list[dict[str, Any]] | None] = ContextVar(
 
 
 def start_capture() -> Token:
+    """Start a scoped validation-event buffer for one command or pytest test."""
     return _CAPTURED_EVENTS.set([])
 
 
 def finish_capture(token: Token) -> list[dict[str, Any]]:
+    """Finish event capture and return the collected validation/decision evidence."""
     events = _CAPTURED_EVENTS.get() or []
     _CAPTURED_EVENTS.reset(token)
     return events
 
 
 def record_event(event: dict[str, Any]) -> None:
+    """Append an evidence event when capture is active; this does not determine the business
+    outcome.
+    """
     events = _CAPTURED_EVENTS.get()
     if events is not None:
         events.append(deepcopy(event))
 
 
 def _pretty(value: Any) -> str:
+    """Format values as readable escaped/text JSON for this reporter."""
     if value is None:
         return "Not supplied / not applicable"
     return json.dumps(value, indent=2, default=str, ensure_ascii=False)
 
 
 def format_events_text(events: list[dict[str, Any]]) -> str:
+    """Render captured events into readable test evidence."""
     if not events:
         return ""
     lines = ["", "MEDPAR RULE-WISE VALIDATION DETAILS", "=" * 110]

@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for conftest. Tests describe controlled examples; passing
+them does not certify all production files.
+"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,11 +14,13 @@ from medpar_qa.normalization.fields import FieldResolver
 
 @pytest.fixture
 def resolver() -> FieldResolver:
+    """Provide the test FieldResolver configured with project aliases."""
     return FieldResolver.from_yaml(Path("config/field_aliases.yaml"))
 
 
 @pytest.fixture
 def make_record():
+    """Provide a test record factory with explicit stage, role and lineage."""
     def _make(
         data,
         *,
@@ -25,6 +30,7 @@ def make_record():
         role=FileRole.SOURCE,
         file_format="json",
     ):
+        """Construct one fixture SourceRecord from the provided values and test metadata."""
         return SourceRecord(
             data=data,
             source=SourceLocation(

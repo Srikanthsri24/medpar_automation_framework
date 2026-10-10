@@ -1,3 +1,6 @@
+"""Run one stage from relative file/folder paths, construct its manifest/settings and publish stage
+evidence.
+"""
 from __future__ import annotations
 
 import argparse
@@ -27,6 +30,9 @@ from medpar_qa.reporting.session_index import refresh_session_indexes  # noqa: E
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Define accepted command-line options and defaults; argparse rejects unsupported command
+    syntax.
+    """
     parser = argparse.ArgumentParser(
         description="Run one MEDPAR stage against one file, multiple files, or a relative wildcard."
     )
@@ -48,10 +54,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _manifest_files(stage: Stage, role: FileRole, paths: list[str]) -> list[ManifestFile]:
+    """Convert stage CLI source/actual/expected arguments into typed manifest file entries."""
     return [ManifestFile(path=path, stage=stage, role=role) for path in paths]
 
 
 def _stage_settings(stage: Stage, mode: str) -> dict:
+    """Construct the selected stage settings from approved defaults and explicit CLI options."""
     require_actual = mode in {"reconcile", "golden"}
     require_expected = mode == "golden"
     all_settings: dict[str, dict] = {
@@ -71,6 +79,9 @@ def _stage_settings(stage: Stage, mode: str) -> dict:
 
 
 def _validate_relative_paths(args: argparse.Namespace) -> None:
+    """Reject absolute user-supplied business paths so the configuration can be shared across
+    machines.
+    """
     for label, values in (("source", args.source), ("actual", args.actual), ("expected", args.expected)):
         for value in values:
             ensure_relative_user_path(value, label)
@@ -81,6 +92,9 @@ def _validate_relative_paths(args: argparse.Namespace) -> None:
 
 
 def main() -> int:
+    """Run this script command-line workflow and return its process exit status. Run one stage from
+    relative file/folder paths, construct its manifest/settings and publish stage evidence.
+    """
     args = build_parser().parse_args()
     _validate_relative_paths(args)
     stage = Stage(args.stage)

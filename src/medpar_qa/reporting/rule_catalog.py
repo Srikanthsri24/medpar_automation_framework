@@ -1,3 +1,6 @@
+"""Reporting descriptions of requirements, evaluation logic, outcomes and suggested remediation.
+Actual implementation branches live in the validators.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,6 +9,9 @@ from typing import Any
 
 @dataclass(frozen=True)
 class RuleMetadata:
+    """Represent one Final Action decision-tree route; applies tests eligibility and evaluate
+    returns auditable group/record decisions.
+    """
     title: str
     requirement: str
     validation: str
@@ -22,6 +28,7 @@ def _meta(
     logic: str,
     remediation: str,
 ) -> RuleMetadata:
+    """Construct a rule-description record for consistent report explanations."""
     return RuleMetadata(
         title=title,
         requirement=requirement,
@@ -69,15 +76,15 @@ CATALOG: dict[str, RuleMetadata] = {
     "FA-PRE-GROUPING": _meta("Final Action claim grouping", "Claims must be grouped by record type, HICN, provider, stay-from date, and stay-thru date.", "Build the business group key for each valid record.", "PASS when a complete deterministic group key can be created.", "Populate or correct the field that prevented group-key creation."),
     "FA-PRE-ORDERING": _meta("Final Action newest-record ordering", "Rules that use first/latest records require deterministic newest-first ordering.", "Sort by processing date, accrete date, and approved source sequence.", "PASS when records have a unique order; BLOCKED when ties cannot be safely resolved.", "Provide the approved tie-breaker or correct duplicate ordering values."),
     "FA-ALL-QC0": _meta("All QC0 group", "When every claim in a group has query code 0, the complete group is dropped.", "Confirm all query codes are zero and assign DROP to every record.", "PASS when every group record receives DROP.", "Remove any QC0 record incorrectly retained in Final Action output."),
-    "FA-RULE-01": _meta("Final Action Rule 1 — single claim", "A one-record group keeps approved non-zero QC values and drops QC0.", "Count the group, inspect query code, and assign KEEP or DROP.", "For the current approved requirements: QC1/QC2/QC3/QC5=KEEP and QC0=DROP.", "Correct query-code handling or the actual retained-output membership."),
+    "FA-RULE-01": _meta("Final Action Rule 1 — single claim", "A one-record group keeps approved non-zero QC values and drops QC0.", "Count the group, inspect query code, and assign KEEP or DROP.", "For the current approved requirements: QC1/QC3/QC5=KEEP; QC2 is outside the default approved domain and QC0=DROP.", "Correct query-code handling or the actual retained-output membership."),
     "FA-RULE-02": _meta("Final Action Rule 2 — 5-0-3 / 5-0-1", "A three-record newest-first sequence 5-0-3 or 5-0-1 keeps only QC5.", "Validate group count, newest-first QC sequence, and record decisions.", "PASS when QC5 is KEEP and the other two records are DROP.", "Correct ordering, sequence selection, or retained-output membership."),
     "FA-RULE-03": _meta("Final Action Rule 3 — same QC", "When all records have the same QC, retain only the newest record for each unique ICN.", "Group same-QC claims by ICN and select the newest record per ICN.", "PASS when kept count equals unique ICN count and no older duplicate survives.", "Drop older duplicate ICNs or restore a missing unique ICN."),
     "FA-RULE-05": _meta("Final Action Rule 5", "For the approved three-record/no-QC5/one-QC0 route, compare ICNs and retain the approved newest non-QC0 record.", "Evaluate group size, QC counts, newest-first order, and ICN equality.", "PASS when decisions match the Rule 5 flow; all-same ICNs must drop all.", "Correct ICN comparison or selected non-QC0 record."),
-    "FA-RULE-06": _meta("Final Action Rule 6 — QC0/QC5 pair", "For a two-record QC0/QC5 group, matching control numbers plus QC0 transaction/action code 4 or 6 drop both records; otherwise QC5 is kept and QC0 is dropped.", "Compare QueryCode, control number, and the QC0 cancellation code.", "PASS when both are dropped for the matching-control-number 4/6 condition, or when QC5 alone is kept otherwise.", "Correct control-number comparison, cancellation-code mapping, or actual retained-output membership."),
+    "FA-RULE-06": _meta("Final Action Rule 6 — QC0/QC5 pair", "For a two-record QC0/QC5 group, matching control numbers plus QC0 action code 4 or 6 drop both records; otherwise QC5 is kept and QC0 is dropped.", "Compare QueryCode, control number, and the QC0 cancellation code.", "PASS when both are dropped for the matching-control-number 4/6 condition, or when QC5 alone is kept otherwise.", "Correct control-number comparison, cancellation-code mapping, or actual retained-output membership."),
     "FA-RULE-07": _meta("Final Action Rule 7", "With no QC5 and QC0 count dominating, retain eligible unique non-QC0 ICNs and drop QC0/duplicates.", "Compare QC counts and ICN occurrence counts.", "PASS when only eligible unique non-QC0 records remain.", "Correct QC-count routing or duplicate-ICN decisions."),
     "FA-RULE-08": _meta("Final Action Rule 8", "With no QC5, more than three records, newest QC0, and non-QC0 count dominating, retain eligible unique non-QC0 ICNs.", "Validate rule prerequisites and assign decisions using ICN uniqueness.", "PASS when QC0 and duplicate ICNs are dropped.", "Correct newest-record detection, count comparison, or ICN filtering."),
     "FA-RULE-09": _meta("Final Action Rule 9", "With no QC5 and newest non-QC0, keep eligible unique non-QC0 ICNs and drop QC0/duplicates.", "Validate the newest QC and ICN uniqueness after initial selection.", "PASS when final decisions match the Rule 9 override logic.", "Correct newest-record or duplicate-ICN processing."),
-    "FA-RULE-10A": _meta("Final Action Rule 10A", "When QC5 exists, newest is QC0, and QC0 count exceeds QC5 count, apply ICN uniqueness to non-QC0 records.", "Check QC5 presence, newest QC, QC counts, and ICN matches.", "PASS when QC0 and matching ICNs are dropped and unique non-QC0 records are retained.", "Correct Rule 10A routing or ICN decisions."),
+    "FA-RULE-10A": _meta("Final Action Rule 10A", "When QC5 exists, the group is not the simple Rule 6 pair, and QC0 count exceeds QC5 count, apply ICN uniqueness to non-QC0 records regardless of the newest QC.", "Check QC5 presence, Rule 6 exclusion, QC counts, and ICN matches.", "PASS when QC0 and matching ICNs are dropped and unique non-QC0 records are retained.", "Correct Rule 10A routing or ICN decisions."),
     "FA-RULE-10B": _meta("Final Action Rule 10B", "When QC5 exists and Rule 10A is false, keep the newest non-QC0 record without ICN comparison.", "Select the first/newest non-QC0 record and drop all remaining records.", "PASS when exactly the approved newest non-QC0 record is kept.", "Correct the selected record or remove unintended ICN comparison."),
     "FA-DEFAULT": _meta("Final Action default rule", "When no numbered rule applies, block the group for manual review.", "Confirm no numbered rule applies; do not infer a KEEP decision.", "BLOCKED when no approved numbered rule applies.", "Review the unmatched claim group and obtain an approved decision."),
     "FA-GROUP-RECONCILIATION": _meta("Final Action group reconciliation", "Every group record must receive exactly one KEEP or DROP decision.", "Compare input record IDs with decision record IDs and detect duplicates/missing decisions.", "PASS when input count equals unique decision count and each record is decided once.", "Fix missing or duplicate decisions in the selected rule."),
@@ -91,8 +98,8 @@ CATALOG: dict[str, RuleMetadata] = {
     "SP-PRE-DATES": _meta("Split date validation", "Admission, stay-from, and stay-thru dates must use supported valid formats.", "Parse the configured dates for each claim.", "PASS when required dates parse successfully.", "Correct the invalid or missing date field."),
     "SP-PRE-DATE-ORDER": _meta("Split stay date order", "Stay-from date must not be later than stay-thru date.", "Compare parsed stay-from and stay-thru dates.", "PASS when from <= thru.", "Correct reversed stay dates."),
     "SP-SORT-ORDER-LD3137": _meta("Split LD-3137 sort-order validation", "admissionDate must be excluded from the Split input sort order.", "Inspect configured Split sort fields.", "PASS when admissionDate is absent and the legacy business key remains contiguous.", "Remove admissionDate from Split sort configuration."),
-    "SP-GROUP-CONTIGUITY-LD3137": _meta("Split LD-3137 grouping evidence", "Claims sharing the Split business identity must not be separated solely by admissionDate.", "Bucket source records using the configured identity and show multi-admission-date groups.", "PASS when admissionDate is absent from the identity.", "Correct Split identity/sort configuration."),
-    "SP-REC-TYPE-BYPASS": _meta("Split transaction-code bypass", "Configured transaction codes, normally 0 and 4, bypass slicing.", "Inspect transaction code and determine whether Split is applicable.", "PASS/NOT_APPLICABLE reflects the configured bypass route.", "Correct transaction-code mapping or bypass configuration."),
+    "SP-GROUP-CONTIGUITY-LD3137": _meta("Split LD-3137 grouping evidence", "Claims sharing the Split business identity must not be separated solely by admissionDate.", "Bucket source records using the configured identity and show multi-admission-date groups.", "PASS when records use the configured stage-specific identity; admission date is forbidden only for Final Action identity.", "Correct Split identity/sort configuration."),
+    "SP-REC-TYPE-BYPASS": _meta("Split transaction-code bypass", "Only explicitly configured skip_transaction_codes bypass slicing; the default skip list is empty and SNF codes 0/4 use the admission-date route.", "Inspect transaction code and determine whether Split is applicable.", "PASS/NOT_APPLICABLE reflects the configured bypass route.", "Correct transaction-code mapping or bypass configuration."),
     "SP-RULE-INDICATOR": _meta("Split-year indicator derivation", "Eligible claims must derive Y#0109, Y#1012, or Y99999 according to date window and reference month.", "Calculate the expected indicator and compare it with the populated indicator.", "PASS when actual indicator exactly equals the calculated value.", "Correct the split-year calculation or the output field."),
     "SP-OUTPUT-RECONCILIATION": _meta("Split output reconciliation", "Actual Split output cannot contain missing, unexpected, or duplicate claim identities.", "Compare source identities with actual output identities.", "PASS when output membership reconciles to expected routing.", "Remove duplicates/unexpected records and restore missing expected records."),
     "SP-ACTUAL-DUPLICATE-IDENTITY": _meta("Split duplicate output identity", "Each Split output identity must be unique.", "Index actual records using configured identity fields and detect duplicates.", "PASS when duplicate count is zero.", "Deduplicate actual Split output."),
@@ -108,8 +115,8 @@ CATALOG: dict[str, RuleMetadata] = {
     "ST-SELECTED-DECIMAL": _meta("Stay selected amount validation", "Selected Stay amount fields must be valid numeric Decimal values.", "Parse and validate the selected amount field.", "PASS when the value is numeric and valid for the field.", "Correct nonnumeric/null value or field mapping."),
     "ST-SELECTED-DECIMAL-PRECISION": _meta("Stay selected amount scale", "Selected Stay amount fields must conform to configured calculation precision.", "Quantize and compare the selected amount at the configured scale.", "PASS when actual scale/value is correct.", "Correct Decimal scale or rounding."),
     "ST-SNF-QUAL-DATE-ORDER": _meta("Stay SNF qualification date order", "SNF qualification from-date must not be after thru-date.", "Parse and compare MEDPAR-SNF-QUAL-FROM-DATE-0180 and thru-date 0190.", "PASS when from <= thru or the rule is not applicable.", "Correct the SNF qualification dates."),
-    "ST-SORT-ORDER-LD3137": _meta("Stay LD-3137 sort/group validation", "admissionDate must be excluded from the Stay input sort/group key so claims are not split into separate groups.", "Inspect Stay identity and sort fields.", "PASS when admissionDate is absent and splitYearIndicator participates in grouping.", "Remove admissionDate and use the approved Stay grouping key."),
-    "ST-GROUP-CONTIGUITY-LD3137": _meta("Stay LD-3137 grouping evidence", "Stay claims with the same HICN, provider, and SplitYearIndicator must remain one bucket despite differing admission dates.", "Bucket Stay source claims and report any business group containing multiple admission dates.", "PASS when all such claims map to one identity.", "Correct Stay identity fields or upstream sort configuration."),
+    "ST-SORT-ORDER-LD3137": _meta("Stay LD-3137 sort/group validation", "admissionDate must be excluded from the Stay input sort key; the complete Stay identity retains admission date to preserve distinct stays.", "Inspect Stay sort fields and preserve the separate complete Stay identity.", "PASS when admissionDate is absent from the configured sort fields; this check does not remove it from the business identity.", "Remove admissionDate from the sort fields and preserve the approved complete Stay identity."),
+    "ST-GROUP-CONTIGUITY-LD3137": _meta("Stay LD-3137 grouping evidence", "Stay claims sharing the complete configured identity are bucketed together; different admission dates remain separate stay identities.", "Bucket Stay source claims and report any business group containing multiple admission dates.", "PASS when the configured stage identity is used; this check is not a physical input-sortedness test.", "Correct Stay identity fields or upstream sort configuration."),
     "ST-SPAN-CODE-LIMIT": _meta("Stay unique Span Code consolidation", "Save unique Span Code/date groups from all claims in the combined Stay, up to 10.", "Apply latest-record precedence to duplicate codes, retain unique groups, and limit output to ten.", "PASS when the consolidated output contains no more than ten unique Span Code/date groups.", "Correct duplicate precedence, collection order, or truncation to the ten-group limit."),
     "ST-GOLDEN-COMPARISON": _meta("Stay golden regression availability", "Field-by-field golden comparison requires both actual and approved expected Stay output.", "Confirm both roles are supplied before golden comparison.", "NOT_APPLICABLE when both are not supplied; PASS/FAIL is emitted by field comparisons when they are.", "Supply actual and expected Stay files for golden mode."),
     "ST-OUTPUT-RECONCILIATION": _meta("Stay output reconciliation", "Actual Stay output must reconcile to expected Stay identities.", "Compare source-derived identities with actual-output identities.", "PASS when there are no unexpected output identities.", "Remove unexpected Stay records and restore missing expected output."),
@@ -136,15 +143,15 @@ CATALOG: dict[str, RuleMetadata] = {
     "INT-PROC-DATE-WINDOW": _meta("Intermediate procedure date window", "Procedure dates must be inside the January-aligned five-year window.", "Calculate January 1 of run-year minus four years through run date and test each procedure date.", "PASS when every applicable date is within the window.", "Correct out-of-window dates or business run date."),
     "INT-DEATH-AFTER-ADMISSION": _meta("Intermediate death-after-admission indicator", "medparDeathAfterAdm0611 must be derived from admission date and date of death.", "Compare date of death with admission date and expected indicator.", "PASS when the populated indicator matches the date relationship.", "Correct source dates or indicator derivation."),
     "INT-AGE": _meta("Intermediate age", "MEDPAR-AGE-0030 must be a valid integer in the approved range.", "Parse age and validate configured range, currently 0 through 120.", "PASS when age is a valid in-range integer.", "Correct age source/derivation or invalid formatting."),
-    "INT-NDC": _meta("Intermediate NDC numbers", "CMS CR18 defines 11-character NDC values and at most ten occurrences.", "Validate each populated entry without inventing leading zeros or concatenating the array.", "PASS when every entry has the configured width and no more than ten occur.", "Correct the source value or occurrence count."),
+    "INT-NDC": _meta("Intermediate NDC numbers", "CMS CR18 defines 11-character NDC values and at most ten occurrences.", "Validate each populated entry without inventing leading zeros or concatenating the array.", "PASS when each entry is numeric with the configured width and no more than ten occur.", "Correct the source value or occurrence count."),
     "INT-NDC-SOURCE-DERIVATION": _meta("Intermediate NDC source order", "Use the first ten NDC occurrences in the source revenue trailer.", "Read IDE/NDC/UPC values in source order and compare with output NDC occurrences.", "PASS when values and order match; ambiguous non-NDC source values require the selection policy.", "Correct the revenue source mapping, order or first-ten selection."),
     "INT-GOLDEN-COMPARISON": _meta("Intermediate golden regression availability", "Golden field comparison requires both actual and approved expected Intermediate output.", "Confirm actual and expected roles are supplied.", "NOT_APPLICABLE without both; detailed field results are emitted when supplied.", "Supply actual and expected Intermediate files for golden mode."),
     "INT-OUTPUT-RECONCILIATION": _meta("Intermediate output reconciliation", "Actual Intermediate output must contain no unexpected identities.", "Compare source and actual identity sets.", "PASS when unexpected identity count is zero.", "Remove unexpected records and restore missing expected records."),
 
     # Final MEDPAR
     "FM-PRE-SOURCE": _meta("Final MEDPAR source availability", "Final MEDPAR validation requires source records.", "Confirm source-role records exist.", "PASS when source count is greater than zero.", "Add Final MEDPAR source files."),
-    "FM-SORT-ORDER-LD3137": _meta("Final MEDPAR LD-3137 sort-order validation", "admissionDate must be excluded from the Final Process input sort order.", "Inspect Final MEDPAR sort and identity fields.", "PASS when admissionDate is absent and records sharing the legacy key remain contiguous.", "Remove admissionDate from Final Process sort configuration."),
-    "FM-GROUP-CONTIGUITY-LD3137": _meta("Final MEDPAR LD-3137 grouping evidence", "Final records sharing HICN, provider, and SplitYearIndicator must not be separated solely by admissionDate.", "Bucket Final source records using the configured identity and report multi-admission-date groups.", "PASS when admissionDate is absent from the identity.", "Correct Final MEDPAR identity/sort configuration."),
+    "FM-SORT-ORDER-LD3137": _meta("Final MEDPAR LD-3137 sort-order validation", "admissionDate must be excluded from the Final Process input sort order.", "Inspect Final MEDPAR sort fields; identity includes admission date separately.", "PASS when admissionDate is absent and records sharing the legacy key remain contiguous.", "Remove admissionDate from Final Process sort configuration."),
+    "FM-GROUP-CONTIGUITY-LD3137": _meta("Final MEDPAR LD-3137 grouping evidence", "Final records sharing the complete configured identity are bucketed together; distinct admissions remain separate.", "Bucket Final source records using the configured identity and report multi-admission-date groups.", "PASS when records use the configured stage-specific identity; admission date is forbidden only for Final Action identity.", "Correct Final MEDPAR identity/sort configuration."),
     "FM-SPLIT-YEAR-INDICATOR": _meta("Final MEDPAR split-year indicator", "Final output must contain a valid split-year indicator.", "Validate format and, in golden mode, compare the field value.", "PASS when the indicator is one of Y#0109, Y#1012, or Y99999 and matches expected when supplied.", "Correct the indicator derivation or final mapping."),
     "FM-CLASSIFICATION": _meta("Final MEDPAR SS/LS/SNF classification", "Final output must use an allowed classification such as SS, LS, or SNF.", "Compare classification against configured allowed values.", "PASS when classification is allowed.", "Correct final classification logic or configuration."),
     "FM-BYTE-LENGTH": _meta("Final MEDPAR 3000-byte length", "The serialized fixed-width Final MEDPAR record must be exactly 3000 bytes in the configured encoding.", "Encode the actual record text and count bytes.", "PASS when encoded length equals configured expected bytes.", "Correct serialization, padding, truncation, or character encoding."),
@@ -156,6 +163,9 @@ CATALOG: dict[str, RuleMetadata] = {
 
 
 def _generic(stage: str, rule_id: str, field_name: str | None) -> RuleMetadata:
+    """Provide a reporting description for an uncatalogued result while preserving its actual
+    message and evidence.
+    """
     readable_stage = stage.replace("_", " ").title()
     readable_rule = rule_id.replace("-", " ").replace("_", " ").title()
     field_text = f" for {field_name}" if field_name else ""
@@ -201,6 +211,9 @@ def _generic(stage: str, rule_id: str, field_name: str | None) -> RuleMetadata:
 
 
 def get_rule_metadata(stage: str, rule_id: str, field_name: str | None = None) -> RuleMetadata:
+    """Look up the reporting catalog for the result ID, using the actual result to support the
+    generic fallback.
+    """
     return CATALOG.get(rule_id) or _generic(stage, rule_id, field_name)
 
 
@@ -212,6 +225,7 @@ def conclusion_text(
     actual: Any,
     metadata: RuleMetadata,
 ) -> str:
+    """Explain the recorded PASS/FAIL/BLOCKED/N/A result without changing its status."""
     if status == "PASS":
         return (
             f"PASS — {message}. Observed result {actual!r} satisfied the expected "
@@ -234,6 +248,7 @@ def conclusion_text(
 
 
 def stage_rule_catalog(stage: str) -> list[tuple[str, RuleMetadata]]:
+    """Select catalog entries relevant to a given stage for report navigation."""
     prefixes = {
         "final_action": ("FA-",),
         "split": ("SP-",),

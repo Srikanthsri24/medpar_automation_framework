@@ -1,3 +1,6 @@
+"""Implement the Final Action rule 03 applicability predicate and resulting record KEEP/DROP
+decisions. Router precedence determines when this rule is reached.
+"""
 from __future__ import annotations
 
 from medpar_qa.enums import RecordDecision, ValidationStatus
@@ -7,12 +10,21 @@ from .base import FinalActionRule, RuleEvaluation
 
 
 class Rule03SameQueryCode(FinalActionRule):
+    """More than one claim has the same QC, after earlier router matches. Keep the newest
+    occurrence of each distinct ICN and drop older occurrences of that ICN.
+    """
     rule_id = "FA-RULE-03"
 
     def applies(self, context: FinalActionGroupContext) -> bool:
+        """Test this route prerequisite: More than one claim has the same QC, after earlier router
+        matches. Earlier router matches take precedence.
+        """
         return context.count > 1 and context.all_query_codes_same
 
     def evaluate(self, context: FinalActionGroupContext) -> RuleEvaluation:
+        """Keep the newest occurrence of each distinct ICN and drop older occurrences of that ICN.
+        Return RuleEvaluation with its outcome and any explicit record decisions.
+        """
         seen_icns: set[str] = set()
         decisions = []
         for index, icn in enumerate(context.icns):

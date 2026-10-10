@@ -52,8 +52,14 @@ SUM_FIELDS = (
 
 def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | None,
                          resolver: FieldResolver, scale: Decimal) -> list[RuleResult]:
+    """Order bills and independently derive supported first/last/nonblank/date/sum/revenue/warning
+    expectations; retain per-field source lineage.
+    """
     results = []
     def get(r: SourceRecord, field: str) -> Any:
+        """Read the resolved field from the supplied record. Alias resolution and missing-value
+        handling follow the code below.
+        """
         return resolver.get(r.data, field)
     ordered = sorted(records, key=lambda r: (parse_date(get(r,"stay_from_date")), parse_date(get(r,"stay_thru_date")),
         -(parse_date(get(r,"processing_date"), allow_none=True).toordinal() if get(r,"processing_date") else 0),
@@ -62,6 +68,10 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
     first, last = ordered[0], ordered[-1]
 
     def check(field: str, expected: Any, rule: str, numeric: bool = False) -> None:
+        """Compare the local independently calculated expectation with the target field and append
+        a traced rule outcome. Missing operands/output and invalid values use the explicit
+        status branches below.
+        """
         observed = get(actual, field) if actual else None
         if observed is None:
             status = ValidationStatus.NOT_APPLICABLE
@@ -121,6 +131,7 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
 
 
 def validate_merge_rules(records, actual, resolver, scale):
+    """Wrap merge derivation and convert invalid numeric/date operands into a reportable failure."""
     try:
         return _validate_merge_rules(records,actual,resolver,scale)
     except (ValueError,TypeError,ArithmeticError) as exc:

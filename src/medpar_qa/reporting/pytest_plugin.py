@@ -1,3 +1,6 @@
+"""Pytest hooks that capture each test outcome and emitted QA evidence, then write timestamped test
+reports.
+"""
 from __future__ import annotations
 
 import html
@@ -17,6 +20,7 @@ STAGE_MARKERS = ("final_action", "split", "stay", "intermediate", "final_medpar"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
+    """Register the MedPAR-specific pytest report and selection options."""
     group = parser.getgroup("medpar-reporting")
     group.addoption("--medpar-report-dir", action="store", default="reports", help="Relative report root")
     group.addoption("--medpar-report-session", action="store", default=None, help="Relative shared timestamped report-session path")
@@ -24,6 +28,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def _selection_name(config: pytest.Config) -> str:
+    """Derive the human-readable pytest selection label for the session."""
     configured = config.getoption("--medpar-report-name")
     if configured:
         return slugify(configured, "pytest")
@@ -34,12 +39,14 @@ def _selection_name(config: pytest.Config) -> str:
 
 
 def _selection_stage(config: pytest.Config) -> str:
+    """Map a pytest selection/test path to a report stage where possible."""
     markexpr = str(getattr(config.option, "markexpr", "") or "").lower()
     matched = [stage for stage in STAGE_MARKERS if stage in markexpr]
     return matched[0] if len(matched) == 1 else "pytest"
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    """Initialize the pytest report session and hook state."""
     report_root = config.getoption("--medpar-report-dir")
     session_path = config.getoption("--medpar-report-session")
     ensure_relative_user_path(report_root, "medpar-report-dir")
@@ -64,6 +71,7 @@ def pytest_configure(config: pytest.Config) -> None:
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]):
+    """Capture each pytest setup/call/teardown outcome and attach emitted validation events."""
     outcome = yield
     report = outcome.get_result()
     store = item.config._medpar_test_reports  # type: ignore[attr-defined]
@@ -98,16 +106,19 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]):
 
 
 def _esc(value: Any) -> str:
+    """Escape text before placing it into HTML so data cannot alter report markup."""
     return html.escape(str(value))
 
 
 def _pretty(value: Any) -> str:
+    """Format values as readable escaped/text JSON for this reporter."""
     if value is None:
         return "Not supplied / not applicable"
     return json.dumps(value, indent=2, default=str, ensure_ascii=False)
 
 
 def _event_card(event: dict[str, Any], number: int) -> str:
+    """Render one test-captured QA event with its rule/decision evidence."""
     event_type = event.get("event_type", "validation")
     if event_type == "decision":
         return f"<article class='event decision-event'><h4>Decision #{number}: {_esc(event.get('decision'))}</h4><p><strong>Record:</strong> {_esc(event.get('record_id'))}</p><p><strong>Rule:</strong> {_esc(event.get('rule_id'))}</p><p><strong>Explanation:</strong> {_esc(event.get('reason'))}</p></article>"
@@ -134,6 +145,7 @@ def _event_card(event: dict[str, Any], number: int) -> str:
 
 
 def _render_test(entry: dict[str, Any], index: int) -> str:
+    """Render the test result, failure output and captured rule evidence."""
     outcome = entry["outcome"]
     captured = "\n".join(entry["stdout"] + entry["stderr"]).strip()
     error = "\n".join(entry["longrepr"]).strip()
@@ -154,6 +166,7 @@ def _render_test(entry: dict[str, Any], index: int) -> str:
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Write the final pytest artifacts and refresh the session indexes."""
     config = session.config
     entries = list(config._medpar_test_reports.values())  # type: ignore[attr-defined]
     report_dir: Path = config._medpar_report_dir_path  # type: ignore[attr-defined]
@@ -185,6 +198,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
 @pytest.hookimpl(trylast=True)
 def pytest_terminal_summary(terminalreporter: Any, exitstatus: int, config: pytest.Config) -> None:
+    """Print the paths and outcome summary of the generated pytest reports."""
     output = getattr(config, "_medpar_detailed_report_path", None)
     if output:
         terminalreporter.write_sep("=", f"MEDPAR detailed HTML report: {relative_display(output, project_root=PROJECT_ROOT)}")

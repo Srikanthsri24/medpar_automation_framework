@@ -1,3 +1,6 @@
+"""Validate encoded raw-record length and explicitly configured byte offsets/width/value slices;
+JSON text length is not the physical byte count.
+"""
 from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
@@ -12,6 +15,9 @@ def validate_encoded_length(
     expected_bytes: int = 3000,
     encoding: str = "ascii",
 ) -> RuleResult:
+    """Encode the supplied raw record and verify its physical byte length, reporting encoding
+    failures.
+    """
     try:
         encoded = value if isinstance(value, bytes) else value.encode(encoding)
         actual = len(encoded)

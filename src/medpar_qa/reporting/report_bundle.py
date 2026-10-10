@@ -1,3 +1,4 @@
+"""Write the coordinated text/JSON/HTML and audit artifacts for one business run."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,6 +13,9 @@ from medpar_qa.reporting.json_reporter import write_json_report
 
 @dataclass(frozen=True)
 class ReportBundle:
+    """Represent report bundle with the fields and methods declared below. Declared dataclass
+    fields are the component contract.
+    """
     html: Path
     json: Path
     text: Path
@@ -27,6 +31,7 @@ def write_report_bundle(
     parent_link: str | None = None,
     context: dict[str, Any] | None = None,
 ) -> ReportBundle:
+    """Write coordinated report artifacts and indexes for the business-run result."""
     stage_results = list(results)
     directory = Path(output_directory)
     directory.mkdir(parents=True, exist_ok=True)

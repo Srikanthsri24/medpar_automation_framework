@@ -1,3 +1,6 @@
+"""Validate source/output identities, dates and collection structure, then check selected latest
+nonblank values.
+"""
 from __future__ import annotations
 
 from decimal import Decimal
@@ -23,6 +26,7 @@ def validate_stay_source_record(
     *,
     decimal_scale: Decimal,
 ) -> list[RuleResult]:
+    """Check source identity, required dates and valid from/thru order before Stay merging."""
     results = required_fields_results(
         stage=Stage.STAY,
         rule_prefix="ST-PRE",
@@ -94,6 +98,9 @@ def validate_stay_output_record(
     *,
     decimal_scale: Decimal,
 ) -> list[RuleResult]:
+    """Check merged output required/selected fields, code collection structure and relevant date
+    order.
+    """
     results: list[RuleResult] = []
     results.append(
         optional_date_result(
@@ -192,7 +199,11 @@ def derive_latest_nonblank(
     resolver: FieldResolver,
     field_name: str,
 ) -> Any:
+    """Sort source bills and choose the latest populated field value, skipping blanks while
+    preserving valid zero.
+    """
     def sort_key(record: SourceRecord):
+        """Build local bill precedence for this latest-value selection."""
         processing = parse_date(resolver.get(record.data, "processing_date"), allow_none=True)
         accrete = parse_date(resolver.get(record.data, "accrete_date"), allow_none=True)
         return processing or parse_date("00010101"), accrete or parse_date("00010101")
@@ -213,6 +224,7 @@ def validate_latest_selected_value(
     rule_id: str,
     decimal_scale: Decimal | None = None,
 ) -> RuleResult:
+    """Compare output against the independently selected latest nonblank source field."""
     expected = derive_latest_nonblank(source_group, resolver, field_name)
     actual_value = resolver.get(actual.data, field_name)
     if expected is None:

@@ -1,3 +1,4 @@
+"""Validate selected Stay amount fields at configured Decimal scale."""
 from __future__ import annotations
 
 from decimal import Decimal
@@ -23,6 +24,7 @@ def validate_stay_decimal_field(
     actual_value: Any,
     scale: Decimal = Decimal("0.001"),
 ) -> RuleResult:
+    """Validate one selected Stay amount at the configured calculation scale."""
     if field_name not in STAY_DECIMAL_FIELDS:
         return RuleResult(
             stage=Stage.STAY,

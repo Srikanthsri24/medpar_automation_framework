@@ -1,9 +1,15 @@
+"""Regression tests and local fixtures for split v3 gap checks. Tests describe controlled examples;
+passing them does not certify all production files.
+"""
 from datetime import date
 from medpar_qa.enums import Stage, ValidationStatus
 from medpar_qa.stages.split.processor import SplitProcessor
 
 
 def _record(make_record, code, i=0):
+    """Test helper for record. It constructs or summarizes controlled fixture data for the
+    assertions in this file.
+    """
     return make_record({
         "claimCan": f"CLAIM{i:05d}", "hicn": "H123", "providerId": "P123",
         "admissionDate": "20260403", "stayFromDate": "20260403",
@@ -12,6 +18,9 @@ def _record(make_record, code, i=0):
 
 
 def test_split_v3_invalid_transaction_code_is_failure(resolver, make_record):
+    """Verify split v3 invalid transaction code is failure. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     result = SplitProcessor(resolver, date(2026, 7, 19)).validate([_record(make_record, 6)])
     matches = [r for r in result.rule_results if r.rule_id == 'SP-INVALID-TRANSACTION-CODE']
     assert len(matches) == 1
@@ -19,6 +28,9 @@ def test_split_v3_invalid_transaction_code_is_failure(resolver, make_record):
 
 
 def test_split_v3_more_than_75_bills_audited_without_rejection(resolver, make_record):
+    """Verify split v3 more than 75 bills audited without rejection. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     records = [_record(make_record, 1, i) for i in range(76)]
     result = SplitProcessor(resolver, date(2026, 7, 19)).validate(records)
     matches = [r for r in result.rule_results if r.rule_id == 'SP-STAY-BILL-LIMIT']
@@ -27,6 +39,9 @@ def test_split_v3_more_than_75_bills_audited_without_rejection(resolver, make_re
 
 
 def test_split_v3_exactly_75_bills_no_limit_failure(resolver, make_record):
+    """Verify split v3 exactly 75 bills no limit failure. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     records = [_record(make_record, 1, i) for i in range(75)]
     result = SplitProcessor(resolver, date(2026, 7, 19)).validate(records)
     assert not [r for r in result.rule_results if r.rule_id == 'SP-STAY-BILL-LIMIT']

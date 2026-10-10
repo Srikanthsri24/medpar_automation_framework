@@ -1,3 +1,6 @@
+"""Convert finite amounts to Decimal, quantize with explicit rounding and sum amounts without
+binary floating-point arithmetic.
+"""
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -8,6 +11,9 @@ DEFAULT_SCALE = Decimal("0.001")
 
 
 def to_decimal(value: Any, *, allow_none: bool = False) -> Decimal | None:
+    """Convert via Decimal text representation and reject invalid/nonfinite values rather than
+    using floating-point arithmetic.
+    """
     if value is None or value == "":
         if allow_none:
             return None
@@ -29,6 +35,7 @@ def quantize_decimal(
     scale: Decimal = DEFAULT_SCALE,
     rounding: str = ROUND_HALF_UP,
 ) -> Decimal:
+    """Round a Decimal to the explicitly configured scale and rounding mode."""
     decimal_value = to_decimal(value)
     assert decimal_value is not None
     return decimal_value.quantize(scale, rounding=rounding)
@@ -40,5 +47,6 @@ def sum_decimal(
     scale: Decimal = DEFAULT_SCALE,
     rounding: str = ROUND_HALF_UP,
 ) -> Decimal:
+    """Convert each operand to Decimal, sum it and apply the explicit scale/rounding policy."""
     total = sum((to_decimal(value) or Decimal("0") for value in values), Decimal("0"))
     return total.quantize(scale, rounding=rounding)

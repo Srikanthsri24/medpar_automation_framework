@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for user split files. Tests describe controlled examples;
+passing them does not certify all production files.
+"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -36,6 +39,9 @@ def test_uploaded_split_file(
     expected_indicator,
     actual_indicator,
 ):
+    """Verify uploaded split file. The assertions below state exactly what this test proves for its
+    fixtures.
+    """
     manifest = load_manifest(Path("config/runs/split") / manifest_name)
     resolver = FieldResolver.from_yaml("config/field_aliases.yaml")
     result = Pipeline(manifest, resolver).run()[0]
@@ -57,6 +63,9 @@ def test_uploaded_split_file(
 @pytest.mark.regression
 @pytest.mark.split
 def test_positive_uploaded_suite_passes():
+    """Verify positive uploaded suite passes. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     manifest = load_manifest("config/runs/positive_uploaded_suite.yaml")
     resolver = FieldResolver.from_yaml("config/field_aliases.yaml")
     results = Pipeline(manifest, resolver).run()
@@ -69,6 +78,9 @@ def test_positive_uploaded_suite_passes():
 @pytest.mark.regression
 @pytest.mark.split
 def test_previous_negative_split_suite_matches_corrected_years_back():
+    """Verify previous negative split suite matches corrected years back. The assertions below
+    state exactly what this test proves for its fixtures.
+    """
     manifest = load_manifest("config/runs/negative_uploaded_split_suite.yaml")
     resolver = FieldResolver.from_yaml("config/field_aliases.yaml")
     result = Pipeline(manifest, resolver).run()[0]

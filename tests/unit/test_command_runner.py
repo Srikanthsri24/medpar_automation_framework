@@ -1,7 +1,13 @@
+"""Regression tests and local fixtures for command runner. Tests describe controlled examples;
+passing them does not certify all production files.
+"""
 import runpy
 
 
 def test_stage_script_uses_current_snf_and_final_class_contracts():
+    """Verify stage script uses current snf and final class contracts. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     from medpar_qa.enums import Stage
     namespace = runpy.run_path("scripts/run_stage.py", run_name="run_stage_test")
     settings = namespace["_stage_settings"]
@@ -10,6 +16,9 @@ def test_stage_script_uses_current_snf_and_final_class_contracts():
 
 
 def test_run_commands_file_loads_and_has_all_five_stages():
+    """Verify run commands file loads and has all five stages. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     namespace = runpy.run_path("run_commands.py", run_name="run_commands_test")
     commands = namespace["COMMANDS"]
     stages = {

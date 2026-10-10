@@ -1,3 +1,6 @@
+"""Sort by processing date, accretion date, query code and source sequence in descending order;
+flag identical complete ordering keys.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,6 +14,9 @@ from medpar_qa.normalization.fields import FieldResolver
 
 @dataclass(frozen=True, order=True)
 class BusinessOrderKey:
+    """Represent business order key with the fields and methods declared below. Declared dataclass
+    fields are the component contract.
+    """
     processing_date: date
     accrete_date: date
     query_code: int
@@ -19,15 +25,22 @@ class BusinessOrderKey:
 
 @dataclass(frozen=True)
 class OrderingResult:
+    """Represent ordering result with the fields and methods declared below. Declared dataclass
+    fields are the component contract.
+    """
     ordered_records: tuple[SourceRecord, ...]
     ambiguous_record_ids: tuple[str, ...] = ()
 
     @property
     def is_ambiguous(self) -> bool:
+        """Determine whether identical business ordering keys were found."""
         return bool(self.ambiguous_record_ids)
 
 
 def _as_sequence(value: Any) -> int:
+    """Parse the optional source sequence; use the explicit missing sentinel and reject invalid
+    sequence text.
+    """
     if value is None or value == "":
         return -1
     try:
@@ -37,6 +50,9 @@ def _as_sequence(value: Any) -> int:
 
 
 def business_order_key(record: SourceRecord, resolver: FieldResolver) -> BusinessOrderKey:
+    """Build descending precedence from processing date, accretion date, query code and source
+    sequence.
+    """
     processing = parse_date(resolver.get(record.data, "processing_date"))
     accrete = parse_date(
         resolver.get(record.data, "accrete_date"), allow_none=True
@@ -48,6 +64,9 @@ def business_order_key(record: SourceRecord, resolver: FieldResolver) -> Busines
 def order_newest_first(
     records: list[SourceRecord], resolver: FieldResolver
 ) -> OrderingResult:
+    """Sort by the complete business order key and return the record IDs sharing identical keys as
+    ambiguity evidence.
+    """
     decorated = [(business_order_key(record, resolver), record) for record in records]
     decorated.sort(key=lambda item: item[0], reverse=True)
 

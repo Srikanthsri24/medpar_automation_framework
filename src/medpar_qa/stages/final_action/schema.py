@@ -1,3 +1,6 @@
+"""Check the mandatory source fields, allowed query/transaction codes, numeric values and valid
+date order before routing claims.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,6 +16,9 @@ from .settings import FinalActionSettings
 
 @dataclass(frozen=True)
 class RecordValidationError:
+    """Represent record validation error with the fields and methods declared below. Declared
+    dataclass fields are the component contract.
+    """
     record: SourceRecord
     field_name: str
     message: str
@@ -32,6 +38,7 @@ _REQUIRED_FIELDS = (
 
 
 def _is_blank(value: Any) -> bool:
+    """Determine whether a mandatory schema value is absent or empty."""
     return value is None or (isinstance(value, str) and not value.strip())
 
 
@@ -40,6 +47,9 @@ def validate_source_record(
     resolver: FieldResolver,
     settings: FinalActionSettings,
 ) -> list[RecordValidationError]:
+    """Check source fields and approved code/date domains before Final Action rules can make
+    decisions.
+    """
     errors: list[RecordValidationError] = []
 
     for field_name in _REQUIRED_FIELDS:

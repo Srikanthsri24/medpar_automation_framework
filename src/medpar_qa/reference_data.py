@@ -11,6 +11,9 @@ from medpar_qa.normalization.decimal_values import to_decimal
 
 
 def ssi_days(admission: date, discharge: date, flags: dict[str, Any]) -> int:
+    """Count SSI-positive monthly overlap days from admission inclusive to discharge exclusive,
+    including month/year boundaries.
+    """
     if discharge < admission:
         raise ValueError("SSI discharge date precedes admission")
     days = 0
@@ -25,7 +28,13 @@ def ssi_days(admission: date, discharge: date, flags: dict[str, Any]) -> int:
 
 
 class ReferenceData:
+    """Represent reference data with the fields and methods declared below. This class groups the
+    related operations below.
+    """
     def __init__(self, config: dict[str, Any], base: Path):
+        """Initialize this ReferenceData with the supplied dependencies/configuration and the
+        assignments in its constructor.
+        """
         self.dod: dict[str, dict[str, Any]] = {}
         self.ssi: dict[str, dict[str, int]] = {}
         self.loaded: set[str] = set()
@@ -57,6 +66,9 @@ class ReferenceData:
             self.loaded.add(kind)
 
     def enrich(self, data: dict[str,Any], resolver: FieldResolver) -> dict[str,Any]:
+        """Copy source data and attach real DOD/SSI feed availability, match flags and matched
+        values without inventing lookups.
+        """
         result = deepcopy(data)
         if "dod" in self.loaded:
             match = self.dod.get(str(resolver.get(data,"hicn")))

@@ -1,3 +1,6 @@
+"""Check one decision per input record and exact retained-output identity membership, including
+duplicates, missing and unexpected records.
+"""
 from __future__ import annotations
 
 from collections import Counter
@@ -12,6 +15,7 @@ from .settings import FinalActionSettings
 
 
 def _canonical_value(field_name: str, value: Any) -> Any:
+    """Normalize an identity component before Final Action output reconciliation."""
     if field_name in {"processing_date", "accrete_date"}:
         parsed = parse_date(value, allow_none=True)
         return parsed.isoformat() if parsed else None
@@ -25,6 +29,9 @@ def record_identity(
     resolver: FieldResolver,
     settings: FinalActionSettings,
 ) -> tuple[Any, ...]:
+    """Resolve and canonicalize the configured identity fields into the tuple used to match
+    records.
+    """
     return tuple(
         _canonical_value(field, resolver.get(record.data, field))
         for field in settings.identity_fields
@@ -36,6 +43,7 @@ def validate_group_decisions(
     decisions: tuple[ClaimDecision, ...],
     group_key: dict[str, Any],
 ) -> RuleResult:
+    """Ensure each source record receives one and only one KEEP/DROP decision."""
     input_ids = [record.record_id for record in records]
     decision_ids = [decision.record_id for decision in decisions]
     duplicate_decisions = sorted(
@@ -79,6 +87,9 @@ def reconcile_actual_output(
     resolver: FieldResolver,
     settings: FinalActionSettings,
 ) -> RuleResult:
+    """Compare actual retained identities against computed KEEP decisions and expose
+    missing/unexpected/duplicate output.
+    """
     source_by_id = {record.record_id: record for record in source_records}
     expected_kept = [
         source_by_id[item.record_id]

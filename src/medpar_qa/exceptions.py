@@ -1,3 +1,4 @@
+"""Named exception types used to distinguish configuration, ingestion and validation problems."""
 class MedparQAError(Exception):
     """Base framework exception."""
 

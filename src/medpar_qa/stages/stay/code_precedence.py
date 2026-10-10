@@ -1,3 +1,6 @@
+"""Consolidate code objects using newest-claim precedence, preserving relevant span dates and
+removing internal lineage before comparison.
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -14,6 +17,7 @@ def _record_sort_key(
     date_paths: tuple[str, ...],
     resolver: FieldResolver | None = None,
 ) -> tuple[date, ...]:
+    """Build precedence for the newest source bill contributing code objects."""
     values: list[date] = []
     for path in date_paths:
         raw = resolver.get(record.data, path) if resolver else nested_get(record.data, path)
@@ -63,6 +67,10 @@ def latest_values_by_code(
             key = str(code).strip().upper()
             if collection_path == "occurrence_span_lines":
                 def span_date(*names: str) -> str:
+                    """Resolve/parse the span dates used by this local consolidation or derivation;
+                    code, date direction and maximum/first precedence follow the expression
+                    below.
+                    """
                     raw = next((nested_get(item, name) for name in names if nested_get(item, name) is not None), None)
                     return str(parse_date(raw, allow_none=True) or "")
                 key = (key, span_date("fromDate", "from_date", "from"), span_date("toDate", "thruDate", "thru_date", "thru"))
@@ -84,6 +92,9 @@ def latest_values_by_code(
 
 
 def strip_lineage(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Remove internal source-trace fields from consolidated items before business-value
+    comparison.
+    """
     return [
         {key: value for key, value in item.items() if key != "_source_record_id"}
         for item in items

@@ -1,3 +1,6 @@
+"""Typed final action configuration defaults and mapping parser: identities, sort fields, domains,
+precision, required output roles and selected field coverage.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -40,6 +43,9 @@ class FinalActionSettings:
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, Any] | None) -> "FinalActionSettings":
+        """Convert supplied stage options into typed settings, applying only the documented
+        defaults for omitted options.
+        """
         values = dict(raw or {})
         return cls(
             rule1_keep_qcs=tuple(int(value) for value in values.get("rule1_keep_qcs", cls.rule1_keep_qcs)),

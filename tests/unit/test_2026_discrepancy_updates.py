@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for 2026 discrepancy updates. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -28,6 +31,9 @@ from medpar_qa.stages.stay.settings import StaySettings
 
 
 def _fa_claim(*, admission: str, row: int) -> dict:
+    """Test helper for fa claim. It constructs or summarizes controlled fixture data for the
+    assertions in this file.
+    """
     return {
         "claimCan": f"C-{row}",
         "claimCanNchEquatable": "H-1",
@@ -50,6 +56,9 @@ def _fa_claim(*, admission: str, row: int) -> dict:
 @pytest.mark.regression
 @pytest.mark.byte_by_byte
 def test_total_accommodation_rounds_each_charge_before_sum(resolver, make_record):
+    """Verify total accommodation rounds each charge before sum. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "MEDPAR-ACCOMMODATION-CHRG-0460": ["1.2345", "1.2345"],
@@ -69,6 +78,9 @@ def test_total_accommodation_rounds_each_charge_before_sum(resolver, make_record
 @pytest.mark.intermediate
 @pytest.mark.byte_by_byte
 def test_total_accommodation_detects_sum_before_rounding_defect(resolver, make_record):
+    """Verify total accommodation detects sum before rounding defect. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "MEDPAR-ACCOMMODATION-CHRG-0460": ["1.2345", "1.2345"],
@@ -88,6 +100,9 @@ def test_total_accommodation_detects_sum_before_rounding_defect(resolver, make_r
 @pytest.mark.regression
 @pytest.mark.byte_by_byte
 def test_bill_total_perdiem_rounds_before_multiplication(resolver, make_record):
+    """Verify bill total perdiem rounds before multiplication. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "passThruPerDiem": "1.2345",
@@ -109,6 +124,9 @@ def test_bill_total_perdiem_rounds_before_multiplication(resolver, make_record):
 def test_intensive_care_indicator_includes_0200_and_0201(
     resolver, make_record, revenue_code
 ):
+    """Verify intensive care indicator includes 0200 and 0201. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "revenueLines": [{"revCntrCd": revenue_code, "totalAmount": 100}],
@@ -131,6 +149,9 @@ def test_intensive_care_indicator_includes_0200_and_0201(
 @pytest.mark.unit
 @pytest.mark.intermediate
 def test_organ_indicator_uses_configured_legacy_revenue_codes(resolver, make_record):
+    """Verify organ indicator uses configured legacy revenue codes. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "revenueLines": [{"REV-CNTR-CD": "0810"}],
@@ -163,6 +184,9 @@ def test_organ_indicator_uses_configured_legacy_revenue_codes(resolver, make_rec
 def test_admission_day_0090_is_derived_from_admission_date(
     resolver, make_record, admission, expected
 ):
+    """Verify admission day 0090 is derived from admission date. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     record = make_record(
         {"admissionDate": admission, "medparAdmDay0090": expected},
         stage=Stage.INTERMEDIATE,
@@ -176,6 +200,9 @@ def test_admission_day_0090_is_derived_from_admission_date(
 @pytest.mark.unit
 @pytest.mark.intermediate
 def test_procedure_groups_cannot_exceed_25(resolver, make_record):
+    """Verify procedure groups cannot exceed 25. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     codes = [f"P{i:02d}" for i in range(26)]
     dates = ["20260101"] * 26
     versions = ["10"] * 26
@@ -202,6 +229,9 @@ def test_procedure_groups_cannot_exceed_25(resolver, make_record):
 @pytest.mark.unit
 @pytest.mark.stay
 def test_stay_span_code_consolidation_is_limited_to_10(resolver, make_record):
+    """Verify stay span code consolidation is limited to 10. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     spans = [
         {"spanCode": f"{index:02d}", "fromDate": "20260101", "thruDate": "20260102"}
         for index in range(12)
@@ -229,6 +259,9 @@ def test_stay_span_code_consolidation_is_limited_to_10(resolver, make_record):
 @pytest.mark.unit
 @pytest.mark.regression
 def test_ld3137_excludes_admission_date_from_four_affected_stage_sort_orders():
+    """Verify ld3137 excludes admission date from four affected stage sort orders. The assertions
+    below state exactly what this test proves for its fixtures.
+    """
     stage_settings = (
         (Stage.FINAL_ACTION, FinalActionSettings().sort_fields),
         (Stage.SPLIT, SplitSettings().sort_fields),
@@ -250,6 +283,9 @@ def test_ld3137_excludes_admission_date_from_four_affected_stage_sort_orders():
 def test_final_action_groups_claims_contiguously_when_only_admission_dates_differ(
     resolver, make_record
 ):
+    """Verify final action groups claims contiguously when only admission dates differ. The
+    assertions below state exactly what this test proves for its fixtures.
+    """
     records = [
         make_record(_fa_claim(admission="20251231", row=1), row=1),
         make_record(_fa_claim(admission="20260101", row=2), row=2),
@@ -263,6 +299,9 @@ def test_final_action_groups_claims_contiguously_when_only_admission_dates_diffe
 @pytest.mark.unit
 @pytest.mark.regression
 def test_stay_and_final_identities_preserve_admission_date(resolver, make_record):
+    """Verify stay and final identities preserve admission date. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     base = {
         "claimCanNchEquatable": "H-1",
         "provider": {"providerId": "P-1"},
@@ -282,6 +321,9 @@ def test_stay_and_final_identities_preserve_admission_date(resolver, make_record
 @pytest.mark.unit
 @pytest.mark.regression
 def test_missing_field_registry_contains_reported_numbered_and_line_item_fields():
+    """Verify missing field registry contains reported numbered and line item fields. The
+    assertions below state exactly what this test proves for its fixtures.
+    """
     aliases = yaml.safe_load(Path("config/field_aliases.yaml").read_text())
     required_canonical_fields = {
         "medpar_bic_code_0022",
@@ -337,6 +379,9 @@ def test_missing_field_registry_contains_reported_numbered_and_line_item_fields(
 @pytest.mark.unit
 @pytest.mark.intermediate
 def test_known_typographical_field_aliases_are_resolved(resolver):
+    """Verify known typographical field aliases are resolved. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     data = {
         "MEDPAR-TOT-ACC-CHRG-043": "10.000",
         "MEDPAR-SQSTRTN-RDCTN-AMT-113": "2.000",
@@ -352,6 +397,9 @@ def test_known_typographical_field_aliases_are_resolved(resolver):
 def test_golden_comparison_does_not_false_pass_when_both_values_are_missing(
     resolver, make_record
 ):
+    """Verify golden comparison does not false pass when both values are missing. The assertions
+    below state exactly what this test proves for its fixtures.
+    """
     from medpar_qa.stages.comparison import compare_expected_actual_fields
 
     expected = make_record({}, row=1, stage=Stage.FINAL_MEDPAR, role=FileRole.EXPECTED_OUTPUT)
@@ -371,6 +419,9 @@ def test_golden_comparison_does_not_false_pass_when_both_values_are_missing(
 @pytest.mark.unit
 @pytest.mark.final_medpar
 def test_final_required_selected_field_can_be_enforced(resolver, make_record):
+    """Verify final required selected field can be enforced. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     from medpar_qa.stages.final_medpar.processor import FinalMedparProcessor
 
     settings = FinalMedparSettings(

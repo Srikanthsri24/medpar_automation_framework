@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for final action v3 decision tree. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 from __future__ import annotations
 
 import pytest
@@ -7,6 +10,9 @@ from test_final_action import base_claim
 
 
 def make_group(make_record, qcs, icns, *, actions=None, accretes=None):
+    """Test helper for make group. It constructs or summarizes controlled fixture data for the
+    assertions in this file.
+    """
     actions = actions or ["A"] * len(qcs)
     accretes = accretes or ["20260111"] * len(qcs)
     return [make_record(base_claim(queryCode=qc, internalControlNumber=icn,
@@ -16,26 +22,41 @@ def make_group(make_record, qcs, icns, *, actions=None, accretes=None):
 
 
 def decisions(result):
+    """Test helper for decisions. It constructs or summarizes controlled fixture data for the
+    assertions in this file.
+    """
     return [x.decision for x in result.decisions]
 
 
 def rule(result):
+    """Test helper for rule. It constructs or summarizes controlled fixture data for the assertions
+    in this file.
+    """
     return next(x for x in result.rule_results if x.rule_id.startswith("FA-RULE") or x.rule_id in ("FA-ALL-QC0", "FA-DEFAULT"))
 
 
 def test_rule5_excludes_nonzero_with_qc0_icn(resolver, make_record):
+    """Verify rule5 excludes nonzero with qc0 icn. The assertions below state exactly what this
+    test proves for its fixtures.
+    """
     result = FinalActionProcessor(resolver).validate_group(make_group(make_record, [3,0,1], ["CANCELLED","CANCELLED","LIVE"]))
     assert rule(result).rule_id == "FA-RULE-05"
     assert decisions(result) == [RecordDecision.DROP, RecordDecision.DROP, RecordDecision.KEEP]
 
 
 def test_rule5_all_icns_same_drops(resolver, make_record):
+    """Verify rule5 all icns same drops. The assertions below state exactly what this test proves
+    for its fixtures.
+    """
     result = FinalActionProcessor(resolver).validate_group(make_group(make_record, [3,0,1], ["A","A","A"]))
     assert result.passed
     assert decisions(result) == [RecordDecision.DROP]*3
 
 
 def test_rule6_transaction_code_does_not_substitute_action_code(resolver, make_record):
+    """Verify rule6 transaction code does not substitute action code. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     records = make_group(make_record, [0,5], ["A","A"], actions=["1","A"])
     records[0].data["transactionCode"] = 4
     result = FinalActionProcessor(resolver).validate_group(records)
@@ -44,6 +65,9 @@ def test_rule6_transaction_code_does_not_substitute_action_code(resolver, make_r
 
 
 def test_rule6_missing_action_blocks(resolver, make_record):
+    """Verify rule6 missing action blocks. The assertions below state exactly what this test proves
+    for its fixtures.
+    """
     records = make_group(make_record, [0,5], ["A","A"])
     records[0].data.pop("actionCode")
     result = FinalActionProcessor(resolver).validate_group(records)
@@ -52,18 +76,27 @@ def test_rule6_missing_action_blocks(resolver, make_record):
 
 
 def test_rule2_requires_newest_accretion(resolver, make_record):
+    """Verify rule2 requires newest accretion. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     records = make_group(make_record, [5,0,3], ["A","B","C"], accretes=["20260101","20260103","20260102"])
     result = FinalActionProcessor(resolver).validate_group(records)
     assert rule(result).rule_id != "FA-RULE-02"
 
 
 def test_invalid_transaction_six_rejected(resolver, make_record):
+    """Verify invalid transaction six rejected. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     result = FinalActionProcessor(resolver).validate_group([make_record(base_claim(transactionCode=6))])
     assert not result.passed
     assert any(x.rule_id == "FA-PRE-SCHEMA" for x in result.rule_results)
 
 
 def test_rule2_invalid_accretion_must_not_fall_through_to_rule10b(resolver, make_record):
+    """Verify rule2 invalid accretion must not fall through to rule10b. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     records = make_group(make_record, [5, 0, 3], ["A", "B", "C"],
                          accretes=["20260101", "20260103", "20260102"])
     result = FinalActionProcessor(resolver).validate_group(records)
@@ -73,6 +106,9 @@ def test_rule2_invalid_accretion_must_not_fall_through_to_rule10b(resolver, make
 
 
 def test_rule2_missing_accretion_must_not_fall_through_to_rule10b(resolver, make_record):
+    """Verify rule2 missing accretion must not fall through to rule10b. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     records = make_group(make_record, [5, 0, 1], ["A", "B", "C"])
     records[1].data.pop("accreteDate")
     result = FinalActionProcessor(resolver).validate_group(records)

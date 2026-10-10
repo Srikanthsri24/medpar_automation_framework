@@ -1,3 +1,6 @@
+"""Shared dataclasses for source lineage, validation evidence, record decisions, manifests and
+stage results. They carry evidence between components.
+"""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
@@ -11,6 +14,9 @@ from .enums import FileRole, RecordDecision, Stage, ValidationStatus
 
 @dataclass(frozen=True)
 class SourceLocation:
+    """Represent source location with the fields and methods declared below. Declared dataclass
+    fields are the component contract.
+    """
     file_path: str
     row_number: int
     file_format: str
@@ -20,6 +26,9 @@ class SourceLocation:
 
 @dataclass
 class SourceRecord:
+    """Represent source record with the fields and methods declared below. Declared dataclass
+    fields are the component contract.
+    """
     data: dict[str, Any]
     source: SourceLocation
     record_id: str
@@ -27,6 +36,9 @@ class SourceRecord:
 
 @dataclass
 class RuleResult:
+    """Represent one Final Action decision-tree route; applies tests eligibility and evaluate
+    returns auditable group/record decisions.
+    """
     stage: Stage
     rule_id: str
     status: ValidationStatus
@@ -43,6 +55,9 @@ class RuleResult:
         # Capture the real Python function that emitted this validation. This gives
         # reports function-level traceability without forcing every validator call
         # to repeat its own function name.
+        """Capture construction-time validation provenance/events for reporting; reporting
+        exceptions are contained so evidence capture cannot change business decisions.
+        """
         if "validator_function" not in self.evidence:
             frame = inspect.currentframe()
             caller = frame.f_back if frame is not None else None
@@ -86,6 +101,9 @@ class RuleResult:
             pass
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert this evidence model into JSON-ready data with enum values represented as
+        strings.
+        """
         payload = asdict(self)
         payload["stage"] = self.stage.value
         payload["status"] = self.status.value
@@ -94,12 +112,18 @@ class RuleResult:
 
 @dataclass
 class ClaimDecision:
+    """Represent claim decision with the fields and methods declared below. Declared dataclass
+    fields are the component contract.
+    """
     record_id: str
     decision: RecordDecision
     rule_id: str
     reason: str
 
     def __post_init__(self) -> None:
+        """Capture construction-time validation provenance/events for reporting; reporting
+        exceptions are contained so evidence capture cannot change business decisions.
+        """
         try:
             from .reporting.event_recorder import record_event
 
@@ -118,12 +142,18 @@ class ClaimDecision:
 
 @dataclass
 class StageResult:
+    """Represent stage result with the fields and methods declared below. Declared fields document
+    the component contract.
+    """
     stage: Stage
     rule_results: list[RuleResult] = field(default_factory=list)
     decisions: list[ClaimDecision] = field(default_factory=list)
 
     @property
     def status_counts(self) -> dict[str, int]:
+        """Count each validation status across this stage; counts are rule outcomes, not patient
+        counts.
+        """
         counts = {status.value: 0 for status in ValidationStatus}
         for result in self.rule_results:
             counts[result.status.value] += 1
@@ -131,12 +161,18 @@ class StageResult:
 
     @property
     def passed(self) -> bool:
+        """Return true only when this stage has neither FAIL nor BLOCKED results; N/A is not a
+        successful calculation.
+        """
         return not any(
             result.status in {ValidationStatus.FAIL, ValidationStatus.BLOCKED}
             for result in self.rule_results
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert this evidence model into JSON-ready data with enum values represented as
+        strings.
+        """
         return {
             "stage": self.stage.value,
             "passed": self.passed,
@@ -155,6 +191,9 @@ class StageResult:
 
 @dataclass(frozen=True)
 class ManifestFile:
+    """Represent manifest file with the fields and methods declared below. Declared dataclass
+    fields are the component contract.
+    """
     path: str
     stage: Stage
     role: FileRole
@@ -163,6 +202,9 @@ class ManifestFile:
 
 @dataclass
 class RunManifest:
+    """Represent run manifest with the fields and methods declared below. Declared fields document
+    the component contract.
+    """
     run_id: str
     run_date: date
     files: list[ManifestFile]

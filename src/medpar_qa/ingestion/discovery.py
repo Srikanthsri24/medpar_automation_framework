@@ -1,3 +1,4 @@
+"""Resolve configured file paths and wildcards into a deterministic list of real files."""
 from __future__ import annotations
 
 from glob import glob
@@ -5,6 +6,9 @@ from pathlib import Path
 
 
 def discover_files(pattern: str, base_directory: Path) -> list[Path]:
+    """Resolve a path or wildcard below the base directory and return its matching files in
+    deterministic order.
+    """
     candidate = Path(pattern)
     if not candidate.is_absolute():
         candidate = base_directory / candidate

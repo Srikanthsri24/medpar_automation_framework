@@ -8,6 +8,7 @@ from .rule_catalog import stage_rule_catalog, get_rule_metadata
 
 
 def readable_time(value):
+    """Format a timestamp with an explicit readable date/time and timezone."""
     try:
         timestamp = datetime.fromisoformat(str(value))
         return timestamp.strftime('%d %B %Y at %I:%M:%S %p') + ' (UTC' + timestamp.strftime('%z')[:3] + ':' + timestamp.strftime('%z')[3:] + ')'
@@ -16,6 +17,9 @@ def readable_time(value):
 
 
 def file_review(stage, validations, anchor_prefix):
+    """Group checks under unique source paths, preserving shared checks and unattributed stage
+    results for honest file conclusions.
+    """
     esc = lambda value: html.escape(str(value), quote=True)
     files = defaultdict(list)
     roles = defaultdict(set)

@@ -1,3 +1,6 @@
+"""Typed final medpar configuration defaults and mapping parser: identities, sort fields, domains,
+precision, required output roles and selected field coverage.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -6,6 +9,9 @@ from typing import Any, Mapping
 
 @dataclass(frozen=True)
 class FinalMedparSettings:
+    """Store the typed FinalMedpar options. Defaults are declared in this class; from_mapping
+    applies explicit manifest overrides.
+    """
     identity_fields: tuple[str, ...] = (
         "hicn",
         "provider_id",
@@ -73,6 +79,9 @@ class FinalMedparSettings:
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, Any] | None) -> "FinalMedparSettings":
+        """Convert supplied stage options into typed settings, applying only the documented
+        defaults for omitted options.
+        """
         raw = raw or {}
         return cls(
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),

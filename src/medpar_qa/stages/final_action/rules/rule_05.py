@@ -1,3 +1,6 @@
+"""Implement the Final Action rule 05 applicability predicate and resulting record KEEP/DROP
+decisions. Router precedence determines when this rule is reached.
+"""
 from __future__ import annotations
 
 from medpar_qa.enums import ValidationStatus
@@ -8,9 +11,16 @@ from .helpers import drop_all
 
 
 class Rule05ThreeClaimsOneQC0NoQC5(FinalActionRule):
+    """Three claims have no QC5 and exactly one QC0. Drop all if the ICNs all match; otherwise
+    retain the newest non-QC0 claim whose ICN differs from QC0. Block when that eligible
+    selection cannot be established.
+    """
     rule_id = "FA-RULE-05"
 
     def applies(self, context: FinalActionGroupContext) -> bool:
+        """Test this route prerequisite: Three claims have no QC5 and exactly one QC0. Earlier
+        router matches take precedence.
+        """
         return (
             context.count == 3
             and not context.has_qc5
@@ -18,6 +28,10 @@ class Rule05ThreeClaimsOneQC0NoQC5(FinalActionRule):
         )
 
     def evaluate(self, context: FinalActionGroupContext) -> RuleEvaluation:
+        """Drop all if the ICNs all match; otherwise retain the newest non-QC0 claim whose ICN
+        differs from QC0. Block when that eligible selection cannot be established. Return
+        RuleEvaluation with its outcome and any explicit record decisions.
+        """
         if context.all_icns_same:
             decisions = drop_all(context, self.rule_id, "All ICNs are the same")
             message = "All ICNs matched; complete group dropped"

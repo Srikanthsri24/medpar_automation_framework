@@ -7,6 +7,7 @@ from medpar_qa.models import StageResult
 
 
 def write_final_action_audit(result: StageResult, directory: str | Path) -> dict[str, Path]:
+    """Export retained/dropped Final Action decisions and failed/blocked record evidence."""
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     errors = [r.to_dict() for r in result.rule_results

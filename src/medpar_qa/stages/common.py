@@ -1,3 +1,6 @@
+"""Shared identities, role separation, duplicate detection, collection normalization, presence
+checks and LD-3137 sort/group evidence.
+"""
 from __future__ import annotations
 
 from collections import defaultdict
@@ -10,6 +13,9 @@ from medpar_qa.normalization.fields import FieldResolver
 
 
 def split_records_by_role(records: Iterable[SourceRecord]) -> dict[FileRole, list[SourceRecord]]:
+    """Separate source, actual-output and expected-output records so a target is not substituted
+    for a source operand.
+    """
     grouped: dict[FileRole, list[SourceRecord]] = defaultdict(list)
     for record in records:
         grouped[record.source.role].append(record)
@@ -17,6 +23,9 @@ def split_records_by_role(records: Iterable[SourceRecord]) -> dict[FileRole, lis
 
 
 def canonical_scalar(value: Any) -> Any:
+    """Normalize identity scalar representations, including configured composite identifiers and
+    date forms.
+    """
     if isinstance(value, str):
         return value.strip()
     return value
@@ -27,6 +36,9 @@ def record_identity(
     resolver: FieldResolver,
     identity_fields: Iterable[str],
 ) -> tuple[Any, ...]:
+    """Resolve and canonicalize the configured identity fields into the tuple used to match
+    records.
+    """
     from medpar_qa.normalization.dates import parse_date
     values=[]
     for field in identity_fields:
@@ -45,6 +57,9 @@ def index_unique_records(
     resolver: FieldResolver,
     identity_fields: Iterable[str],
 ) -> tuple[dict[tuple[Any, ...], SourceRecord], dict[tuple[Any, ...], list[SourceRecord]]]:
+    """Index records by canonical identity and report duplicates separately rather than silently
+    certifying uniqueness.
+    """
     buckets: dict[tuple[Any, ...], list[SourceRecord]] = defaultdict(list)
     for record in records:
         buckets[record_identity(record, resolver, identity_fields)].append(record)
@@ -61,6 +76,7 @@ def duplicate_identity_result(
     identity_fields: Iterable[str],
     role_name: str,
 ) -> RuleResult:
+    """Create a PASS/FAIL result describing duplicate output identities and affected evidence."""
     duplicate_evidence = {
         str(key): [record.record_id for record in records]
         for key, records in duplicates.items()
@@ -100,6 +116,9 @@ def presence_result(
     role_name: str,
     required: bool,
 ) -> RuleResult:
+    """Report whether a required or optional file role was supplied; optional absence must not
+    become a false calculation PASS.
+    """
     if supplied:
         return RuleResult(
             stage=stage,
@@ -120,6 +139,9 @@ def presence_result(
 
 
 def normalize_collection(value: Any) -> list[Any]:
+    """Convert supported scalar/list/object collection shapes into a consistent sequence for
+    validators.
+    """
     if value is None:
         return []
     if isinstance(value, list):
@@ -130,6 +152,7 @@ def normalize_collection(value: Any) -> list[Any]:
 
 
 def nonblank_values(value: Any) -> list[Any]:
+    """Filter absent/blank collection values without conflating every zero value with missing data."""
     return [item for item in normalize_collection(value) if item is not None and str(item).strip()]
 
 
@@ -169,11 +192,11 @@ def ld3137_grouping_result(
     resolver: FieldResolver,
     identity_fields: Iterable[str],
 ) -> RuleResult:
-    """Show that admissionDate cannot split records sharing the configured business key.
+    """Show dictionary/index grouping under the stage-specific configured identity.
 
-    The processors use dictionary/index grouping rather than relying on physical file
-    adjacency. This evidence reports groups that contain multiple admission dates and
-    confirms they remain one business identity.
+    Only Final Action forbids admission date in its identity. Stay and Final retain
+    admission date so separate stays do not merge. This reports multi-admission buckets
+    when the configured key permits them; it does not prove physical file sort order.
     """
     configured = tuple(str(field) for field in identity_fields)
     forbidden = [field for field in configured if field in {"admission_date", "admissionDate"}] if stage == Stage.FINAL_ACTION else []

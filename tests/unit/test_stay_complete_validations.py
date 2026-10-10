@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for stay complete validations. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 from decimal import Decimal
 
 import pytest
@@ -12,6 +15,9 @@ from medpar_qa.stages.stay.structural import (
 
 
 def valid_stay_source():
+    """Test helper for valid stay source. It constructs or summarizes controlled fixture data for
+    the assertions in this file.
+    """
     return {
         "claimCanNchEquatable": "H001",
         "provider": {"providerId": "P1"},
@@ -32,6 +38,9 @@ def valid_stay_source():
 @pytest.mark.stay
 @pytest.mark.regression
 def test_stay_source_required_identity_and_dates_pass(resolver, make_record):
+    """Verify stay source required identity and dates pass. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     record = make_record(valid_stay_source(), stage=Stage.STAY)
     results = validate_stay_source_record(record, resolver, decimal_scale=Decimal("0.001"))
     failures = [item for item in results if item.status in {ValidationStatus.FAIL, ValidationStatus.BLOCKED}]
@@ -41,6 +50,9 @@ def test_stay_source_required_identity_and_dates_pass(resolver, make_record):
 @pytest.mark.unit
 @pytest.mark.stay
 def test_stay_source_rejects_reversed_stay_dates(resolver, make_record):
+    """Verify stay source rejects reversed stay dates. The assertions below state exactly what this
+    test proves for its fixtures.
+    """
     data = valid_stay_source()
     data["stayFromDate"] = "20260111"
     data["stayThruDate"] = "20260110"
@@ -54,6 +66,9 @@ def test_stay_source_rejects_reversed_stay_dates(resolver, make_record):
 @pytest.mark.stay
 @pytest.mark.regression
 def test_latest_value_code_object_wins(resolver, make_record):
+    """Verify latest value code object wins. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     older = make_record(
         {**valid_stay_source(), "nchWeeklyProcessingDate": "20260101", "valueLines": [{"valueCode": "73", "amount": "1.000"}]},
         row=1,
@@ -73,6 +88,9 @@ def test_latest_value_code_object_wins(resolver, make_record):
 @pytest.mark.stay
 @pytest.mark.regression
 def test_latest_span_code_object_wins(resolver, make_record):
+    """Verify latest span code object wins. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     older = make_record(
         {**valid_stay_source(), "nchWeeklyProcessingDate": "20260101", "occurrenceSpanLines": [{"spanCode": "70", "fromDate": "20260101", "thruDate": "20260102"}]},
         row=1,
@@ -90,6 +108,9 @@ def test_latest_span_code_object_wins(resolver, make_record):
 @pytest.mark.unit
 @pytest.mark.stay
 def test_snf_qualification_date_order_fails(resolver, make_record):
+    """Verify snf qualification date order fails. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     record = make_record(
         {
             "MEDPAR-SNF-QUAL-FROM-DATE-0180": "20260110",
@@ -106,6 +127,9 @@ def test_snf_qualification_date_order_fails(resolver, make_record):
 @pytest.mark.stay
 @pytest.mark.regression
 def test_drg_price_uses_latest_nonblank_source_value(resolver, make_record):
+    """Verify drg price uses latest nonblank source value. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     source_old = make_record(
         {**valid_stay_source(), "nchWeeklyProcessingDate": "20260101", "MEDPAR-DRG-PRICE-0380": "10.000"},
         row=1,

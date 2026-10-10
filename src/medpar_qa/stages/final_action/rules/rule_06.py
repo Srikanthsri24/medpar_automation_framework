@@ -1,3 +1,6 @@
+"""Implement the Final Action rule 06 applicability predicate and resulting record KEEP/DROP
+decisions. Router precedence determines when this rule is reached.
+"""
 from __future__ import annotations
 
 from medpar_qa.enums import RecordDecision, ValidationStatus
@@ -9,15 +12,31 @@ from .base import FinalActionRule, RuleEvaluation
 
 
 class Rule06TwoClaimsQC0QC5(FinalActionRule):
+    """Exactly two claims have QCs 0 and 5. Drop both for matching ICNs and QC0 action code in
+    configured cancellation codes 4/6; otherwise keep QC5 and drop QC0. Matching ICNs without
+    the action operand, or a disabled rule, block evaluation. Transaction code does not
+    substitute for action code.
+    """
     rule_id = "FA-RULE-06"
 
     def __init__(self, settings: FinalActionSettings) -> None:
+        """Initialize this Rule06TwoClaimsQC0QC5 with the supplied dependencies/configuration and
+        the assignments in its constructor.
+        """
         self.settings = settings
 
     def applies(self, context: FinalActionGroupContext) -> bool:
+        """Test this route prerequisite: Exactly two claims have QCs 0 and 5. Earlier router
+        matches take precedence.
+        """
         return context.count == 2 and set(context.query_codes) == {0, 5}
 
     def evaluate(self, context: FinalActionGroupContext) -> RuleEvaluation:
+        """Drop both for matching ICNs and QC0 action code in configured cancellation codes 4/6;
+        otherwise keep QC5 and drop QC0. Matching ICNs without the action operand, or a disabled
+        rule, block evaluation. Transaction code does not substitute for action code. Return
+        RuleEvaluation with its outcome and any explicit record decisions.
+        """
         if not self.settings.rule6_enabled:
             return RuleEvaluation(
                 self._result(

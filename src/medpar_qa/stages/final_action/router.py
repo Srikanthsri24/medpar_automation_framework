@@ -1,3 +1,6 @@
+"""Select the first applicable rule in explicit decision-tree order. Specific rules precede general
+fallbacks.
+"""
 from __future__ import annotations
 
 from .context import FinalActionGroupContext
@@ -23,6 +26,9 @@ class FinalActionRuleRouter:
     """Select exactly one rule using the approved decision-tree precedence."""
 
     def __init__(self, settings: FinalActionSettings) -> None:
+        """Initialize this FinalActionRuleRouter with the supplied dependencies/configuration and
+        the assignments in its constructor.
+        """
         self.rules: tuple[FinalActionRule, ...] = (
             AllQC0Rule(),
             Rule01SingleClaim(settings),
@@ -39,6 +45,9 @@ class FinalActionRuleRouter:
         )
 
     def select(self, context: FinalActionGroupContext) -> FinalActionRule:
+        """Return the first applicable rule in the router precedence; the default ensures an
+        unmatched group is explicitly blocked.
+        """
         matches = [rule for rule in self.rules if rule.applies(context)]
         # Default always matches, therefore the first match is the selected route.
         return matches[0]

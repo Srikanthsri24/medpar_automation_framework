@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_demo_end_to_end(tmp_path):
+    """Verify demo end to end. The assertions below state exactly what this test proves for its
+    fixtures.
+    """
     report = run_pipeline(ROOT / 'data/demo_v3/demo_claims.json', tmp_path, 2024, ROOT / 'config/field_aliases.yaml')
     stages = report['stages']
     assert stages['final_action']['input'] == 5
@@ -31,6 +34,9 @@ def test_demo_end_to_end(tmp_path):
 
 
 def test_reject_invalid_transaction(tmp_path):
+    """Verify reject invalid transaction. The assertions below state exactly what this test proves
+    for its fixtures.
+    """
     records = load_claims(ROOT / 'data/demo_v3/demo_claims.json')
     records[0]['transaction_code'] = '9'
     path = tmp_path / 'invalid.json'
@@ -40,6 +46,9 @@ def test_reject_invalid_transaction(tmp_path):
 
 
 def test_split_inpatient_last_thru_and_snf_admit():
+    """Verify split inpatient last thru and snf admit. The assertions below state exactly what this
+    test proves for its fixtures.
+    """
     base = {'hicn':'H','provider_id':'P','admission_date':'2023-12-30','claim_can':'999595','processing_date':'2024-02-01','accrete_date':'2024-02-01'}
     inpatient = [dict(base, claim_id='1', transaction_code='3', stay_thru_date='2023-12-31'), dict(base, claim_id='2', transaction_code='3', stay_thru_date='2024-01-02', processing_date='2024-02-02')]
     snf = [dict(base, claim_id='3', transaction_code='4', stay_thru_date='2024-01-02')]
@@ -50,6 +59,9 @@ def test_split_inpatient_last_thru_and_snf_admit():
 
 
 def test_inpatient_without_discharge_excluded_snf_allowed():
+    """Verify inpatient without discharge excluded snf allowed. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     inp={'claim_id':'A','split_type':'INP'}
     snf={'claim_id':'B','split_type':'SNF'}
     output, audit=final_medpar([inp,snf])
@@ -58,6 +70,9 @@ def test_inpatient_without_discharge_excluded_snf_allowed():
 
 
 def test_split_excess_bills_retained_and_audited():
+    """Verify split excess bills retained and audited. The assertions below state exactly what this
+    test proves for its fixtures.
+    """
     records = [{'claim_id':str(i),'hicn':'H','provider_id':'P','admission_date':'2024-01-01','processing_date':'2024-02-01','stay_thru_date':'2024-01-02','transaction_code':'3'} for i in range(76)]
     output,audit=split_claims(records,2024)
     assert len(output) == 76

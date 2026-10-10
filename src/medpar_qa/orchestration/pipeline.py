@@ -1,3 +1,6 @@
+"""Load manifest files with ingestion diagnostics, optionally enrich Intermediate source
+references, run requested processors and add each stage completion result.
+"""
 from __future__ import annotations
 
 from collections import defaultdict
@@ -22,11 +25,20 @@ from medpar_qa.stages.stay.settings import StaySettings
 
 
 class Pipeline:
+    """Represent pipeline with the fields and methods declared below. This class groups the related
+    operations below.
+    """
     def __init__(self, manifest: RunManifest, field_resolver: FieldResolver) -> None:
+        """Initialize this Pipeline with the supplied dependencies/configuration and the
+        assignments in its constructor.
+        """
         self.manifest = manifest
         self.field_resolver = field_resolver
 
     def _snapshot_check(self, stage: Stage, records: list[SourceRecord]) -> RuleResult:
+        """Compare available source/output rundate and yearQuarter folder metadata; BLOCKED means a
+        compatible comparison cycle is not established.
+        """
         from medpar_qa.enums import FileRole
         axes = ("rundate", "yearQuarter")
         snapshots = {role: {axis: set() for axis in axes}
@@ -172,6 +184,9 @@ class Pipeline:
         return records
 
     def _processors(self):
+        """Instantiate each concrete stage processor with its typed settings and run date where
+        required.
+        """
         return {
             Stage.FINAL_ACTION: FinalActionProcessor(
                 self.field_resolver,
@@ -221,6 +236,9 @@ class Pipeline:
         }
 
     def run(self) -> list[StageResult]:
+        """Load evidence, apply optional references and record contracts, execute requested stages
+        and add the final stage summary.
+        """
         records_by_stage, diagnostics = self.load_with_diagnostics()
         reference_config = self.manifest.settings.get("reference_feeds")
         if reference_config:

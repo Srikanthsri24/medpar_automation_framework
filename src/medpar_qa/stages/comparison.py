@@ -1,3 +1,6 @@
+"""Compare expected/actual values and matched record fields, using normalized scalars/collections
+and explicit Decimal handling.
+"""
 from __future__ import annotations
 
 from decimal import Decimal
@@ -20,6 +23,9 @@ def compare_values(
     source_files: list[str],
     decimal_scale: Decimal | None = None,
 ) -> RuleResult:
+    """Compare normalized values with explicit numeric/collection handling and return equality plus
+    comparison evidence.
+    """
     normalized_expected = expected
     normalized_actual = actual
     try:
@@ -80,6 +86,9 @@ def compare_expected_actual_fields(
     decimal_scale: Decimal = Decimal("0.001"),
     rule_prefix: str,
 ) -> list[RuleResult]:
+    """Match expected and actual record identities, detect membership problems and compare selected
+    fields.
+    """
     decimal_fields = decimal_fields or set()
     results: list[RuleResult] = []
     for field_name in fields:

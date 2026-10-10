@@ -10,11 +10,15 @@ from medpar_qa.stages.comparison import compare_values
 
 @lru_cache(maxsize=1)
 def field_contract():
+    """Load and cache the 200-field V3 registry from configuration."""
     path=Path(__file__).resolve().parents[3]/"config/v3_field_contract.json"
     return json.loads(path.read_text())["fields"]
 
 
 def compare_v3_fields(expected,actual,resolver):
+    """Compare every registered field against supplied golden data; both absent is N/A and deleted
+    populated fields fail.
+    """
     results=[]
     for spec in field_contract():
         for field in spec["fields"]:
@@ -39,6 +43,9 @@ def compare_v3_fields(expected,actual,resolver):
 
 
 def validate_whole_dollar_fields(source,actual,resolver):
+    """Check that populated registered monetary fields meet their whole-dollar representation
+    policy.
+    """
     from medpar_qa.normalization.decimal_values import to_decimal
     from medpar_qa.stages.intermediate.business_rules import whole_dollars
     results=[]

@@ -1,3 +1,6 @@
+"""Manifest-based command line entry point: parse arguments, load aliases/manifest, run Pipeline,
+write reports and return success/failure.
+"""
 from __future__ import annotations
 
 import argparse
@@ -16,6 +19,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Define accepted command-line options and defaults; argparse rejects unsupported command
+    syntax.
+    """
     parser = argparse.ArgumentParser(description="Run one or all MEDPAR stages from a relative YAML manifest")
     parser.add_argument("--manifest", required=True, help="Relative YAML run-manifest path")
     parser.add_argument("--aliases", default="config/field_aliases.yaml")
@@ -27,6 +33,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    """Run this script command-line workflow and return its process exit status. Manifest-based
+    command line entry point: parse arguments, load aliases/manifest, run Pipeline, write
+    reports and return success/failure.
+    """
     args = build_parser().parse_args()
     for label, value in (("manifest", args.manifest), ("aliases", args.aliases), ("reports", args.reports)):
         ensure_relative_user_path(value, label)

@@ -1,3 +1,4 @@
+"""Format validation requirements, observed/expected values and conclusions for terminal output."""
 from __future__ import annotations
 
 import json
@@ -8,6 +9,7 @@ from medpar_qa.reporting.rule_catalog import conclusion_text, get_rule_metadata,
 
 
 def _pretty(value: object) -> str:
+    """Format values as readable escaped/text JSON for this reporter."""
     try:
         return json.dumps(value, indent=2, default=str, ensure_ascii=False)
     except TypeError:
@@ -27,12 +29,14 @@ def validation_reason(status: str, message: str, expected: object, actual: objec
 
 
 def _append_value(lines: list[str], label: str, value: object, indent: str = "    ") -> None:
+    """Append a labeled nonempty evidence value to the text report."""
     lines.append(f"{indent}{label}:")
     rendered = _pretty(value) if value is not None else "Not supplied / not applicable"
     lines.extend(f"{indent}  {line}" for line in rendered.splitlines())
 
 
 def render_rule_result(check: RuleResult, number: int) -> list[str]:
+    """Render one rule with requirement, expected/observed data, reason and evidence."""
     status = check.status.value
     metadata = get_rule_metadata(check.stage.value, check.rule_id, check.field_name)
     conclusion = conclusion_text(
@@ -76,6 +80,7 @@ def render_results_text(
     include_pass: bool = True,
     include_not_applicable: bool = True,
 ) -> str:
+    """Render the stage results into a terminal/text report with the requested status filters."""
     stage_results = list(results)
     lines: list[str] = [
         "MEDPAR QA — DETAILED BUSINESS VALIDATION RESULTS",

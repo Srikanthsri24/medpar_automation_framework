@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for intermediate complete validations. Tests describe
+controlled examples; passing them does not certify all production files.
+"""
 from datetime import date
 
 import pytest
@@ -18,6 +21,9 @@ from medpar_qa.stages.intermediate.structural import (
 @pytest.mark.intermediate
 @pytest.mark.regression
 def test_intermediate_direct_fields_and_january_window_pass(resolver, make_record):
+    """Verify intermediate direct fields and january window pass. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "admissionDate": "20220101",
@@ -43,6 +49,9 @@ def test_intermediate_direct_fields_and_january_window_pass(resolver, make_recor
 @pytest.mark.unit
 @pytest.mark.intermediate
 def test_intermediate_date_before_january_window_fails(resolver, make_record):
+    """Verify intermediate date before january window fails. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     record = make_record({"admissionDate": "20211231"}, stage=Stage.INTERMEDIATE)
     results = validate_intermediate_direct_fields(
         record,
@@ -61,6 +70,9 @@ def test_intermediate_date_before_january_window_fails(resolver, make_record):
 @pytest.mark.intermediate
 @pytest.mark.regression
 def test_accommodation_repeated_arrays_align(resolver, make_record):
+    """Verify accommodation repeated arrays align. The assertions below state exactly what this
+    test proves for its fixtures.
+    """
     record = make_record(
         {
             "MEDPAR-ACCOMMODATION-CHRG-0460": ["1.000", "2.000"],
@@ -75,6 +87,9 @@ def test_accommodation_repeated_arrays_align(resolver, make_record):
 @pytest.mark.unit
 @pytest.mark.intermediate
 def test_accommodation_repeated_array_length_mismatch_fails(resolver, make_record):
+    """Verify accommodation repeated array length mismatch fails. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "MEDPAR-ACCOMMODATION-CHRG-0460": ["1.000", "2.000"],
@@ -89,6 +104,9 @@ def test_accommodation_repeated_array_length_mismatch_fails(resolver, make_recor
 @pytest.mark.unit
 @pytest.mark.intermediate
 def test_procedure_code_date_alignment_fails(resolver, make_record):
+    """Verify procedure code date alignment fails. The assertions below state exactly what this
+    test proves for its fixtures.
+    """
     record = make_record(
         {
             "MEDPAR-SURG-IND-0500": "Y",
@@ -108,6 +126,9 @@ def test_procedure_code_date_alignment_fails(resolver, make_record):
 @pytest.mark.unit
 @pytest.mark.intermediate
 def test_diagnosis_poa_alignment_fails(resolver, make_record):
+    """Verify diagnosis poa alignment fails. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     record = make_record(
         {
             "MEDPAR-DIAG-CODE-0492": ["A01", "B02"],
@@ -127,6 +148,9 @@ def test_diagnosis_poa_alignment_fails(resolver, make_record):
 @pytest.mark.intermediate
 @pytest.mark.regression
 def test_death_after_admission_day_count(resolver, make_record):
+    """Verify death after admission day count. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     record = make_record(
         {
             "admissionDate": "20260101",

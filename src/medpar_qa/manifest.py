@@ -1,3 +1,6 @@
+"""Read a YAML run manifest, establish its base directory and convert file/stage/role/date/settings
+entries into typed models.
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -21,6 +24,7 @@ def _find_project_root(manifest_path: Path) -> Path:
 
 
 def load_manifest(path: str | Path) -> RunManifest:
+    """Read and validate YAML settings/files, parse the run date and build RunManifest."""
     manifest_path = Path(path).resolve()
     if not manifest_path.exists():
         raise ManifestError(f"Manifest does not exist: {manifest_path}")

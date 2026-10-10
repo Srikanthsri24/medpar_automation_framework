@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for split complete validations. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 from datetime import date
 
 import pytest
@@ -9,6 +12,9 @@ from medpar_qa.stages.split.processor import SplitProcessor
 @pytest.mark.unit
 @pytest.mark.split
 def test_split_processor_reports_missing_required_provider(resolver, make_record):
+    """Verify split processor reports missing required provider. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     record = make_record(
         {
             "claimCan": "C1",

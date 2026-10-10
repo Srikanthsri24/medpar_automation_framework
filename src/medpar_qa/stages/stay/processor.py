@@ -1,3 +1,6 @@
+"""Coordinate stay validation: separate file roles, check prerequisites/structure, derive source
+expectations, match output identities and compare available golden fields.
+"""
 from __future__ import annotations
 
 from collections import defaultdict
@@ -33,6 +36,9 @@ from .structural import (
 
 
 class StayProcessor(BaseStageProcessor):
+    """Implement this stage through the BaseStageProcessor validation interface and hold its
+    resolver/settings.
+    """
     stage = Stage.STAY
 
     def __init__(
@@ -40,12 +46,16 @@ class StayProcessor(BaseStageProcessor):
         resolver: FieldResolver,
         settings: StaySettings | None = None,
     ) -> None:
+        """Initialize this StayProcessor with the supplied dependencies/configuration and the
+        assignments in its constructor.
+        """
         self.resolver = resolver
         self.settings = settings or StaySettings()
 
     def _group_sources(
         self, records: list[SourceRecord]
     ) -> dict[tuple[Any, ...], list[SourceRecord]]:
+        """Bucket Stay source bills by the complete configured stay identity."""
         grouped: dict[tuple[Any, ...], list[SourceRecord]] = defaultdict(list)
         for record in records:
             identity = record_identity(record,self.resolver,self.settings.identity_fields)
@@ -60,6 +70,7 @@ class StayProcessor(BaseStageProcessor):
         actual_index: dict[tuple[Any, ...], SourceRecord],
         expected_index: dict[tuple[Any, ...], SourceRecord],
     ) -> tuple[SourceRecord | None, SourceRecord | None]:
+        """Find a matched target by identity, honoring the processor role precedence."""
         return actual_index.get(identity), expected_index.get(identity)
 
     def _validate_latest_code_collections(
@@ -67,6 +78,9 @@ class StayProcessor(BaseStageProcessor):
         source_group: list[SourceRecord],
         actual: SourceRecord | None,
     ) -> list[RuleResult]:
+        """Compare consolidated condition/occurrence/span/value collections with their latest-claim
+        source expectation.
+        """
         results: list[RuleResult] = []
         from .merge_rules import validate_merge_rules
         results.extend(validate_merge_rules(source_group, actual, self.resolver, self.settings.decimal_scale))
@@ -166,6 +180,7 @@ class StayProcessor(BaseStageProcessor):
         source_group: list[SourceRecord],
         actual: SourceRecord | None,
     ) -> list[RuleResult]:
+        """Check supported Stay amount and switch derivations independently from the source bills."""
         results: list[RuleResult] = []
         if actual is None:
             return results
@@ -282,6 +297,9 @@ class StayProcessor(BaseStageProcessor):
         return results
 
     def validate(self, records: list[SourceRecord]) -> StageResult:
+        """Coordinate stay checks and return StageResult with auditable outcomes/decisions; source
+        records remain distinct from actual/expected roles.
+        """
         result = StageResult(stage=self.stage)
         result.rule_results.append(
             ld3137_sort_order_result(

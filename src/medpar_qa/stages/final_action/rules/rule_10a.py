@@ -1,3 +1,6 @@
+"""Implement the Final Action rule 10a applicability predicate and resulting record KEEP/DROP
+decisions. Router precedence determines when this rule is reached.
+"""
 from __future__ import annotations
 
 from medpar_qa.enums import RecordDecision, ValidationStatus
@@ -8,9 +11,17 @@ from .helpers import keep_unique_non_qc0_icns
 
 
 class Rule10AQC5QC0Dominates(FinalActionRule):
+    """QC5 exists, the group is not the simple Rule-6 pair and QC0 count exceeds QC5 count,
+    irrespective of newest QC. Drop QC0 and repeated ICNs; keep only non-QC0 records whose ICN
+    occurs exactly once across the complete group.
+    """
     rule_id = "FA-RULE-10A"
 
     def applies(self, context: FinalActionGroupContext) -> bool:
+        """Test this route prerequisite: QC5 exists, the group is not the simple Rule-6 pair and
+        QC0 count exceeds QC5 count, irrespective of newest QC. Earlier router matches take
+        precedence.
+        """
         simple_rule6_group = context.count == 2 and set(context.query_codes) == {0, 5}
         return (
             context.has_qc5
@@ -19,6 +30,10 @@ class Rule10AQC5QC0Dominates(FinalActionRule):
         )
 
     def evaluate(self, context: FinalActionGroupContext) -> RuleEvaluation:
+        """Drop QC0 and repeated ICNs; keep only non-QC0 records whose ICN occurs exactly once
+        across the complete group. Return RuleEvaluation with its outcome and any explicit
+        record decisions.
+        """
         decisions = keep_unique_non_qc0_icns(context, self.rule_id)
         keep_count = sum(item.decision == RecordDecision.KEEP for item in decisions)
         return RuleEvaluation(

@@ -1,3 +1,6 @@
+"""Combine saved business and pytest reports into per-stage and master indexes, metric definitions
+and overall conclusions.
+"""
 from __future__ import annotations
 
 import html
@@ -13,16 +16,21 @@ from .rule_catalog import conclusion_text, get_rule_metadata
 
 
 def _esc(value: Any) -> str:
+    """Escape text before placing it into HTML so data cannot alter report markup."""
     return html.escape(str(value))
 
 
 def _pretty(value: Any) -> str:
+    """Format values as readable escaped/text JSON for this reporter."""
     if value is None:
         return "Not supplied / not applicable"
     return json.dumps(value, indent=2, default=str, ensure_ascii=False)
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:
+    """Read a saved JSON report for index generation, honoring the existing malformed/missing-
+    report handling.
+    """
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
         return value if isinstance(value, dict) else None
@@ -31,6 +39,7 @@ def _read_json(path: Path) -> dict[str, Any] | None:
 
 
 def _business_report_entries(session_root: Path) -> list[dict[str, Any]]:
+    """Discover saved business-run report entries in the session."""
     entries: list[dict[str, Any]] = []
     for path in sorted(session_root.glob("*/*/report.json")):
         if path.parts[-3] in {"master", "pytest"}:
@@ -42,6 +51,7 @@ def _business_report_entries(session_root: Path) -> list[dict[str, Any]]:
 
 
 def _pytest_report_entries(session_root: Path) -> list[dict[str, Any]]:
+    """Discover saved pytest-run entries in the session."""
     entries: list[dict[str, Any]] = []
     for path in sorted(session_root.glob("pytest/*/report.json")):
         payload = _read_json(path)
@@ -51,6 +61,9 @@ def _pytest_report_entries(session_root: Path) -> list[dict[str, Any]]:
 
 
 def _report_summary(payload: dict[str, Any]) -> dict[str, int]:
+    """Summarize a saved business report, keeping validation counts separate from command exit
+    status.
+    """
     summary = payload.get("summary") or {}
     return {
         "pass": int(summary.get("pass", summary.get("passed", 0)) or 0),
@@ -62,6 +75,7 @@ def _report_summary(payload: dict[str, Any]) -> dict[str, int]:
 
 
 def write_stage_index(session_root: str | Path, stage_name: str) -> Path:
+    """Write a stage index combining its run/file summaries and links."""
     root = Path(session_root)
     stage_dir = root / stage_name
     stage_dir.mkdir(parents=True, exist_ok=True)
@@ -98,6 +112,9 @@ def write_stage_index(session_root: str | Path, stage_name: str) -> Path:
 
 
 def _render_raw_validation(validation: dict[str, Any], stage: str, number: int, prefix: str = "check") -> str:
+    """Render a saved validation payload in the master report without requiring live processor
+    objects.
+    """
     status = str(validation.get("status", "UNKNOWN"))
     rule_id = str(validation.get("rule_id", "UNKNOWN"))
     field = validation.get("field_name")
@@ -125,6 +142,9 @@ def _render_raw_validation(validation: dict[str, Any], stage: str, number: int, 
 
 
 def write_master_index(session_root: str | Path, executions: list[dict[str, Any]] | None = None) -> Path:
+    """Write the session dashboard, metric definitions, command outcomes, all-stage conclusions and
+    rule evidence.
+    """
     root = Path(session_root)
     master = root / "master"
     master.mkdir(parents=True, exist_ok=True)
@@ -240,6 +260,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
 
 
 def refresh_session_indexes(session_root: str | Path, executions: list[dict[str, Any]] | None = None) -> Path:
+    """Refresh stage and master indexes after artifacts have been written."""
     root = Path(session_root)
     for child in sorted(root.iterdir() if root.exists() else []):
         if child.is_dir() and child.name not in {"master", "pytest"}:

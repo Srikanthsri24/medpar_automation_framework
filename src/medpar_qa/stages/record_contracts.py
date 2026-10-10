@@ -7,6 +7,9 @@ LENGTHS={Stage.FINAL_ACTION:(32004,32007),Stage.SPLIT:(32007,32007),
 
 
 def validate_record_contracts(records,resolver,encoding="ascii"):
+    """Validate raw physical records against the applicable stage byte contract when raw data is
+    supplied.
+    """
     results=[]
     for record in records:
         raw=resolver.get(record.data,"fixed_width_record")

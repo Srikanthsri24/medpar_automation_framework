@@ -1,3 +1,6 @@
+"""Normalize display paths, validate relative user paths, create safe folder labels and build
+relative report links.
+"""
 from __future__ import annotations
 
 import os
@@ -9,16 +12,19 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def slugify(value: str, fallback: str = "run") -> str:
+    """Convert a human label into a safe readable folder/link label."""
     text = re.sub(r"[^A-Za-z0-9]+", "_", str(value).strip()).strip("_")
     return text.lower() or fallback
 
 
 def timestamp_folder_name(moment: datetime | None = None) -> str:
+    """Create a timestamp label for the report session directory."""
     value = moment or datetime.now().astimezone()
     return value.strftime("%Y%m%d_%H%M%S")
 
 
 def resolve_project_path(path: str | Path, *, project_root: Path = PROJECT_ROOT) -> Path:
+    """Resolve the configured path relative to the project base."""
     candidate = Path(path)
     if candidate.is_absolute():
         return candidate.resolve()
@@ -26,6 +32,7 @@ def resolve_project_path(path: str | Path, *, project_root: Path = PROJECT_ROOT)
 
 
 def relative_display(path: str | Path, *, project_root: Path = PROJECT_ROOT) -> str:
+    """Produce a portable readable path for reports without changing the actual filesystem target."""
     candidate = Path(path)
     try:
         absolute = candidate.resolve() if candidate.is_absolute() else (project_root / candidate).resolve()
@@ -35,10 +42,12 @@ def relative_display(path: str | Path, *, project_root: Path = PROJECT_ROOT) -> 
 
 
 def relative_link(from_directory: str | Path, target: str | Path) -> str:
+    """Calculate a relative hyperlink between report artifacts."""
     return Path(os.path.relpath(Path(target), Path(from_directory))).as_posix()
 
 
 def ensure_relative_user_path(path: str | Path, label: str) -> None:
+    """Reject an absolute user path where a portable relative path is required."""
     if Path(path).is_absolute():
         raise ValueError(
             f"{label} must be a relative project path, not an absolute path: {path}"

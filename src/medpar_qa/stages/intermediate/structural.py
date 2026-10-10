@@ -1,3 +1,6 @@
+"""Validate Intermediate dates/windows, repeated amounts, procedure/diagnosis structure, DOD day
+count, age/NDC and accommodation totals.
+"""
 from __future__ import annotations
 
 from decimal import Decimal
@@ -18,6 +21,9 @@ def validate_decimal_values(
     repeated_fields: tuple[str, ...],
     scale: Decimal,
 ) -> list[RuleResult]:
+    """Validate populated scalar and repeated Intermediate amounts with finite Decimal precision
+    checks.
+    """
     results: list[RuleResult] = []
     for field_name in fields:
         value = resolver.get(record.data, field_name)
@@ -84,6 +90,7 @@ def validate_procedure_structure(
     window_start,
     window_end,
 ) -> list[RuleResult]:
+    """Check procedure repeated collection shapes, counts and aligned dates/versions."""
     codes = nonblank_values(resolver.get(record.data, "medpar_surg_code_0513"))
     dates = nonblank_values(resolver.get(record.data, "medpar_surg_date_0514"))
     versions = nonblank_values(
@@ -97,6 +104,9 @@ def validate_procedure_structure(
     actual_indicator = str(actual_indicator).strip() if actual_indicator is not None else None
 
     def normalized_count(value):
+        """Convert a declared repeated-field count to a comparable integer while honoring this
+        validator missing-value policy.
+        """
         try:
             return int(value)
         except (TypeError, ValueError):
@@ -202,10 +212,14 @@ def validate_diagnosis_structure(
     record: SourceRecord,
     resolver: FieldResolver,
 ) -> list[RuleResult]:
+    """Check diagnosis and POA arrays for matching occurrence counts and valid structure."""
     diagnoses = nonblank_values(resolver.get(record.data, "medpar_diag_code_0492"))
     versions = nonblank_values(resolver.get(record.data, "medpar_dgns_vrsn_cd"))
     poa = nonblank_values(resolver.get(record.data, "medpar_poa_dgns_ind_cd"))
     def normalized_count(value):
+        """Convert a declared repeated-field count to a comparable integer while honoring this
+        validator missing-value policy.
+        """
         try:
             return int(value)
         except (TypeError, ValueError):
@@ -260,6 +274,9 @@ def validate_death_after_admission(
     record: SourceRecord,
     resolver: FieldResolver,
 ) -> RuleResult:
+    """Validate the output death-day count against available dates, without replacing the
+    independent source DOD checks.
+    """
     admission_raw = resolver.get(record.data, "admission_date")
     death_raw = resolver.get(record.data, "date_of_death")
     actual = resolver.get(record.data, "medpar_death_after_adm_0611")
@@ -296,6 +313,9 @@ def validate_age_and_ndc(
     resolver: FieldResolver,
     ndc_length: int,
 ) -> list[RuleResult]:
+    """Check populated age and NDC fields, including independent numeric NDC content/width and
+    occurrence limits.
+    """
     results: list[RuleResult] = []
     age = resolver.get(record.data, "medpar_age_0030")
     try:
@@ -348,6 +368,9 @@ def validate_accommodation_totals(
     resolver: FieldResolver,
     scale: Decimal,
 ) -> RuleResult:
+    """Reconcile repeated accommodation amount groups with the configured total and rounding
+    behavior.
+    """
     raw_charges = nonblank_values(
         resolver.get(record.data, "medpar_accommodation_chrg_0460")
     )

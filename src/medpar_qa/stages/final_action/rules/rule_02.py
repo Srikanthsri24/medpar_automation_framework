@@ -1,3 +1,6 @@
+"""Implement the Final Action rule 02 applicability predicate and resulting record KEEP/DROP
+decisions. Router precedence determines when this rule is reached.
+"""
 from __future__ import annotations
 
 from medpar_qa.enums import RecordDecision, ValidationStatus
@@ -7,10 +10,17 @@ from .base import FinalActionRule, RuleEvaluation
 
 
 class Rule02ThreeClaimSequence(FinalActionRule):
+    """Three newest-first QCs are 5-0-3 or 5-0-1 and QC5 has a verified latest accretion date. Keep
+    the first/newest QC5 and drop the other two claims. The processor blocks
+    missing/contradictory accretion prerequisites before fallback routing.
+    """
     rule_id = "FA-RULE-02"
     _VALID_SEQUENCES = {(5, 0, 3), (5, 0, 1)}
 
     def applies(self, context: FinalActionGroupContext) -> bool:
+        """Test this route prerequisite: Three newest-first QCs are 5-0-3 or 5-0-1 and QC5 has a
+        verified latest accretion date. Earlier router matches take precedence.
+        """
         if context.count != 3 or context.query_codes not in self._VALID_SEQUENCES:
             return False
         # V3 page 20 requires QC5 to have the greatest accretion date.
@@ -19,6 +29,9 @@ class Rule02ThreeClaimSequence(FinalActionRule):
         # The records are ordered by processing date; the schema exposes
         # canonical accretion aliases via the same resolver used by processor.
         def accrete(record):
+            """Read and parse this Rule-2 record accretion date so QC5 latest-accretion eligibility
+            is checked independently of processing-date order.
+            """
             for key in ("accreteDate", "accrete_date", "accretionDate"):
                 if key in record.data and record.data[key] not in (None, ""):
                     return parse_date(record.data[key])
@@ -27,6 +40,10 @@ class Rule02ThreeClaimSequence(FinalActionRule):
         return all(value is not None for value in dates) and dates[0] == max(dates)
 
     def evaluate(self, context: FinalActionGroupContext) -> RuleEvaluation:
+        """Keep the first/newest QC5 and drop the other two claims. The processor blocks
+        missing/contradictory accretion prerequisites before fallback routing. Return
+        RuleEvaluation with its outcome and any explicit record decisions.
+        """
         decisions = tuple(
             self._decision(
                 context,

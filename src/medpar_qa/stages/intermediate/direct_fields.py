@@ -1,3 +1,4 @@
+"""Validate populated direct fields and alignment of related repeated arrays."""
 from __future__ import annotations
 
 import re
@@ -24,6 +25,9 @@ def _optional_scalar_result(
     *,
     max_length: int | None = None,
 ) -> RuleResult:
+    """Validate the type/content of a populated optional direct field and report optional absence
+    explicitly.
+    """
     value = resolver.get(record.data, field_name)
     if value is None or value == "":
         return RuleResult(
@@ -59,6 +63,7 @@ def validate_intermediate_direct_fields(
     window_start: date,
     window_end: date,
 ) -> list[RuleResult]:
+    """Apply structural domain checks to populated Intermediate direct fields."""
     results: list[RuleResult] = []
     results.extend(
         [
@@ -115,6 +120,7 @@ def validate_repeated_alignment(
     record: SourceRecord,
     resolver: FieldResolver,
 ) -> list[RuleResult]:
+    """Check corresponding repeated field arrays have compatible occurrence counts and positions."""
     charges = resolver.get(record.data, "medpar_accommodation_chrg_0460")
     days = resolver.get(record.data, "medpar_accommodation_days_0450")
     charge_values = charges if isinstance(charges, list) else ([] if charges is None else [charges])

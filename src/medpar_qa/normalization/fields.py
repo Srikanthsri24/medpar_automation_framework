@@ -1,3 +1,6 @@
+"""Resolve canonical field names against aliases, punctuation/case variants and nested paths.
+Ambiguous conflicting aliases must not be silently selected.
+"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,6 +15,9 @@ def _key_form(value: str) -> str:
 
 
 def nested_get(data: dict[str, Any], path: str, default: Any = None) -> Any:
+    """Read a dotted path through nested dictionaries, returning the default when any part is
+    absent.
+    """
     current: Any = data
     for part in path.split("."):
         if not isinstance(current, dict):
@@ -27,11 +33,18 @@ def nested_get(data: dict[str, Any], path: str, default: Any = None) -> Any:
 
 
 class FieldResolver:
+    """Represent field resolver with the fields and methods declared below. This class groups the
+    related operations below.
+    """
     def __init__(self, aliases: dict[str, list[str]]) -> None:
+        """Initialize this FieldResolver with the supplied dependencies/configuration and the
+        assignments in its constructor.
+        """
         self.aliases = aliases
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "FieldResolver":
+        """Load the approved alias definitions and construct a FieldResolver."""
         with Path(path).open("r", encoding="utf-8") as handle:
             raw = yaml.safe_load(handle) or {}
         aliases = {
@@ -41,6 +54,9 @@ class FieldResolver:
         return cls(aliases)
 
     def get(self, data: dict[str, Any], canonical_name: str, default: Any = None) -> Any:
+        """Read the resolved field from the supplied record. Alias resolution and missing-value
+        handling follow the code below.
+        """
         candidates = [canonical_name, *self.aliases.get(canonical_name, [])]
         for candidate in candidates:
             value = nested_get(data, candidate, default=None)
@@ -63,6 +79,7 @@ class FieldResolver:
         return default
 
     def require(self, data: dict[str, Any], canonical_name: str) -> Any:
+        """Resolve a field and raise when its required value is missing."""
         marker = object()
         value = self.get(data, canonical_name, marker)
         if value is marker:

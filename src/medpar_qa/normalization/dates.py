@@ -1,3 +1,6 @@
+"""Parse supported Gregorian and Julian dates, distinguish missing zero dates, and calculate
+January-aligned validation windows.
+"""
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -16,6 +19,9 @@ def is_missing_date(value: Any) -> bool:
 
 
 def parse_date(value: Any, *, allow_none: bool = True) -> date | None:
+    """Parse Gregorian/Julian formats with width and day-of-year checks; missing required or
+    invalid dates raise ValueError.
+    """
     if is_missing_date(value):
         if allow_none:
             return None
@@ -47,12 +53,16 @@ def parse_date(value: Any, *, allow_none: bool = True) -> date | None:
 
 
 def january_aligned_window(run_date: date, years: int) -> tuple[date, date]:
+    """Return January 1 of the earliest included calendar year and the run date; reject fewer than
+    one year.
+    """
     if years < 1:
         raise ValueError("years must be at least 1")
     return date(run_date.year - (years - 1), 1, 1), run_date
 
 
 def in_date_window(value: Any, start: date, end: date) -> bool:
+    """Parse a required date and check both inclusive window boundaries."""
     parsed = parse_date(value, allow_none=False)
     assert parsed is not None
     return start <= parsed <= end

@@ -1,3 +1,6 @@
+"""Typed split configuration defaults and mapping parser: identities, sort fields, domains,
+precision, required output roles and selected field coverage.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,6 +9,9 @@ from typing import Any, Mapping
 
 @dataclass(frozen=True)
 class SplitSettings:
+    """Store the typed Split options. Defaults are declared in this class; from_mapping applies
+    explicit manifest overrides.
+    """
     window_years: int = 4
     allowed_transaction_codes: tuple[int, ...] = (0, 1, 2, 3, 4)
     maximum_bills_per_stay: int = 75
@@ -26,6 +32,9 @@ class SplitSettings:
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, Any] | None) -> "SplitSettings":
+        """Convert supplied stage options into typed settings, applying only the documented
+        defaults for omitted options.
+        """
         raw = raw or {}
         return cls(
             window_years=int(raw.get("window_years", 4)),

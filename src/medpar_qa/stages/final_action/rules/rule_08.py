@@ -1,3 +1,6 @@
+"""Implement the Final Action rule 08 applicability predicate and resulting record KEEP/DROP
+decisions. Router precedence determines when this rule is reached.
+"""
 from __future__ import annotations
 
 from medpar_qa.enums import RecordDecision, ValidationStatus
@@ -8,9 +11,16 @@ from .helpers import keep_unique_non_qc0_icns
 
 
 class Rule08NoQC5LatestQC0(FinalActionRule):
+    """No QC5, more than three claims, newest QC0 and QC0 count less than QC1 plus QC3 counts. Drop
+    QC0 and repeated ICNs; keep only non-QC0 records whose ICN occurs exactly once across the
+    complete group.
+    """
     rule_id = "FA-RULE-08"
 
     def applies(self, context: FinalActionGroupContext) -> bool:
+        """Test this route prerequisite: No QC5, more than three claims, newest QC0 and QC0 count
+        less than QC1 plus QC3 counts. Earlier router matches take precedence.
+        """
         return (
             not context.has_qc5
             and context.count > 3
@@ -19,6 +29,10 @@ class Rule08NoQC5LatestQC0(FinalActionRule):
         )
 
     def evaluate(self, context: FinalActionGroupContext) -> RuleEvaluation:
+        """Drop QC0 and repeated ICNs; keep only non-QC0 records whose ICN occurs exactly once
+        across the complete group. Return RuleEvaluation with its outcome and any explicit
+        record decisions.
+        """
         decisions = keep_unique_non_qc0_icns(context, self.rule_id)
         keep_count = sum(item.decision == RecordDecision.KEEP for item in decisions)
         return RuleEvaluation(

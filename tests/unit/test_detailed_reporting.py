@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for detailed reporting. Tests describe controlled examples;
+passing them does not certify all production files.
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -14,6 +17,9 @@ from medpar_qa.reporting.report_bundle import write_report_bundle
 
 @pytest.mark.unit
 def test_report_bundle_contains_complete_validation_evidence(tmp_path: Path):
+    """Verify report bundle contains complete validation evidence. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     stage_result = StageResult(
         stage=Stage.STAY,
         rule_results=[
@@ -58,6 +64,9 @@ def test_report_bundle_contains_complete_validation_evidence(tmp_path: Path):
 
 @pytest.mark.unit
 def test_missing_input_file_is_reported_as_failure_instead_of_false_pass(tmp_path: Path):
+    """Verify missing input file is reported as failure instead of false pass. The assertions below
+    state exactly what this test proves for its fixtures.
+    """
     manifest = RunManifest(
         run_id="missing_file",
         run_date=date(2026, 7, 19),
@@ -85,6 +94,9 @@ def test_missing_input_file_is_reported_as_failure_instead_of_false_pass(tmp_pat
 
 @pytest.mark.unit
 def test_stage_status_counts_are_available_for_html_summary():
+    """Verify stage status counts are available for html summary. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     result = StageResult(
         stage=Stage.INTERMEDIATE,
         rule_results=[
@@ -107,6 +119,9 @@ def test_stage_status_counts_are_available_for_html_summary():
 
 @pytest.mark.unit
 def test_team_report_explains_requirement_expected_actual_and_conclusion(tmp_path: Path):
+    """Verify team report explains requirement expected actual and conclusion. The assertions below
+    state exactly what this test proves for its fixtures.
+    """
     stage_result = StageResult(
         stage=Stage.SPLIT,
         rule_results=[
@@ -139,6 +154,9 @@ def test_team_report_explains_requirement_expected_actual_and_conclusion(tmp_pat
 
 @pytest.mark.unit
 def test_timestamped_session_writes_stage_and_master_indexes(tmp_path: Path):
+    """Verify timestamped session writes stage and master indexes. The assertions below state
+    exactly what this test proves for its fixtures.
+    """
     from medpar_qa.reporting.run_layout import ReportSession
     from medpar_qa.reporting.session_index import refresh_session_indexes
 
@@ -164,6 +182,9 @@ def test_timestamped_session_writes_stage_and_master_indexes(tmp_path: Path):
 
 @pytest.mark.unit
 def test_file_review_preserves_shared_checks_and_unattributed_failures():
+    """Verify file review preserves shared checks and unattributed failures. The assertions below
+    state exactly what this test proves for its fixtures.
+    """
     from medpar_qa.reporting.file_review import file_review, readable_time
     checks = [
         {'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read 2 records', 'source_files': ['a.json'], 'actual': {'role': 'source'}},
@@ -180,6 +201,9 @@ def test_file_review_preserves_shared_checks_and_unattributed_failures():
 
 @pytest.mark.unit
 def test_master_report_defines_metrics_and_file_navigation(tmp_path):
+    """Verify master report defines metrics and file navigation. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     import json
     from medpar_qa.reporting.session_index import write_master_index
     folder = tmp_path / 'stay' / 'run'
@@ -195,6 +219,9 @@ def test_master_report_defines_metrics_and_file_navigation(tmp_path):
 
 @pytest.mark.unit
 def test_stage_conclusions_count_unique_files_and_keep_global_blocks():
+    """Verify stage conclusions count unique files and keep global blocks. The assertions below
+    state exactly what this test proves for its fixtures.
+    """
     from medpar_qa.reporting.file_review import stage_conclusion, file_review
     checks = [
         {'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read', 'source_files': ['a.json'], 'actual': {'role': 'source'}},

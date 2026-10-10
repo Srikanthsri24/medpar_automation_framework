@@ -1,3 +1,6 @@
+"""Shared identities, role separation, duplicate detection, collection normalization, presence
+checks and LD-3137 sort/group evidence.
+"""
 from __future__ import annotations
 
 from typing import Any
@@ -12,6 +15,7 @@ def required_fields_result(
     record: SourceRecord,
     values: dict[str, Any],
 ) -> RuleResult:
+    """Return a validation result listing required fields that are absent from the resolved record."""
     missing = [name for name, value in values.items() if value is None or value == ""]
     if missing:
         return RuleResult(

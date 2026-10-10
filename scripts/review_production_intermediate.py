@@ -33,6 +33,10 @@ def distinct_payload_paths(paths: list[Path]) -> tuple[list[Path], int]:
 
 
 def main() -> int:
+    """Run this script command-line workflow and return its process exit status. Compare the
+    production Intermediate extract using distinct payload files. Duplicate archive payloads are
+    excluded from this diagnostic pairing, while original files are retained.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', default='data/production/q61')
     parser.add_argument('--output', default='reports/production_intermediate_review/summary.json')

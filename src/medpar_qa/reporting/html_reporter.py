@@ -1,3 +1,4 @@
+"""Render escaped HTML rule cards, stage sections, file navigation/search and evidence links."""
 from __future__ import annotations
 
 import html
@@ -15,10 +16,12 @@ from medpar_qa.reporting.rule_catalog import conclusion_text, get_rule_metadata,
 
 
 def _esc(value: Any) -> str:
+    """Escape text before placing it into HTML so data cannot alter report markup."""
     return html.escape(str(value))
 
 
 def _pretty(value: Any) -> str:
+    """Format values as readable escaped/text JSON for this reporter."""
     if value is None:
         return "Not supplied / not applicable"
     try:
@@ -28,6 +31,7 @@ def _pretty(value: Any) -> str:
 
 
 def _value_box(label: str, value: Any, kind: str) -> str:
+    """Render labeled expected/observed/evidence values in an escaped HTML block."""
     return (
         f'<section class="value-panel {kind}"><h5>{_esc(label)}</h5>'
         f'<pre>{_esc(_pretty(value))}</pre></section>'
@@ -35,12 +39,14 @@ def _value_box(label: str, value: Any, kind: str) -> str:
 
 
 def _list(values: list[str], empty: str = "None") -> str:
+    """Render an escaped HTML list of evidence values."""
     if not values:
         return f'<span class="muted">{_esc(empty)}</span>'
     return "<ul>" + "".join(f"<li>{_esc(value)}</li>" for value in values) + "</ul>"
 
 
 def _counts(results: list[StageResult]) -> Counter[str]:
+    """Count validation outcomes for this report view."""
     values: Counter[str] = Counter()
     for stage in results:
         values.update(result.status.value for result in stage.rule_results)
@@ -48,6 +54,9 @@ def _counts(results: list[StageResult]) -> Counter[str]:
 
 
 def _validation_card(check: RuleResult, number: int, prefix: str = "check") -> str:
+    """Render the full rule explanation, expected/observed values, status and evidence links as a
+    card.
+    """
     status = check.status.value
     metadata = get_rule_metadata(check.stage.value, check.rule_id, check.field_name)
     conclusion = conclusion_text(
@@ -135,6 +144,7 @@ def _validation_card(check: RuleResult, number: int, prefix: str = "check") -> s
 
 
 def _stage_section(stage: StageResult, index: int) -> str:
+    """Render a stage with summary, file-level navigation/search and its validation cards."""
     counts = stage.status_counts
     executed_rule_ids = {item.rule_id for item in stage.rule_results}
     catalogue_rows = "".join(
@@ -194,6 +204,7 @@ def write_html_report(
     filename: str = "report.html",
     parent_link: str | None = None,
 ) -> Path:
+    """Write the standalone HTML evidence report for a run."""
     stage_results = list(results)
     directory = Path(output_directory)
     directory.mkdir(parents=True, exist_ok=True)

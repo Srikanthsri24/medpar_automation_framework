@@ -25,6 +25,9 @@ def whole_dollars(value: Any) -> Decimal:
 
 
 def length_of_stay(admission: date, thru: date, discharge_status: Any) -> int:
+    """Derive stay length from admission/thru and discharge status, including same-day behavior;
+    reject inverted dates.
+    """
     days = (thru - admission).days
     if days < 0:
         raise ValueError("Thru date precedes admission/from date")
@@ -32,10 +35,16 @@ def length_of_stay(admission: date, thru: date, discharge_status: Any) -> int:
 
 
 def death_after_admission(admission: date, death: date | None) -> int | None:
+    """Return the signed death-day distance from admission, using one for same-day death.
+    A missing death date returns None; this arithmetic helper does not reject negative days.
+    """
     return None if death is None else (1 if death == admission else (death - admission).days)
 
 
 def age_at_admission(birth: date, admission: date, medicare_status: Any) -> int:
+    """Compute age using the birthday boundary and the documented Medicare-status adjustment; never
+    replace a missing DOB with an invented date.
+    """
     if birth > admission:
         raise ValueError("Birth date is after admission")
     age = admission.year - birth.year - ((admission.month, admission.day) < (birth.month, birth.day))
@@ -43,6 +52,7 @@ def age_at_admission(birth: date, admission: date, medicare_status: Any) -> int:
 
 
 def base_facility_ccn(provider: Any) -> str:
+    """Derive base facility CCN using the documented provider-position mapping."""
     text = str(provider).strip().upper()
     if len(text) != 6:
         raise ValueError("Provider CCN must contain six characters")
@@ -81,6 +91,9 @@ def accommodation_totals(lines: Any) -> tuple[list[int], list[Decimal]]:
 
 
 def line_value(line: Any, *keys: str) -> Any:
+    """Resolve alternate nested revenue/value/span keys and identifier wrappers from one line
+    object.
+    """
     if not isinstance(line, dict):
         return line if "code" in keys else None
     for key in keys:
@@ -104,6 +117,7 @@ def line_value(line: Any, *keys: str) -> Any:
 
 
 def codes(lines: Any, *keys: str) -> list[str]:
+    """Extract trimmed uppercase nonblank codes from the normalized repeated source collection."""
     return [str(value).strip().upper() for line in normalize_collection(lines)
             if (value := line_value(line, "code", *keys)) is not None and str(value).strip()]
 
@@ -138,6 +152,7 @@ def care_unit_indicator(lines: Any, family: str) -> str:
 
 def outpatient_services_indicator(revenue_codes: list[str]) -> str:
     # CMS CR14 p139: outpatient=1, ambulatory surgery=2, both=3, neither=0.
+    """Return 0=neither, 1=050X outpatient, 2=049X ambulatory surgery or 3=both."""
     outpatient = any("0500" <= code <= "0509" for code in revenue_codes)
     ambulatory = any("0490" <= code <= "0499" for code in revenue_codes)
     return str(int(outpatient) + 2 * int(ambulatory))
@@ -219,9 +234,15 @@ DIRECT_MOVES = {
 
 def validate_business_rules(source: SourceRecord, target: SourceRecord,
                             resolver: FieldResolver) -> list[RuleResult]:
+    """Calculate supported Intermediate expectations from source operands and compare them with the
+    matched target, emitting field-specific evidence.
+    """
     results: list[RuleResult] = []
 
     def get(field: str, *alternates: str) -> Any:
+        """Read the source-only operand using the first populated alternate name. Alias resolution
+        and missing-value handling follow the code below.
+        """
         for name in (field, *alternates):
             value = resolver.get(source.data, name)
             if value is not None and value != "":
@@ -229,12 +250,18 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         return None
 
     def required(field: str, *alternates: str) -> Any:
+        """Read a mandatory resolved source operand; raise instead of substituting an output value
+        when it is missing.
+        """
         value = get(field, *alternates)
         if value is None:
             raise LookupError(f"Missing source operand: {field}")
         return value
 
     def required_date(field: str, *alternates: str) -> date:
+        """Read a required source date, reject blank/zero operands and parse it before any
+        calculation.
+        """
         from medpar_qa.normalization.dates import is_missing_date
         value = required(field, *alternates)
         if is_missing_date(value):
@@ -242,6 +269,10 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         return parse_date(value, allow_none=False)
 
     def check(rule: str, field: str, calculate: Callable[[], Any], numeric: bool = False, *, date_value: bool = False) -> None:
+        """Compare the local independently calculated expectation with the target field and append
+        a traced rule outcome. Missing operands/output and invalid values use the explicit
+        status branches below.
+        """
         observed = resolver.get(target.data, field)
         calculated=False
         try:
@@ -269,12 +300,15 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
                                             "specification": "V3 pp26–34; Byte-by-Byte pp4–6"}))
 
     def admission() -> date:
+        """Read source admission date with the documented stay-from fallback."""
         return parse_date(get("admission_date") or required("stay_from_date"), allow_none=False)
 
     def thru() -> date:
+        """Read the required source stay-thru date."""
         return parse_date(required("stay_thru_date"), allow_none=False)
 
     def status() -> Any:
+        """Read source discharge status using the supported aliases."""
         return required("discharge_status", "patient_discharge_status", "patientStatus")
 
     check("INT-LOS-CALCULATION", "medpar_lgth_stay_0260", lambda: length_of_stay(admission(), thru(), status()), True)
@@ -284,6 +318,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     # DOD lookup requires the external EDB match. This explicitly provided source
     # field is the matched DOD, not the derived output DOD.
     def dod() -> date | None:
+        """Use the actual DOD lookup/source date or dead-status thru-date fallback; distinguish a
+        confirmed no-match from an unavailable feed.
+        """
         from medpar_qa.normalization.dates import is_missing_date
         death = get("matched_date_of_death") if get("dod_reference_available") else get("date_of_death")
         if not is_missing_date(death):
@@ -297,6 +334,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-DEATH-DAYS-CALCULATION", "medpar_death_after_adm_0611", lambda: death_after_admission(admission(), dod()), True)
     check("INT-DOD-CALCULATION", "medpar_himaster_dod_0230", lambda: dod().strftime("%Y%j") if dod() else None, date_value=True)
     def death_verify() -> Any:
+        """Use the matched DOD verification switch, dead-status fallback B, or confirmed absent
+        match; missing lookup evidence blocks the calculation.
+        """
         if get("dod_reference_matched"):
             return required("matched_dod_verify_switch")
         if str(status()).strip() in {"20","B"}:
@@ -307,6 +347,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-DOD-VERIFY", "medpar_dod_ind_0240", death_verify)
     from medpar_qa.reference_data import ssi_days
     def ssi_count() -> int:
+        """Require an available SSI reference and inpatient stay before calculating monthly-overlap
+        days.
+        """
         if not get("ssi_reference_available"):
             raise LookupError("SSI reference feed not supplied")
         if str(required("transaction_code")) in {"0","4"}:
@@ -315,6 +358,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-SSI-DAYS", "medpar_ssi_data_0251", ssi_count, True)
     check("INT-SSI-MATCH-INDICATOR", "medpar_ssi_data_0252", lambda: "Y" if required("ssi_reference_matched") else "N")
     def revenue_codes() -> list[str]:
+        """Read the required source revenue-line codes and normalize them to four characters."""
         return [code.zfill(4) for code in codes(required("revenue_lines"), "revenueCode", "revCntrCd", "REV-CNTR-CD")]
     ndc_observed = resolver.get(target.data, "medpar_rev_cntr_ndc_num_1550")
     try:
@@ -332,6 +376,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
                               record_ids=[source.record_id, target.record_id],
                               evidence={"specification": "CMS MedPAR CR18 p125, field241"}))
     def organ_type() -> str:
+        """Choose the highest valid organ-acquisition code from the explicit mapping; no valid code
+        returns blank.
+        """
         matched=set(revenue_codes()) & ORGAN_TYPES.keys()
         if not matched:
             return ""  # CMS CR14 p140: no organ acquisition is blank.
@@ -342,6 +389,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-CORONARY-CARE-IND-0482", "medpar_coronary_care_ind_0482", lambda: care_unit_indicator(required("revenue_lines"), "021"))
     check("INT-RADIOLOGY-INDICATORS", "medpar_radiology_ind_0485", lambda: "".join("1" if any(lo <= int(c) <= hi for c in revenue_codes()) else "0" for lo, hi in ((280,289),(320,329),(330,339),(340,349),(350,359),(400,409))))
     def condition_codes() -> list[str]:
+        """Read condition codes from the required source condition collection."""
         return codes(required("condition_codes"), "conditionCode", "CLM-RLT-COND-CD")
     check("INT-ESRD-CONDITION", "medpar_esrd_condition_0550", lambda: max((c for c in condition_codes() if c in {str(n) for n in range(71,77)}), default="00"), True)
     check("INT-PPS-CALCULATION", "medpar_pps_ind_0120", lambda: "2" if "65" not in condition_codes() and str(required("provider_id"))[2:3].isdigit() else "0")
@@ -364,8 +412,12 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
             actual=observed,record_ids=[source.record_id,target.record_id]))
 
     def value_lines() -> list[Any]:
+        """Read the required source value-code collection with supported alternate field naming."""
         return normalize_collection(required("value_lines", "clm_val_grp"))
     def value_total(code: str) -> Decimal:
+        """Sum all signed amounts for a given source value code before whole-dollar rounding;
+        missing line amounts are not guessed.
+        """
         amounts = []
         for line in value_lines():
             if str(line_value(line, "code", "valueCode", "CLM-VAL-CD")).strip().upper() == code:
@@ -379,6 +431,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-DEVICE-CREDIT-SWITCH", "medpar_cr_rcv_repl_dvc_sw_0840", lambda: "Y" if "FD" in codes(value_lines(), "valueCode", "CLM-VAL-CD") else "N")
 
     def drg_price() -> Decimal:
+        """Sum payment, primary payer, coinsurance, inpatient deductible and blood deductible,
+        subtract outlier payment, then round to whole dollars.
+        """
         operands = [required("claim_payment_amount", "CLM-PMT-AMT", "claimPaymentAmount", "reimbursement_amount"),
                     required("primary_payer_amount", "NCH-PRMRY-PYR-CLM-PD-AMT", "primaryPayerClaimPaidAmount", "primary_payment_amount"),
                     required("coinsurance_amount", "NCH-BENE-PTA-COINSRNC-AMT", "beneficiaryCoinsuranceAmount"),
@@ -395,6 +450,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         for index, field in enumerate(("medpar_ng_aco_ind_1_cd_1330", "medpar_ng_aco_ind_2_cd_1340",
                 "medpar_ng_aco_ind_3_cd_1350", "medpar_ng_aco_ind_4_cd_1360", "medpar_ng_aco_ind_5_cd_1370")):
             def aco_value(index=index):
+                """Return the requested source ACO array position and reject a missing/malformed
+                position.
+                """
                 if not isinstance(aco, list) or len(aco) <= index:
                     raise LookupError(f"Missing ACO indicator at position {index+1}")
                 return aco[index]
@@ -406,6 +464,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         check("INT-FIVE-PERCENT-SAMPLE", "medpar_sample_05_0680",
               lambda: "1" if str(required("claim_can"))[7:9] in {"05","20","45","70","95"} else "0")
     def total_per_diem() -> Decimal:
+        """Require nonnegative integer utilization days, round the source per-diem rate to whole
+        dollars first, then multiply and round the total.
+        """
         days = to_decimal(required("utilization_days"))
         if days < 0 or days != days.to_integral_value():
             raise ValueError("Utilization days must be a non-negative integer")
@@ -421,8 +482,12 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
             ("stay_thru_date","medpar_dischg_date_0210")):
         check("INT-JULIAN-CONVERSION",output_field,lambda input_field=input_field: parse_date(required(input_field),allow_none=False).strftime("%Y%j"),date_value=True)
     def spans() -> list[Any]:
+        """Read the source occurrence-span collection needed by span date derivations."""
         return normalize_collection(required("occurrence_span_lines"))
     def span_date(code: str, direction: str, highest: bool = False) -> str | None:
+        """Resolve/parse the span dates used by this local consolidation or derivation; code, date
+        direction and maximum/first precedence follow the expression below.
+        """
         matches=[line for line in spans() if str(line_value(line,"code","spanCode","occurrenceSpanCode")).strip()==code]
         names=("fromDate","from_date","from") if direction=="from" else ("toDate","thruDate","thru_date","thru")
         values=[parse_date(line_value(line,*names),allow_none=False) for line in matches]

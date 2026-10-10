@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for stay latest code precedence. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 import pytest
 
 from medpar_qa.enums import Stage
@@ -9,6 +12,9 @@ from medpar_qa.stages.stay.code_precedence import latest_values_by_code
 @pytest.mark.regression
 @pytest.mark.condition_codes
 def test_duplicate_condition_code_uses_latest_claim(make_record):
+    """Verify duplicate condition code uses latest claim. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     older = make_record(
         {
             "nchWeeklyProcessingDate": "20260101",
@@ -39,6 +45,9 @@ def test_duplicate_condition_code_uses_latest_claim(make_record):
 @pytest.mark.regression
 @pytest.mark.occurrence_codes
 def test_duplicate_occurrence_code_uses_latest_claim(make_record):
+    """Verify duplicate occurrence code uses latest claim. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     older = make_record(
         {
             "nchWeeklyProcessingDate": "20260101",

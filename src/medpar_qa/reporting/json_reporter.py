@@ -1,3 +1,4 @@
+"""Persist structured StageResult evidence as JSON for tooling and the master report."""
 from __future__ import annotations
 
 import json
@@ -18,6 +19,7 @@ def write_json_report(
     filename: str = "report.json",
     context: dict[str, Any] | None = None,
 ) -> Path:
+    """Serialize run results and metadata as machine-readable JSON."""
     stage_results = list(results)
     directory = Path(output_directory)
     directory.mkdir(parents=True, exist_ok=True)

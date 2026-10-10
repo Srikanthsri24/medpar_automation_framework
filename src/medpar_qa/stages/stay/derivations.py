@@ -1,3 +1,6 @@
+"""Derive known Stay condition switches, code-73 amounts and sum fields independently from source
+bill data.
+"""
 from __future__ import annotations
 
 from decimal import Decimal
@@ -9,6 +12,7 @@ from medpar_qa.normalization.fields import FieldResolver
 
 
 def collection_codes(value: Any) -> set[str]:
+    """Extract the comparable codes from a repeated Stay code collection."""
     if not isinstance(value, list):
         return set()
     codes: set[str] = set()
@@ -23,6 +27,7 @@ def collection_codes(value: Any) -> set[str]:
 
 
 def derive_condition_switch(condition_codes: Any, code: str) -> str:
+    """Calculate the known condition switch from source condition codes."""
     return "Y" if str(code) in collection_codes(condition_codes) else "N"
 
 
@@ -33,6 +38,7 @@ def derive_value_code_amount(
     code: str,
     scale: Decimal = Decimal("0.001"),
 ) -> Decimal:
+    """Sum the matching source value-code amounts with configured Decimal scale/rounding."""
     total = Decimal("0")
     for record in records:
         lines = resolver.get(record.data, "value_lines", []) or []
@@ -56,6 +62,7 @@ def derive_sum_field(
     *,
     scale: Decimal = Decimal("0.001"),
 ) -> Decimal | None:
+    """Sum a resolved field across source bills using Decimal rather than float arithmetic."""
     values: list[Decimal] = []
     for record in records:
         raw = resolver.get(record.data, field_name)

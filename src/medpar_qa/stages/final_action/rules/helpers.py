@@ -1,3 +1,4 @@
+"""Shared DROP-all, newest non-QC0 and eligible unique non-QC0 ICN decision constructors."""
 from __future__ import annotations
 
 from medpar_qa.enums import RecordDecision
@@ -7,6 +8,7 @@ from ..context import FinalActionGroupContext
 
 
 def drop_all(context: FinalActionGroupContext, rule_id: str, reason: str) -> tuple[ClaimDecision, ...]:
+    """Construct DROP decisions for every claim in the supplied group."""
     return tuple(
         ClaimDecision(record.record_id, RecordDecision.DROP, rule_id, reason)
         for record in context.records
@@ -19,6 +21,7 @@ def keep_first_non_qc0(
     keep_reason: str,
     drop_reason: str,
 ) -> tuple[ClaimDecision, ...]:
+    """Retain the newest eligible non-QC0 claim and drop the remaining claims."""
     keep_index = next(
         (index for index, qc in enumerate(context.query_codes) if qc != 0),
         None,

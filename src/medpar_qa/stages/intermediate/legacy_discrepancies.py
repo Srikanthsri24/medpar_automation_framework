@@ -1,3 +1,6 @@
+"""Specific recovered requirements for per diem, revenue selection, admission weekday, condition
+switches, line items and source-to-output direct moves.
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -14,6 +17,7 @@ from medpar_qa.stages.comparison import compare_values
 
 
 def _line_code(line: Any) -> str | None:
+    """Read the source line code from its supported flat/nested representations."""
     if isinstance(line, dict):
         from .business_rules import line_value
         value = line_value(line, "code", "revenueCode", "revCntrCd", "REV-CNTR-CD")
@@ -24,6 +28,7 @@ def _line_code(line: Any) -> str | None:
 
 
 def _source_trace(record: SourceRecord) -> dict[str, Any]:
+    """Build record/file evidence linking a source operand with the matched output."""
     return {
         "record_id": record.record_id,
         "source_file": record.source.file_path,
@@ -124,6 +129,7 @@ def validate_revenue_indicator(
     negative_value: str = "N",
     source: SourceRecord | None = None,
 ) -> RuleResult:
+    """Derive a revenue-based indicator from the supplied configured code set and compare target."""
     configured = tuple(sorted({str(code).strip().zfill(4) for code in search_codes if str(code).strip()}))
     actual = resolver.get(record.data, field_name)
     operand_record = source if source is not None else record
@@ -211,6 +217,7 @@ def admission_day_code(admission: date) -> int:
 
 
 def validate_admission_day(record: SourceRecord, resolver: FieldResolver) -> RuleResult:
+    """Compare the output admission-day code with the independently parsed admission date."""
     raw_admission = resolver.get(record.data, "admission_date")
     raw_actual = resolver.get(record.data, "medpar_adm_day_0090")
     if raw_admission in (None, "") and raw_actual in (None, ""):
@@ -278,6 +285,7 @@ def validate_condition_switches(
     mappings: Mapping[str, tuple[str, ...]],
     *, source: SourceRecord | None = None,
 ) -> list[RuleResult]:
+    """Derive each configured condition-code switch from source codes and compare output."""
     operand_record = source if source is not None else record
     raw_lines = resolver.get(operand_record.data, "condition_codes")
     lines = normalize_collection(raw_lines)
@@ -341,6 +349,7 @@ def validate_condition_switches(
 
 
 def validate_revenue_line_items(record: SourceRecord, resolver: FieldResolver, *, scale: Decimal) -> list[RuleResult]:
+    """Check repeated revenue line-item fields, codes, counts and configured amount behavior."""
     lines = normalize_collection(resolver.get(record.data, "revenue_lines"))
     if not lines:
         return [
@@ -414,6 +423,9 @@ def validate_source_to_actual_direct_moves(
     decimal_fields: set[str],
     scale: Decimal,
 ) -> list[RuleResult]:
+    """Compare only the approved direct-move fields between matched source and target; derived age
+    operands and MRN fallback are handled separately.
+    """
     results: list[RuleResult] = []
     for field_name in fields:
         expected = resolver.get(source.data, field_name)

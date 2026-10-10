@@ -1,3 +1,6 @@
+"""Coordinate final medpar validation: separate file roles, check prerequisites/structure, derive
+source expectations, match output identities and compare available golden fields.
+"""
 from __future__ import annotations
 
 import re
@@ -22,6 +25,9 @@ from .business_rules import bypass_required, compare_final_bytes, validate_trail
 
 
 class FinalMedparProcessor(BaseStageProcessor):
+    """Implement this stage through the BaseStageProcessor validation interface and hold its
+    resolver/settings.
+    """
     stage = Stage.FINAL_MEDPAR
 
     def __init__(
@@ -29,10 +35,14 @@ class FinalMedparProcessor(BaseStageProcessor):
         resolver: FieldResolver,
         settings: FinalMedparSettings | None = None,
     ) -> None:
+        """Initialize this FinalMedparProcessor with the supplied dependencies/configuration and
+        the assignments in its constructor.
+        """
         self.resolver = resolver
         self.settings = settings or FinalMedparSettings()
 
     def _validate_record(self, record: SourceRecord) -> list[RuleResult]:
+        """Run Final record classification, selected-field and optional physical-layout checks."""
         results: list[RuleResult] = []
         split_indicator = self.resolver.get(record.data, "split_year_indicator")
         split_valid = bool(
@@ -141,6 +151,9 @@ class FinalMedparProcessor(BaseStageProcessor):
         return results
 
     def validate(self, records: list[SourceRecord]) -> StageResult:
+        """Coordinate final medpar checks and return StageResult with auditable outcomes/decisions;
+        source records remain distinct from actual/expected roles.
+        """
         result = StageResult(stage=self.stage)
         result.rule_results.append(
             ld3137_sort_order_result(

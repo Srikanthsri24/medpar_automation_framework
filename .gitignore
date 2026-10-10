@@ -18,3 +18,4 @@ outputs/**/*.zip
 outputs/**/*.inspect.ndjson
 outputs/**/submission_checksums.json
 ~$*.xlsx
+outputs/

@@ -1,3 +1,6 @@
+"""Validate selected amount fields plus procedure and diagnosis counts, versions, indicators and
+array alignment.
+"""
 from __future__ import annotations
 
 from decimal import Decimal
@@ -26,6 +29,7 @@ def validate_intermediate_decimal_field(
     actual_value: Any,
     scale: Decimal = Decimal("0.001"),
 ) -> RuleResult:
+    """Check one Intermediate amount for numeric value and configured scale."""
     if field_name not in INTERMEDIATE_DECIMAL_FIELDS:
         return RuleResult(
             stage=Stage.INTERMEDIATE,
@@ -81,6 +85,9 @@ def validate_procedure_fields(
     window_start,
     window_end,
 ) -> list[RuleResult]:
+    """Validate procedure indicator/count/date/code/version consistency with the supported
+    occurrence limit.
+    """
     results: list[RuleResult] = []
     normalized_codes = [str(code).strip() for code in codes if code is not None and str(code).strip()]
     normalized_dates = [value for value in dates if value is not None and str(value).strip()]
@@ -179,6 +186,7 @@ def validate_diagnosis_fields(
     actual_diagnosis_count: int,
     actual_poa_count: int,
 ) -> list[RuleResult]:
+    """Validate diagnosis count, code/version and POA position alignment."""
     populated_diagnoses = [item for item in diagnosis_codes if item is not None and str(item).strip()]
     populated_poa = [item for item in poa_indicators if item is not None and str(item).strip()]
 

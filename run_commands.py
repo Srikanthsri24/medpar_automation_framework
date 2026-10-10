@@ -77,6 +77,9 @@ def _production_paths(*folders: str, suffixes: tuple[str, ...] = (".json", ".par
 def _production_run(name: str, folders: tuple[str, ...], *, enabled: bool = True,
                     suffixes: tuple[str, ...] = (".json", ".parquet"),
                     actual_folders: tuple[str, ...] = ()) -> dict[str, Any]:
+    """Create the configuration entry for a named production run, with its source/output paths and
+    enabled flag.
+    """
     paths = _production_paths(*folders, suffixes=suffixes)
     actual_paths = _production_paths(*actual_folders, suffixes=suffixes)
     return {
@@ -176,6 +179,9 @@ PYTEST_RUNS = [
 
 @dataclass(frozen=True)
 class Command:
+    """Represent command with the fields and methods declared below. Declared fields document the
+    component contract.
+    """
     name: str
     stage: str
     command_id: str
@@ -185,12 +191,16 @@ class Command:
 
 
 def _append_paths(args: list[str], flag: str, paths: list[str]) -> None:
+    """Append configured file or folder arguments to a stage command without dropping prior
+    entries.
+    """
     for path in paths:
         ensure_relative_user_path(path, flag)
         args.extend([flag, path])
 
 
 def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_session: str) -> Command:
+    """Translate one enabled stage run into the Python stage-runner argument list."""
     name = str(item["name"])
     command_id = slugify(name)
     args = [
@@ -219,6 +229,9 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
 
 
 def build_commands(report_session: str = "reports/_configured_preview") -> list[Command]:
+    """Expand enabled STAGE_RUNS entries into business command definitions and append requested
+    pytest commands.
+    """
     ensure_relative_user_path(report_session, "report_session")
     commands: list[Command] = []
     for stage, stage_config in STAGE_RUNS.items():
@@ -264,11 +277,13 @@ COMMANDS = build_commands()
 def _command_text(args: list[str]) -> str:
     # Keep paths and command output project-relative. The Python executable is shown
     # as "python" instead of its machine-specific absolute virtualenv path.
+    """Render the argument list as readable shell command text for execution evidence."""
     display_args = ["python", *args[1:]] if args and args[0] == PYTHON else list(args)
     return " ".join(f'"{arg}"' if " " in arg else arg for arg in display_args)
 
 
 def _command_output_directory(session: ReportSession, command: Command) -> Path:
+    """Choose the isolated report directory for this command inside its session."""
     if command.stage == "master":
         directory = session.master_directory / command.command_id
     elif command.stage in {"final_action", "split", "stay", "intermediate", "final_medpar"}:
@@ -320,6 +335,10 @@ def write_quality_summary(session_root: Path, executions: list[dict[str, Any]]) 
 
 
 def main() -> int:
+    """Run this script command-line workflow and return its process exit status. The team entry
+    point. STAGE_RUNS selects enabled business runs, paths, dates and validation options;
+    commands run sequentially and their reports are combined into a session.
+    """
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
     commands = [command for command in build_commands(session_relative) if command.enabled]

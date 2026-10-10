@@ -1,3 +1,6 @@
+"""Typed intermediate configuration defaults and mapping parser: identities, sort fields, domains,
+precision, required output roles and selected field coverage.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +10,9 @@ from typing import Any, Mapping
 
 @dataclass(frozen=True)
 class IntermediateSettings:
+    """Store the typed Intermediate options. Defaults are declared in this class; from_mapping
+    applies explicit manifest overrides.
+    """
     identity_fields: tuple[str, ...] = (
         "hicn",
         "provider_id",
@@ -141,10 +147,14 @@ class IntermediateSettings:
 
     @property
     def condition_switch_map(self) -> dict[str, tuple[str, ...]]:
+        """Expose configured condition-switch mappings as a dictionary for the validators."""
         return dict(self.condition_switch_mappings)
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, Any] | None) -> "IntermediateSettings":
+        """Convert supplied stage options into typed settings, applying only the documented
+        defaults for omitted options.
+        """
         raw = raw or {}
         raw_switches = raw.get("condition_switch_mappings")
         if isinstance(raw_switches, Mapping):

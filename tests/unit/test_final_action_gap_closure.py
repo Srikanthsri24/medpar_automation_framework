@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for final action gap closure. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 from __future__ import annotations
 
 from medpar_qa.enums import ValidationStatus, RecordDecision
@@ -8,10 +11,16 @@ from test_final_action import base_claim
 
 
 def record(make_record, **overrides):
+    """Test helper for record. It constructs or summarizes controlled fixture data for the
+    assertions in this file.
+    """
     return make_record(base_claim(**overrides), row=int(overrides.get("queryCode", 0)) + 1)
 
 
 def test_rule6_enabled_by_default_and_cancellation_4(resolver, make_record):
+    """Verify rule6 enabled by default and cancellation 4. The assertions below state exactly what
+    this test proves for its fixtures.
+    """
     group = [record(make_record, queryCode=0, internalControlNumber='MATCH', actionCode=4),
              record(make_record, queryCode=5, internalControlNumber='MATCH', actionCode=1, nchWeeklyProcessingDate='20260119')]
     result = FinalActionProcessor(resolver).validate_group(group)
@@ -21,6 +30,9 @@ def test_rule6_enabled_by_default_and_cancellation_4(resolver, make_record):
 
 
 def test_rule6_cancel_6(resolver, make_record):
+    """Verify rule6 cancel 6. The assertions below state exactly what this test proves for its
+    fixtures.
+    """
     group = [record(make_record, queryCode=0, internalControlNumber='MATCH', actionCode=6),
              record(make_record, queryCode=5, internalControlNumber='MATCH', actionCode=1, nchWeeklyProcessingDate='20260119')]
     result = FinalActionProcessor(resolver).validate_group(group)
@@ -29,6 +41,9 @@ def test_rule6_cancel_6(resolver, make_record):
 
 
 def test_rule6_non_cancel_keeps_qc5(resolver, make_record):
+    """Verify rule6 non cancel keeps qc5. The assertions below state exactly what this test proves
+    for its fixtures.
+    """
     group = [record(make_record, queryCode=0, internalControlNumber='MATCH', actionCode=2),
              record(make_record, queryCode=5, internalControlNumber='MATCH', actionCode=1, nchWeeklyProcessingDate='20260119')]
     result = FinalActionProcessor(resolver).validate_group(group)
@@ -37,6 +52,9 @@ def test_rule6_non_cancel_keeps_qc5(resolver, make_record):
 
 
 def test_table_limit_detected(resolver, make_record):
+    """Verify table limit detected. The assertions below state exactly what this test proves for
+    its fixtures.
+    """
     group = [record(make_record, queryCode=1, internalControlNumber=f'I{i}',
                     nchWeeklyProcessingDate=f'202601{(i%28)+1:02d}') for i in range(901)]
     for item in group:
@@ -47,6 +65,9 @@ def test_table_limit_detected(resolver, make_record):
 
 
 def test_invalid_bypass_policy_fails_closed(resolver, make_record):
+    """Verify invalid bypass policy fails closed. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     processor = FinalActionProcessor(resolver, FinalActionSettings(bypass_direction='nonsense'))
     import pytest
     with pytest.raises(ValueError):
@@ -54,6 +75,9 @@ def test_invalid_bypass_policy_fails_closed(resolver, make_record):
 
 
 def test_bypass_exception_file(resolver, make_record, tmp_path):
+    """Verify bypass exception file. The assertions below state exactly what this test proves for
+    its fixtures.
+    """
     settings = FinalActionSettings(bypass_direction='covered_gt_los')
     r = record(make_record)
     r.data['covered_days'] = 999
@@ -66,6 +90,9 @@ def test_bypass_exception_file(resolver, make_record, tmp_path):
 
 
 def test_unmatched_rule_is_error_file(resolver, make_record, tmp_path):
+    """Verify unmatched rule is error file. The assertions below state exactly what this test
+    proves for its fixtures.
+    """
     group = [record(make_record, queryCode=1, internalControlNumber='A', nchWeeklyProcessingDate='20260125'),
              record(make_record, queryCode=3, internalControlNumber='B', nchWeeklyProcessingDate='20260124')]
     group = [record(make_record, queryCode=0, internalControlNumber='MATCH', actionCode=4),

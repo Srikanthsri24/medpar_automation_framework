@@ -1,3 +1,6 @@
+"""Regression tests and local fixtures for stay selected fields. Tests describe controlled
+examples; passing them does not certify all production files.
+"""
 import pytest
 
 from medpar_qa.enums import Stage, ValidationStatus
@@ -17,6 +20,9 @@ from medpar_qa.stages.stay.selected_fields import validate_stay_decimal_field
     ],
 )
 def test_stay_selected_fields_use_three_decimal_precision(make_record, field_name):
+    """Verify stay selected fields use three decimal precision. The assertions below state exactly
+    what this test proves for its fixtures.
+    """
     record = make_record({}, stage=Stage.STAY)
     result = validate_stay_decimal_field(
         record,

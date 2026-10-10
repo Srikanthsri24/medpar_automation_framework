@@ -5,6 +5,7 @@ from medpar_qa.enums import ValidationStatus
 
 
 def write_stage_audit(result, directory):
+    """Export the stage record decisions and summary evidence as audit artifacts."""
     directory=Path(directory)
     directory.mkdir(parents=True,exist_ok=True)
     rows={

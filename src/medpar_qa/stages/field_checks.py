@@ -1,3 +1,6 @@
+"""Reusable required-field, date, allowed-value, amount, array/object and pattern validators that
+return RuleResult evidence.
+"""
 from __future__ import annotations
 
 import re
@@ -21,6 +24,7 @@ def required_fields_results(
     resolver: FieldResolver,
     fields: Iterable[str],
 ) -> list[RuleResult]:
+    """Emit individual required-field results so the failing field and record can be traced."""
     results: list[RuleResult] = []
     for field_name in fields:
         value = resolver.get(record.data, field_name)
@@ -56,6 +60,9 @@ def optional_date_result(
     window_start: date | None = None,
     window_end: date | None = None,
 ) -> RuleResult:
+    """Validate a populated date and return the appropriate absence status when the date is
+    optional.
+    """
     raw = resolver.get(record.data, field_name)
     from medpar_qa.normalization.dates import is_missing_date
     if is_missing_date(raw):
@@ -125,6 +132,9 @@ def date_order_result(
     end_field: str,
     allow_missing: bool = True,
 ) -> RuleResult:
+    """Parse paired dates and check start is not after end, honoring the caller missing-value
+    policy.
+    """
     start_raw = resolver.get(record.data, start_field)
     end_raw = resolver.get(record.data, end_field)
     if allow_missing and (start_raw in (None, "") or end_raw in (None, "")):
@@ -176,6 +186,7 @@ def allowed_value_result(
     allowed: Iterable[Any],
     required: bool = False,
 ) -> RuleResult:
+    """Compare a resolved value with the explicitly allowed set and record the expected domain."""
     raw = resolver.get(record.data, field_name)
     allowed_values = tuple(allowed)
     if raw is None or raw == "":
@@ -219,6 +230,7 @@ def decimal_field_result(
     scale: Decimal,
     required: bool = False,
 ) -> RuleResult:
+    """Parse a resolved amount, check precision and emit numeric/scale evidence."""
     raw = resolver.get(record.data, field_name)
     if raw is None or raw == "":
         return RuleResult(
@@ -273,6 +285,7 @@ def collection_structure_result(
     item_required_keys: Iterable[str] = (),
     required: bool = False,
 ) -> RuleResult:
+    """Validate the expected repeated collection shape and its elements."""
     raw = resolver.get(record.data, field_name)
     if raw is None:
         return RuleResult(
@@ -340,6 +353,7 @@ def pattern_result(
     description: str,
     required: bool = False,
 ) -> RuleResult:
+    """Check the field against the configured pattern rather than guessing valid identifiers."""
     raw = resolver.get(record.data, field_name)
     if raw is None or raw == "":
         return RuleResult(

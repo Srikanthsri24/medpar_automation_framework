@@ -22,6 +22,7 @@ from medpar_qa.stages.final_action.processor import FinalActionProcessor
 
 
 def iso(value: Any) -> str:
+    """Parse a demo date and return its normalized ISO representation."""
     parsed = parse_date(value)
     if parsed is None:
         raise ValueError(f"Missing date: {value!r}")
@@ -29,6 +30,7 @@ def iso(value: Any) -> str:
 
 
 def load_claims(path: Path) -> list[dict[str, Any]]:
+    """Load the demo source claims from JSON and normalize their representation."""
     obj = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(obj, dict):
         obj = obj.get("claims")
@@ -52,11 +54,13 @@ def load_claims(path: Path) -> list[dict[str, Any]]:
 
 
 def write_json(path: Path, obj: Any) -> None:
+    """Create the parent directory and write a formatted JSON output file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, indent=2, default=str, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def final_action(claims: list[dict[str, Any]], resolver: FieldResolver) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Run Final Action decisions for demo claims and retain only the records with KEEP decisions."""
     processor = FinalActionProcessor(resolver)
     records = [SourceRecord(data=claim, record_id=str(claim["claim_id"]), source=SourceLocation(
         file_path="demo_claims.json", row_number=i+1, file_format="json", stage=Stage.FINAL_ACTION, role=FileRole.SOURCE
@@ -81,6 +85,9 @@ def final_action(claims: list[dict[str, Any]], resolver: FieldResolver) -> tuple
 
 
 def split_claims(claims: list[dict[str, Any]], run_year: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Derive demo Split indicators and route retained/outside-window records, recording bill-limit
+    audit evidence.
+    """
     groups: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
     for claim in claims:
         if int(claim["transaction_code"]) in (0, 4):
@@ -114,6 +121,9 @@ def split_claims(claims: list[dict[str, Any]], run_year: int) -> tuple[list[dict
 
 
 def _unique_items(groups: list[dict[str, Any]], name: str) -> list[Any]:
+    """Consolidate the demo code collection without repeated equivalent items, honoring the
+    supplied limit.
+    """
     result = []
     for claim in groups:
         for value in claim.get(name, []):
@@ -123,6 +133,7 @@ def _unique_items(groups: list[dict[str, Any]], name: str) -> list[Any]:
 
 
 def stay_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Combine synthetic bills by stay identity using the demo-supported merge and code rules."""
     groups = defaultdict(list)
     for c in claims:
         key = (str(c["hicn"]), str(c["provider_id"]), iso(c["admission_date"])) if c["split_type"] == "INP" else (str(c["claim_id"]), "SNF", "")
@@ -155,6 +166,9 @@ def stay_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dic
 
 
 def intermediate_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Derive supported synthetic Intermediate fields for the demo, using the explicit source
+    operands.
+    """
     from medpar_qa.stages.intermediate.business_rules import length_of_stay, validate_business_rules
     resolver = FieldResolver.from_yaml(Path(__file__).resolve().parents[2]/"config/field_aliases.yaml")
     result = []
@@ -179,6 +193,9 @@ def intermediate_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, An
 
 
 def final_medpar(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Create demo Final records from eligible Intermediate records; honor classification/discharge
+    and bypass behavior.
+    """
     output, excluded, bypass = [], [], []
     for c in claims:
         is_snf = c["split_type"] == "SNF"
@@ -193,6 +210,9 @@ def final_medpar(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], di
 
 
 def run_pipeline(source: Path, destination: Path, run_year: int, aliases: Path) -> dict[str, Any]:
+    """Generate all five synthetic stages in sequence and return their paths; this is demonstration
+    data, not production certification.
+    """
     if not (1997 <= run_year <= 2100):
         raise ValueError("run_year must be 1997–2100")
     destination.mkdir(parents=True, exist_ok=True)
@@ -233,6 +253,10 @@ def run_pipeline(source: Path, destination: Path, run_year: int, aliases: Path) 
 
 
 def main() -> None:
+    """Run this script command-line workflow and return its process exit status. Small synthetic
+    five-stage generator and demo driver. It illustrates supported paths and creates demo
+    outputs; it is not the production MedPAR replacement.
+    """
     parser = argparse.ArgumentParser(description="MEDPAR V3 document-backed five-stage demo")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
