@@ -192,3 +192,25 @@ def test_master_report_defines_metrics_and_file_navigation(tmp_path):
     assert "href='#stay-1-2'" in page
     assert 'example.json' in page
     assert 'Final conclusion for this file' in page
+
+@pytest.mark.unit
+def test_stage_conclusions_count_unique_files_and_keep_global_blocks():
+    from medpar_qa.reporting.file_review import stage_conclusion, file_review
+    checks = [
+        {'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read', 'source_files': ['a.json'], 'actual': {'role': 'source'}},
+        {'rule_id': 'ST-TOTAL-CHARGE', 'status': 'FAIL', 'message': 'Expected 10, observed 9', 'source_files': ['a.json', 'b.json']},
+        {'rule_id': 'INGEST-SNAPSHOT-MATCH', 'status': 'BLOCKED', 'message': 'Different snapshots', 'source_files': []},
+    ]
+    conclusion = stage_conclusion('stay', checks)
+    assert '2 unique evidence files; 1 successfully read; 3 checks' in conclusion
+    assert 'Stay: FAIL' in conclusion
+    assert 'Files linked to failed checks: 2' in conclusion
+    assert 'Different snapshots' in conclusion
+    assert 'Required action' in conclusion
+    assert 'Stay: BLOCKED' in stage_conclusion('stay', checks[2:])
+    assert 'Stay: PASS' in stage_conclusion('stay', checks[:1])
+    assert 'Stay: NOT ESTABLISHED' in stage_conclusion('stay', [])
+    inventory = file_review('stay', checks, 'stay-1')
+    assert 'file-search' in inventory and 'file-select' in inventory
+    assert "data-file='a.json'" in inventory
+    assert "value='b.json'" in inventory

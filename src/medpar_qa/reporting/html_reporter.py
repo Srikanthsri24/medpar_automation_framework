@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from dataclasses import asdict
-from .file_review import file_review, readable_time
+from .file_review import file_review, readable_time, stage_conclusion, FILE_FILTER_SCRIPT
 
 from medpar_qa.models import RunManifest, RuleResult, StageResult
 from medpar_qa.reporting.rule_catalog import conclusion_text, get_rule_metadata, stage_rule_catalog
@@ -78,7 +78,7 @@ def _validation_card(check: RuleResult, number: int, prefix: str = "check") -> s
     )
     return f"""
     <article id="{_esc(prefix)}-{number}" class="validation-card status-{status.lower()}"
-             data-status="{_esc(status)}" data-stage="{_esc(check.stage.value)}"
+             data-files="{_esc(json.dumps(check.source_files))}" data-status="{_esc(status)}" data-stage="{_esc(check.stage.value)}"
              data-search="{_esc(searchable)}">
       <div class="validation-topline">
         <div class="identity-line">
@@ -177,6 +177,7 @@ def _stage_section(stage: StageResult, index: int) -> str:
         <details><summary>Full rule explanations and evidence — open any rule link above</summary>
         {cards}</details>
         {decisions}
+        {stage_conclusion(stage.stage.value, [dict(asdict(c), status=c.status.value) for c in stage.rule_results])}
       </div>
     </details>
     """
@@ -269,6 +270,7 @@ header{{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;p
 .table-wrap{{overflow:auto}} table{{width:100%;border-collapse:collapse}} th,td{{border:1px solid var(--line);padding:9px;text-align:left;vertical-align:top}} th{{background:#edf2f7}} .rule-catalogue{{margin:14px 2px;padding:0 12px 12px;border:1px solid var(--line);border-radius:9px;background:#fafbfc}} .rule-catalogue>summary{{cursor:pointer;font-weight:800;padding:12px 0}} .catalogue-status{{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}} .catalogue-status.executed{{background:#d3f9d8;color:var(--green)}} .catalogue-status.not-triggered{{background:#f1f3f5;color:var(--muted)}} .decision-section{{margin:18px 2px}} .hidden{{display:none!important}} footer{{text-align:center;color:var(--muted);padding:30px}}
 @media(max-width:800px){{.guide ol{{columns:1}}.stage-status{{margin-left:0}}}} @media print{{.toolbar,.copy-button{{display:none}}details{{display:block}}details>summary{{list-style:none}}.validation-card,.stage-section{{break-inside:avoid}}body{{background:#fff}}}}
 .file-review{{border:1px solid #d0d5dd;border-radius:10px;margin:10px 0;padding:12px;overflow-wrap:anywhere}}.file-review summary{{cursor:pointer;font-weight:700}}.file-conclusion{{padding:14px;background:#edf2f7;border-radius:8px}}.file-inventory table{{table-layout:fixed}}.file-inventory td{{overflow-wrap:anywhere}}
+.file-toolbar,.stage-conclusion,.overall-conclusion{{padding:16px;margin:16px 0;background:#eef6ff;border:1px solid #b6c9de;border-radius:10px}}.file-toolbar input,.file-toolbar select{{padding:9px;max-width:100%;margin:8px;border:1px solid #98a2b3;border-radius:6px}}.file-toolbar select{{width:100%}}.stage-conclusion td{{overflow-wrap:anywhere}}[hidden]{{display:none!important}}
 </style></head>
 <body><header>{navigation}<h1>{_esc(title)}</h1><p><strong>Run ID:</strong> {_esc(run_id)}</p><p><strong>Business run date:</strong> {_esc(run_date)}</p><p><strong>Generated:</strong> {_esc(readable_time(generated.isoformat(timespec='seconds')))}</p><span class="overall-badge">OVERALL {'PASS' if overall_passed else 'FAIL / BLOCKED'}</span></header>
 <main class="container">
@@ -276,11 +278,11 @@ header{{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;p
 <section class="guide"><h2>How to read this report</h2><ol><li>Open the required stage.</li><li>Use status filters to focus on failures.</li><li>Read the business requirement and exact validation performed.</li><li>Compare Expected result with Observed result.</li><li>Read the conclusion explaining why it passed, failed, or was blocked.</li><li>Open source evidence for relative file paths, record IDs, group keys, and validator function.</li></ol></section>
 <section class="failure-overview"><h2>Failure / blocked overview</h2>{failure_summary}</section>
 <section class="toolbar"><input id="search" type="search" placeholder="Search stage, rule, field, requirement, source file..." oninput="applyFilters()"><select id="statusFilter" onchange="applyFilters()"><option value="ALL">All statuses</option><option>PASS</option><option>FAIL</option><option>BLOCKED</option><option>NOT_APPLICABLE</option></select><select id="stageFilter" onchange="applyFilters()"><option value="ALL">All stages</option>{''.join(f'<option value="{_esc(stage.stage.value)}">{_esc(stage.stage.value.replace("_"," ").title())}</option>' for stage in stage_results)}</select><button onclick="expandAll(true)">Expand all</button><button onclick="expandAll(false)">Collapse all</button><button onclick="window.print()">Print / Save PDF</button></section>
-{manifest_block}{stages_html}</main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
+{manifest_block}{stages_html}<section class='overall-conclusion'><h2>Overall conclusion — all stages: {'PASS' if overall_passed and validation_count else 'FAIL / BLOCKED' if failures else 'NOT ESTABLISHED'}</h2><p>{len(stage_results)} stages reviewed. Every required stage must pass its applicable checks before acceptance. Unexecuted rules and absent stages have no acceptance result. File filters do not change these full-run conclusions.</p></section></main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
 <script>
 function applyFilters(){{const q=document.getElementById('search').value.toLowerCase();const status=document.getElementById('statusFilter').value;const stage=document.getElementById('stageFilter').value;document.querySelectorAll('.validation-card').forEach(card=>{{const okQ=!q||card.dataset.search.includes(q);const okS=status==='ALL'||card.dataset.status===status;const okStage=stage==='ALL'||card.dataset.stage===stage;card.classList.toggle('hidden',!(okQ&&okS&&okStage));}});}}
 function expandAll(open){{document.querySelectorAll('details').forEach(item=>item.open=open);}}
 function copyCard(button){{const card=button.closest('.validation-card');navigator.clipboard.writeText(card.innerText).then(()=>{{button.textContent='Copied';setTimeout(()=>button.textContent='Copy validation',1200);}});}}
-</script><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script></body></html>"""
+</script><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script>{FILE_FILTER_SCRIPT}</body></html>"""
     output.write_text(document, encoding="utf-8")
     return output
