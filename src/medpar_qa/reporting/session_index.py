@@ -205,7 +205,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
             )
             run_info = f"<p><strong>Business processing date:</strong> {_esc(entry['payload'].get('run_date', 'Not recorded'))} · <strong>Validation generated:</strong> {_esc(readable_time(entry['payload'].get('generated_at', 'Not recorded')))}</p>"
             command_sections.append(
-                f"<details class='command-report'><summary>{_esc(command_name)} — {'PASS' if stage_payload.get('passed') else 'FAIL / BLOCKED'} · {len(validations)} validations</summary><p><a href='{_esc(report_link)}'>Open standalone detailed report</a></p>{run_info}{file_review(stage, validations, stage + '-' + str(command_index))}<h3>Full rule explanations and evidence</h3>{cards}</details>"
+                f"<details class='command-report'><summary>{_esc(command_name)} — {'PASS' if stage_payload.get('passed') else 'FAIL / BLOCKED'} · {len(validations)} validations</summary><p><a href='{_esc(report_link)}'>Open standalone detailed report</a></p>{run_info}{file_review(stage, validations, stage + '-' + str(command_index))}<details><summary>Full rule explanations and evidence — open any rule link above</summary>{cards}</details></details>"
             )
         stage_index_link = relative_link(master, root / stage / "index.html")
         stage_sections.append(

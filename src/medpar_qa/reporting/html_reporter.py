@@ -174,8 +174,8 @@ def _stage_section(stage: StageResult, index: int) -> str:
         </div>
         {catalogue}
         {file_review(stage.stage.value, [dict(asdict(c), status=c.status.value) for c in stage.rule_results], f"stage-{index}")}
-        <h3>Full rule explanations and evidence</h3>
-        {cards}
+        <details><summary>Full rule explanations and evidence — open any rule link above</summary>
+        {cards}</details>
         {decisions}
       </div>
     </details>
