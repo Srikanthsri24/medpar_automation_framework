@@ -6,9 +6,12 @@ suffix so the existing file loader can detect them. Never commit copied data.
 """
 from pathlib import Path
 import shutil
+import argparse
 
-SOURCE = Path("/Users/macbookpro/Downloads/q61_extracted/home/cloudshell-user/my-bucket-data")
-DEST = Path(__file__).resolve().parent / "data/production/q61"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--source", type=Path, required=True, help="Extracted q61 archive directory")
+SOURCE = parser.parse_args().source
+DEST = Path(__file__).resolve().parents[1] / "data/production/q61"
 if not SOURCE.is_dir():
     raise SystemExit(f"Production folder not found: {SOURCE}")
 if DEST.is_symlink():

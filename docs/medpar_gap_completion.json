@@ -1809,8 +1809,8 @@
       ]
     }
   },
-  "testsPassed": 254,
-  "testReport": "reports/20261011_015557/pytest/pytest_complete_suite/report.html",
+  "testsPassed": 257,
+  "testReport": "reports/20261011_023341/pytest/pytest_complete_suite/report.html",
   "definitions": {
     "Implemented": "Documented check implemented with regression evidence; CMS production certification still separate.",
     "Existing": "Required behaviour already present and verified; original finding retained.",
@@ -1818,7 +1818,7 @@
     "Needs input": "Cannot finish correctly without approved external rules, data, scope or environment.",
     "Not required": "Removed or outside IP/SNF scope under supplied requirements."
   },
-  "productionReview": "docs/PRODUCTION_VALIDATION_REVIEW.md",
+  "productionReview": "README.md#production-status",
   "productionCertified": false,
-  "productionRemediationHandoff": "docs/PRODUCTION_REMEDIATION_HANDOFF.md"
+  "productionRemediationHandoff": "README.md#production-status"
 }
