@@ -122,7 +122,7 @@ An explicitly selected distinct-payload Intermediate diagnostic reviews 83 sourc
 
 Independent field semantics use supplied requirements and supplementary [CMS CR14](https://www.cms.gov/files/document/medpar-cr14-rif-report.pdf) / [CMS CR18](https://www.cms.gov/files/document/medpar-cr18-rif-report.pdf). These do not certify the current complete byte layout.
 
-The detailed gap evidence remains in `docs/medpar_gap_completion.json`, with `productionCertified: false`. The reviewed workbook remains under `outputs/medpar_gap_submission_20261011/`; it is an earlier review snapshot, not proof that all production gaps are closed. Original production data and the current diagnostic reports are preserved.
+The detailed gap evidence remains in `docs/medpar_gap_completion.json`, with `productionCertified: false`. The [annotated gap register](outputs/medpar_gap_submission_20261011/MedPAR_Gap_Register_Srikanth.xlsx) adds “Notes by Srikanth” and “Remarks by Srikanth” to every sheet and preserves all original findings. All 298 detailed entries are annotated. Its 74 functionality rows contain 33 implemented/verified QA checks, 23 partial entries, 14 entries blocked on approved external inputs and four outside approved scope. Production acceptance is not closed. Original production data and the current diagnostic reports are preserved.
 
 ## Repository layout
 

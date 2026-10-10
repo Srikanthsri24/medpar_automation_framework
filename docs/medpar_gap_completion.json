@@ -401,9 +401,9 @@
         ],
         [
           "Partial",
-          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
-          "Generic full-register comparison regression; no field-specific calculation certification.",
-          "Approved source mapping/calculation and CMS golden fixture required."
+          "Golden comparison and independent highest-accumulated-charge ICU/CCU type validation, with missing-charge/tie blocks. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py",
+          "CMS golden fixture/current byte offset required."
         ],
         [
           "Partial",
@@ -479,9 +479,9 @@
         ],
         [
           "Partial",
-          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
-          "Generic full-register comparison regression; no field-specific calculation certification.",
-          "Approved source mapping/calculation and CMS golden fixture required."
+          "Golden comparison and independent highest-accumulated-charge ICU/CCU type validation, with missing-charge/tie blocks. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py",
+          "CMS golden fixture/current byte offset required."
         ],
         [
           "Partial",
@@ -1527,10 +1527,10 @@
           "CMS golden verification."
         ],
         [
-          "Partial",
-          "Highest valid organ revenue derives K1\u2026L1/01;0818 excluded. src/medpar_qa/stages/intermediate/business_rules.py",
-          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
-          "No-organ default and other transplant indicator rules require COBOL."
+          "Implemented",
+          "Highest valid organ revenue derives the documented type;0818 excluded;no-organ output blank. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py",
+          "CMS golden verification remains external."
         ],
         [
           "Partial",
@@ -1552,9 +1552,9 @@
         ],
         [
           "Partial",
-          "Six radiology indicators and outpatient490\u2013509 presence implemented. src/medpar_qa/stages/intermediate/business_rules.py",
-          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
-          "ESRD setting and charge-based ICU/CCU mappings; LD-1514 points to missing MPRPARL."
+          "Radiology and outpatient types0\u20133 checked;ICU/CCU types use accumulated charges with missing-charge/tie blocks. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py",
+          "ESRD setting requires approved current MPRPARL mapping."
         ],
         [
           "Implemented",
@@ -1820,5 +1820,7 @@
   },
   "productionReview": "README.md#production-status",
   "productionCertified": false,
-  "productionRemediationHandoff": "README.md#production-status"
+  "productionRemediationHandoff": "README.md#production-status",
+  "annotatedWorkbook": "outputs/medpar_gap_submission_20261011/MedPAR_Gap_Register_Srikanth.xlsx",
+  "annotationReviewDate": "2026-10-11"
 }
