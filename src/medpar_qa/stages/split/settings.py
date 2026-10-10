@@ -16,7 +16,7 @@ class SplitSettings:
         "stay_from_date",
         "stay_thru_date",
     )
-    skip_transaction_codes: tuple[int, ...] = (0, 4)
+    skip_transaction_codes: tuple[int, ...] = ()
     outside_window_indicator: str = "Y99999"
     require_actual_output: bool = False
     sort_fields: tuple[str, ...] = (
@@ -33,7 +33,7 @@ class SplitSettings:
             maximum_bills_per_stay=int(raw.get("maximum_bills_per_stay", 75)),
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),
             skip_transaction_codes=tuple(
-                int(value) for value in (raw.get("skip_transaction_codes") or (0, 4))
+                int(value) for value in raw.get("skip_transaction_codes", ())
             ),
             outside_window_indicator=str(
                 raw.get("outside_window_indicator", "Y99999")

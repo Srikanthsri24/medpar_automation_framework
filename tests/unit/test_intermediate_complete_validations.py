@@ -126,12 +126,12 @@ def test_diagnosis_poa_alignment_fails(resolver, make_record):
 @pytest.mark.unit
 @pytest.mark.intermediate
 @pytest.mark.regression
-def test_death_after_admission_indicator(resolver, make_record):
+def test_death_after_admission_day_count(resolver, make_record):
     record = make_record(
         {
             "admissionDate": "20260101",
             "dateOfDeath": "20260102",
-            "medparDeathAfterAdm0611": "Y",
+            "medparDeathAfterAdm0611": 1,
         },
         stage=Stage.INTERMEDIATE,
     )

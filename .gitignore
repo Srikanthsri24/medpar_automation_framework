@@ -11,3 +11,9 @@ reports/*
 *.egg-info/
 dist/
 build/
+data/production/
+production_file_inventory.txt
+.DS_Store
+outputs/**/*.zip
+outputs/**/*.inspect.ndjson
+outputs/**/submission_checksums.json

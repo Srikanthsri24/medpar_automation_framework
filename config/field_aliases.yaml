@@ -24,6 +24,8 @@ stay_thru_date:
 - claimThruDate
 - CLM-THRU-DATE
 admission_date:
+- MEDPAR-ADM-DATE-0200
+- medparAdmDate0200
 - admissionDate
 - MEDPAR-ADMSN-DATE
 - medparAdmissionDate
@@ -309,7 +311,7 @@ poa_indicators_source:
 medpar_ssa_no_0021:
 - MEDPAR-SSA-NO-0021
 - medparSsaNo0021
-- HICN
+- ssa_no
 medpar_no_bills_0150:
 - NO-BILLS-MEDPAR-0150
 - MEDPAR-NO-BILLS-0150
@@ -616,9 +618,11 @@ medpar_emer_use_sw_1590:
 medpar_new_tech_add_on_amt_0860:
 - medparNewTechAddOAmt0860
 - MEDPAR-NEW-TECH-ADD-ON-AMT-0860
+- MEDPAR-NEW-TECH-ADD-O-AMT-0860
 medpar_islet_addon_pmt_amt_1450:
 - medparIsletAddonPmtamt1450
 - MEDPAR-ISLET-ADDON-PMT-AMT-1450
+- MEDPAR-ISLET-ADDON-PMTAMT-1450
 medpar_val_qb_pmt_adj_amt_1500:
 - medparValqbPmtAdjAmt1500
 - MEDPAR-VALQB-PMT-ADJ-AMT-1500
@@ -640,3 +644,258 @@ qc7:
 - qc7
 internal_control_number_origin:
 - internalControlNumberOrigin
+med_drg_code_0531:
+- MED-DRG-CODE-0531
+medpar_base_oprtg_drg_amt_0870:
+- MEDPAR-BASE-OPRTG-DRG-AMT-0870
+medpar_bndld_adjstmt_amt_1150:
+- MEDPAR-BNDLD-ADJSTMT-AMT-1150
+medpar_clm_modl_reimb_amt_1480:
+- MEDPAR-CLM-MODL-REIMB-AMT-1480
+medpar_cr_rcv_repl_dvc_sw_0840:
+- MEDPAR-CR-RCV-REPL-DVC-SW-0840
+medpar_dgns_e_cd_cnt:
+- MEDPAR-DGNS-E-CD-CNT
+medpar_ehr_adjstmt_amt_1180:
+- MEDPAR-EHR-ADJSTMT-AMT-1180
+medpar_esrd_condition_0550:
+- MEDPAR-ESRD-CONDITION-0550
+medpar_finl_std_amt_1200:
+- MEDPAR-FINL-STD-AMT-1200
+medpar_full_std_pmt_amt_1310:
+- MEDPAR-FULL-STD-PMT-AMT-1310
+medpar_hac_rdctn_pmt_amt_1210:
+- MEDPAR-HAC-RDCTN-PMT-AMT-1210
+medpar_hrr_adjstmt_amt_1170:
+- MEDPAR-HRR-ADJSTMT-AMT-1170
+medpar_lgth_stay_0260:
+- MEDPAR-LGTH-STAY-0260
+medpar_ltch_dpp_adj_amt_1540:
+- MEDPAR-LTCH-DPP-ADJ-AMT-1540
+medpar_oprtg_hsp_amt_0880:
+- MEDPAR-OPRTG-HSP-AMT-0880
+medpar_outlier_days_0270:
+- MEDPAR-OUTLIER-DAYS-0270
+medpar_poa_dgns_e_cd_cnt:
+- MEDPAR-POA-DGNS-E-CD-CNT
+medpar_pps_ind_0120:
+- MEDPAR-PPS-IND-0120
+medpar_pps_std_val_amt_1190:
+- MEDPAR-PPS-STD-VAL-AMT-1190
+medpar_prov_code_0137:
+- MEDPAR-PROV-CODE-0137
+medpar_prvdr_base_fac_ccn_1650:
+- MEDPAR-PRVDR-BASE-FAC-CCN-1650
+medpar_s_ntrl_pmt_cst_amt_1290:
+- MEDPAR-S-NTRL-PMT-CST-AMT-1290
+medpar_s_ntrl_pmt_ipps_am_1300:
+- MEDPAR-S-NTRL-PMT-IPPS-AM-1300
+medpar_ssi_data_0251:
+- MEDPAR-SSI-DATA-0251
+medpar_ssi_data_0253:
+- MEDPAR-SSI-DATA-0253
+medpar_sso_std_pmt_amt_1320:
+- MEDPAR-SSO-STD-PMT-AMT-1320
+medpar_uncmp_care_pmt_amt_1140:
+- MEDPAR-UNCMP-CARE-PMT-AMT-1140
+medpar_accretion_date_0160:
+- MEDPAR-ACCRETION-DATE-0160
+medpar_adm_date_0200:
+- MEDPAR-ADM-DATE-0200
+medpar_algnc_stem_cellamt_1440:
+- MEDPAR-ALGNC-STEM-CELLAMT-1440
+medpar_cell_gene_prc_amt_1510:
+- MEDPAR-CELL-GENE-PRC-AMT-1510
+medpar_cell_tpy_drug_amt_1520:
+- MEDPAR-CELL-TPY-DRUG-AMT-1520
+medpar_coronary_care_ind_0482:
+- MEDPAR-CORONARY-CARE-IND-0482
+medpar_crdc_cathrztn_amt_1120:
+- MEDPAR-CRDC-CATHRZTN-AMT-1120
+medpar_date_benfex_0170:
+- MEDPAR-DATE-BENFEX-0170
+medpar_dischg_date_0210:
+- MEDPAR-DISCHG-DATE-0210
+medpar_esrd_setting_ind_0488:
+- MEDPAR-ESRD-SETTING-IND-0488
+medpar_gene_tpy_drug_amt_1530:
+- MEDPAR-GENE-TPY-DRUG-AMT-1530
+medpar_hosp_home_chrg_amt_1620:
+- MEDPAR-HOSP-HOME-CHRG-AMT-1620
+medpar_incdnt_dgn_srv_amt_1000:
+- MEDPAR-INCDNT-DGN-SRV-AMT-1000
+medpar_incdnt_rdlgy_amt_0990:
+- MEDPAR-INCDNT-RDLGY-AMT-0990
+medpar_intraocular_ln_amt_0950:
+- MEDPAR-INTRAOCULAR-LN-AMT-0950
+medpar_invstgtnl_dvc_amt_1020:
+- MEDPAR-INVSTGTNL-DVC-AMT-1020
+medpar_mdcl_srg_drsng_amt_1010:
+- MEDPAR-MDCL-SRG-DRSNG-AMT-1010
+medpar_mdcl_srg_gen_amt_0890:
+- MEDPAR-MDCL-SRG-GEN-AMT-0890
+medpar_mdcl_srg_nstrl_amt_0900:
+- MEDPAR-MDCL-SRG-NSTRL-AMT-0900
+medpar_mdcl_srg_pcmkr_amt_0940:
+- MEDPAR-MDCL-SRG-PCMKR-AMT-0940
+medpar_mdcl_srg_strl_amt_0910:
+- MEDPAR-MDCL-SRG-STRL-AMT-0910
+medpar_mdcl_srg_tkhme_amt_0920:
+- MEDPAR-MDCL-SRG-TKHME-AMT-0920
+medpar_mdcl_srgl_misc_amt_1030:
+- MEDPAR-MDCL-SRGL-MISC-AMT-1030
+medpar_obsrvtn_sw_0850:
+- MEDPAR-OBSRVTN-SW-0850
+medpar_oprtg_room_amt_1100:
+- MEDPAR-OPRTG-ROOM-AMT-1100
+medpar_or_labor_dlvry_amt_1110:
+- MEDPAR-OR-LABOR-DLVRY-AMT-1110
+medpar_othr_implants_amt_0970:
+- MEDPAR-OTHR-IMPLANTS-AMT-0970
+medpar_othr_suppl_dvc_amt_0980:
+- MEDPAR-OTHR-SUPPL-DVC-AMT-0980
+medpar_outpatient_srv_ind_0486:
+- MEDPAR-OUTPATIENT-SRV-IND-0486
+medpar_oxygn_tkehome_amt_0960:
+- MEDPAR-OXYGN-TKEHOME-AMT-0960
+medpar_pharmacy_ind_0483:
+- MEDPAR-PHARMACY-IND-0483
+medpar_prsthtc_orthtc_amt_0930:
+- MEDPAR-PRSTHTC-ORTHTC-AMT-0930
+medpar_ptnt_add_on_amt_1230:
+- MEDPAR-PTNT-ADD-ON-AMT-1230
+medpar_radiology_ind_o485:
+- MEDPAR-RADIOLOGY-IND-O485
+medpar_rdlgy_ct_scan_amt_1080:
+- MEDPAR-RDLGY-CT-SCAN-AMT-1080
+medpar_rdlgy_dgnstc_amt_1050:
+- MEDPAR-RDLGY-DGNSTC-AMT-1050
+medpar_rdlgy_nuclr_md_amt_1070:
+- MEDPAR-RDLGY-NUCLR-MD-AMT-1070
+medpar_rdlgy_oncology_amt_1040:
+- MEDPAR-RDLGY-ONCOLOGY-AMT-1040
+medpar_rdlgy_othr_img_amt_1090:
+- MEDPAR-RDLGY-OTHR-IMG-AMT-1090
+medpar_rdlgy_thrptc_amt_1060:
+- MEDPAR-RDLGY-THRPTC-AMT-1060
+medpar_rev_cntr_modl_amt_1490:
+- MEDPAR-REV-CNTR-MODL-AMT-1490
+medpar_rev_cntr_rp_ind_cd_1400:
+- MEDPAR-REV-CNTR-RP-IND-CD-1400
+medpar_transplant_ind_0484:
+- MEDPAR-TRANSPLANT-IND-0484
+med_disch_dest_0532:
+- MED-DISCH-DEST-0532
+med_old_bic_0530:
+- MED-OLD-BIC-0530
+med_outlier_code_0533:
+- MED-OUTLIER-CODE-0533
+medpar_aco_id_num_1410:
+- MEDPAR-ACO-ID-NUM-1410
+medpar_adm_source_0560:
+- MEDPAR-ADM-SOURCE-0560
+medpar_amt_reimb_0420:
+- MEDPAR-AMT-REIMB-0420
+medpar_at_phys_0650:
+- MEDPAR-AT-PHYS-0650
+medpar_bene_coun_0072:
+- MEDPAR-BENE-COUN-0072
+medpar_blood_ded_0330:
+- MEDPAR-BLOOD-DED-0330
+medpar_blood_pints_0520:
+- MEDPAR-BLOOD-PINTS-0520
+medpar_bndld_mod_dsct_pct_0770:
+- MEDPAR-BNDLD-MOD-DSCT-PCT-0770
+medpar_capital_acc92_0382:
+- MEDPAR-CAPITAL-ACC92-0382
+medpar_car_imprv_mod_1_cd_0710:
+- MEDPAR-CAR-IMPRV-MOD-1-CD-0710
+medpar_car_imprv_mod_2_cd_0720:
+- MEDPAR-CAR-IMPRV-MOD-2-CD-0720
+medpar_car_imprv_mod_3_cd_0730:
+- MEDPAR-CAR-IMPRV-MOD-3-CD-0730
+medpar_car_imprv_mod_4_cd_0740:
+- MEDPAR-CAR-IMPRV-MOD-4-CD-0740
+medpar_clm_bene_id_typ_cd_1430:
+- MEDPAR-CLM-BENE-ID-TYP-CD-1430
+medpar_clm_drg_grpr_vrsn_1610:
+- MEDPAR-CLM-DRG-GRPR-VRSN-1610
+medpar_clm_pnt_rltnshp_cd_0700:
+- MEDPAR-CLM-PNT-RLTNSHP-CD-0700
+medpar_clm_prcr_vrsn_1600:
+- MEDPAR-CLM-PRCR-VRSN-1600
+medpar_clm_rp_ind_cd_1390:
+- MEDPAR-CLM-RP-IND-CD-1390
+medpar_coin_amt_0310:
+- MEDPAR-COIN-AMT-0310
+medpar_coin_days_0290:
+- MEDPAR-COIN-DAYS-0290
+medpar_cov_days_0280:
+- MEDPAR-COV-DAYS-0280
+medpar_date_of_data_0620:
+- MEDPAR-DATE-OF-DATA-0620
+medpar_ehr_pgm_rdctn_ind_1250:
+- MEDPAR-EHR-PGM-RDCTN-IND-1250
+medpar_hac_pgm_rdctn_ind_1240:
+- MEDPAR-HAC-PGM-RDCTN-IND-1240
+medpar_hmo_readm_0110:
+- MEDPAR-HMO-READM-0110
+medpar_hrr_adjstmt_pct_0790:
+- MEDPAR-HRR-ADJSTMT-PCT-0790
+medpar_hrr_prtcpnt_ind_cd_0760:
+- MEDPAR-HRR-PRTCPNT-IND-CD-0760
+medpar_imcab_info_0619:
+- MEDPAR-IMCAB-INFO-0619
+medpar_inpat_ded_0320:
+- MEDPAR-INPAT-DED-0320
+medpar_intmd_num_0580:
+- MEDPAR-INTMD-NUM-0580
+medpar_ip_initl_ms_drg_cd_1460:
+- MEDPAR-IP-INITL-MS-DRG-CD-1460
+medpar_ip_low_vol_pmt_amt_0386:
+- MEDPAR-IP-LOW-VOL-PMT-AMT-0386
+medpar_life_res_0300:
+- MEDPAR-LIFE-RES-0300
+medpar_mrn_0670:
+- MEDPAR-MRN-0670
+medpar_mscode_0060:
+- MEDPAR-MSCODE-0060
+medpar_ng_aco_ind_1_cd_1330:
+- MEDPAR-NG-ACO-IND-1-CD-1330
+medpar_ng_aco_ind_2_cd_1340:
+- MEDPAR-NG-ACO-IND-2-CD-1340
+medpar_ng_aco_ind_3_cd_1350:
+- MEDPAR-NG-ACO-IND-3-CD-1350
+medpar_ng_aco_ind_4_cd_1360:
+- MEDPAR-NG-ACO-IND-4-CD-1360
+medpar_ng_aco_ind_5_cd_1370:
+- MEDPAR-NG-ACO-IND-5-CD-1370
+medpar_op_phys_0660:
+- MEDPAR-OP-PHYS-0660
+medpar_org_npi_num:
+- MEDPAR-ORG-NPI-NUM
+medpar_outlier_amount_0350:
+- MEDPAR-OUTLIER-AMOUNT-0350
+medpar_primary_amount_0340:
+- MEDPAR-PRIMARY-AMOUNT-0340
+medpar_prior_authrztn_ind_1260:
+- MEDPAR-PRIOR-AUTHRZTN-IND-1260
+medpar_sample_05_0680:
+- MEDPAR-SAMPLE-05-0680
+- meparSample050680
+medpar_rsdl_pmt_ind_cd_1380:
+- MEDPAR-RSDL-PMT-IND-CD-1380
+medpar_sample_size_0630:
+- MEDPAR-SAMPLE-SIZE-0630
+medpar_sex_0040:
+- MEDPAR-SEX-0040
+medpar_type_admis_0570:
+- MEDPAR-TYPE-ADMIS-0570
+medpar_uniq_trkng_num_1270:
+- MEDPAR-UNIQ-TRKNG-NUM-1270
+medpar_vbp_adjstmt_pct_0780:
+- MEDPAR-VBP-ADJSTMT-PCT-0780
+medpar_vbp_prtcpnt_ind_cd_0750:
+- MEDPAR-VBP-PRTCPNT-IND-CD-0750
+medpar_warning_ind_0640:
+- MEDPAR-WARNING-IND-0640

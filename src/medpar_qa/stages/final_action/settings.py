@@ -14,9 +14,8 @@ class FinalActionSettings:
     require_accrete_date: bool = False
     block_ambiguous_ordering: bool = True
     rule6_enabled: bool = True
-    # FA-01 approved: warning 04=2 when covered days exceed LOS.
-    # The business-approved direction is covered_gt_los.
-    bypass_direction: str = "covered_gt_los"
+    # Oct 9 clarification places covered-days/LOS bypass at Final, not FA.
+    bypass_direction: str | None = None
     enforce_single_service_year: bool = True
     max_continuation_records: int = 900
     max_hold_records: int = 875
@@ -53,7 +52,7 @@ class FinalActionSettings:
             require_accrete_date=bool(values.get("require_accrete_date", False)),
             block_ambiguous_ordering=bool(values.get("block_ambiguous_ordering", True)),
             rule6_enabled=bool(values.get("rule6_enabled", True)),
-            bypass_direction=values.get("bypass_direction", "covered_gt_los"),
+            bypass_direction=values.get("bypass_direction"),
             enforce_single_service_year=bool(values.get("enforce_single_service_year", True)),
             max_continuation_records=int(values.get("max_continuation_records", 900)),
             max_hold_records=int(values.get("max_hold_records", 875)),

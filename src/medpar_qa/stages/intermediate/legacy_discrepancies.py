@@ -67,12 +67,14 @@ def validate_bill_total_perdiem(
             source_files=[record.source.file_path],
         )
     try:
-        rounded_per_diem = quantize_decimal(raw_per_diem, scale=scale)
-        days = int(raw_days)
-        if days < 0:
+        from .business_rules import whole_dollars
+        rounded_per_diem = quantize_decimal(raw_per_diem, scale=Decimal("1"))
+        days_decimal = to_decimal(raw_days)
+        days = int(days_decimal)
+        if days < 0 or days_decimal != Decimal(days):
             raise ValueError("utilizationDays must be a non-negative integer")
-        expected = quantize_decimal(rounded_per_diem * Decimal(days), scale=scale)
-        actual = quantize_decimal(raw_actual, scale=scale)
+        expected = whole_dollars(rounded_per_diem * Decimal(days))
+        actual = to_decimal(raw_actual)
     except (TypeError, ValueError) as exc:
         return RuleResult(
             stage=Stage.INTERMEDIATE,
@@ -331,6 +333,8 @@ def validate_revenue_line_items(record: SourceRecord, resolver: FieldResolver, *
         if not code:
             invalid.append({"index": index, "reason": "missing revenue code", "value": line})
             continue
+        if not code.isdigit() or not (1 <= int(code) <= 999 or 9000 <= int(code) <= 9044):
+            invalid.append({"index": index, "reason": "revenue code outside 0001..0999 or RUG 9000..9044", "value": code})
         units = next((line.get(key) for key in ("revCntrUnitCnt", "REV-CNTR-UNIT-CNT", "units", "unitCount") if line.get(key) is not None), None)
         if units not in (None, ""):
             try:
@@ -376,6 +380,12 @@ def validate_source_to_actual_direct_moves(
         expected = resolver.get(source.data, field_name)
         if expected is None:
             continue
+        if field_name in decimal_fields:
+            from .business_rules import whole_dollars
+            try:
+                expected = whole_dollars(expected)
+            except ValueError:
+                pass  # compare_values reports the malformed amount.
         observed = resolver.get(actual.data, field_name)
         results.append(
             compare_values(

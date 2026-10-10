@@ -35,9 +35,7 @@ settings:
     - source_sequence
   split:
     window_years: 4
-    skip_transaction_codes:
-    - 0
-    - 4
+    skip_transaction_codes: []
     require_actual_output: true
     sort_fields:
     - hicn
@@ -54,6 +52,7 @@ settings:
     identity_fields:
     - hicn
     - provider_id
+    - admission_date
     - split_year_indicator
     sort_fields:
     - hicn
@@ -77,12 +76,13 @@ settings:
     require_expected_output: true
     require_fixed_width: true
     allowed_classifications:
-    - SS
-    - LS
-    - SNF
+    - S
+    - L
+    - N
     identity_fields:
     - hicn
     - provider_id
+    - admission_date
     - split_year_indicator
     sort_fields:
     - hicn

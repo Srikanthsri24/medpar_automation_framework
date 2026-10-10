@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 @dataclass(frozen=True)
 class StaySettings:
-    identity_fields: tuple[str, ...] = ("hicn", "provider_id", "split_year_indicator")
+    identity_fields: tuple[str, ...] = ("hicn", "provider_id", "admission_date", "split_year_indicator")
     sort_fields: tuple[str, ...] = (
         "hicn", "provider_id", "split_year_indicator",
         "stay_from_date", "stay_thru_date", "processing_date",

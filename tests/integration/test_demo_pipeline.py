@@ -44,9 +44,9 @@ def test_split_inpatient_last_thru_and_snf_admit():
     inpatient = [dict(base, claim_id='1', transaction_code='3', stay_thru_date='2023-12-31'), dict(base, claim_id='2', transaction_code='3', stay_thru_date='2024-01-02', processing_date='2024-02-02')]
     snf = [dict(base, claim_id='3', transaction_code='4', stay_thru_date='2024-01-02')]
     output, audit = split_claims(inpatient+snf, 2024)
-    assert [r['split_bucket'] for r in output if r['split_type']=='INP'] == ['Y0Q0109']*2
-    assert [r['split_bucket'] for r in output if r['split_type']=='SNF'] == ['Y1Q1012']
-    assert all(r['sample_1pct'] for r in output)
+    assert [r['split_bucket'] for r in output if r['split_type']=='INP'] == ['Y00109']*2
+    assert [r['split_bucket'] for r in output if r['split_type']=='SNF'] == ['Y11012']
+    assert all(r['sample_0_1pct'] for r in output)
 
 
 def test_inpatient_without_discharge_excluded_snf_allowed():
@@ -57,8 +57,9 @@ def test_inpatient_without_discharge_excluded_snf_allowed():
     assert audit['excluded_undischarged_inpatient'] == ['A']
 
 
-def test_split_excess_bills_quarantined():
+def test_split_excess_bills_retained_and_audited():
     records = [{'claim_id':str(i),'hicn':'H','provider_id':'P','admission_date':'2024-01-01','processing_date':'2024-02-01','stay_thru_date':'2024-01-02','transaction_code':'3'} for i in range(76)]
     output,audit=split_claims(records,2024)
-    assert output == []
-    assert len(audit['exceptions']) == 1
+    assert len(output) == 76
+    assert len(audit['over_75_bill_audit']) == 1
+    assert not audit['exceptions']

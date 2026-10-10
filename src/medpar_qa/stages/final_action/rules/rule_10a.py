@@ -15,7 +15,6 @@ class Rule10AQC5QC0Dominates(FinalActionRule):
         return (
             context.has_qc5
             and not simple_rule6_group
-            and context.latest_qc == 0
             and context.qc_count(0) > context.qc_count(5)
         )
 
@@ -29,7 +28,9 @@ class Rule10AQC5QC0Dominates(FinalActionRule):
                 message="QC5 group processed using Rule 10A ICN comparison",
                 expected={"keep": keep_count, "drop": context.count - keep_count},
                 actual={"keep": keep_count, "drop": context.count - keep_count},
-                evidence={"qc_counts": dict(context.qc_counts)},
+                evidence={"qc_counts": dict(context.qc_counts),
+                          "requirement": "MM-FINAC-16A/B" if context.latest_qc == 0 else "MM-FINAC-16C/D/E",
+                          "precedence": "Specific QC0>QC5 condition precedes general MM-FINAC-14 fallback"},
             ),
             decisions,
         )

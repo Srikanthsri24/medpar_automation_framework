@@ -65,7 +65,7 @@ def test_latest_value_code_object_wins(resolver, make_record):
         stage=Stage.STAY,
     )
     result = latest_values_by_code([older, newer], collection_path="value_lines", resolver=resolver)
-    assert result[0]["amount"] == "2.000"
+    assert result[0]["amount"] == "3.000"
     assert result[0]["_source_record_id"] == "record-2"
 
 

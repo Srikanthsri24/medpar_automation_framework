@@ -18,6 +18,7 @@ from medpar_qa.stages.comparison import compare_expected_actual_fields
 
 from .byte_layout import validate_encoded_length, validate_field_layout
 from .settings import FinalMedparSettings
+from .business_rules import bypass_required, compare_final_bytes, validate_trailer_removal
 
 
 class FinalMedparProcessor(BaseStageProcessor):
@@ -218,7 +219,21 @@ class FinalMedparProcessor(BaseStageProcessor):
             actual = actual_index.get(identity)
             expected = expected_index.get(identity)
             target = actual or source
-            if actual is None and self.settings.require_actual_output:
+            try:
+                bypass = bypass_required(source, self.resolver)
+            except (ValueError, TypeError, ArithmeticError) as exc:
+                result.rule_results.append(RuleResult(stage=self.stage, rule_id="FM-BYPASS-OPERANDS",
+                    status=ValidationStatus.FAIL, message=str(exc), record_ids=[source.record_id]))
+                continue
+            if bypass:
+                result.rule_results.append(RuleResult(stage=self.stage, rule_id="FM-BYPASS-EXCEPTION",
+                    status=ValidationStatus.FAIL if actual is not None else ValidationStatus.PASS,
+                    message="Covered days exceed LOS: source belongs in Final bypass, absent from retained output",
+                    expected="Absent from retained output", actual=actual.record_id if actual else None,
+                    record_ids=[source.record_id], source_files=[source.source.file_path],
+                    evidence={"route": "bypass"}))
+                continue
+            if actual is None and (self.settings.require_actual_output or actuals):
                 result.rule_results.append(
                     RuleResult(
                         stage=self.stage,
@@ -230,7 +245,7 @@ class FinalMedparProcessor(BaseStageProcessor):
                         source_files=[source.source.file_path],
                     )
                 )
-            if expected is None and self.settings.require_expected_output:
+            if expected is None and (self.settings.require_expected_output or expecteds):
                 result.rule_results.append(
                     RuleResult(
                         stage=self.stage,
@@ -242,7 +257,12 @@ class FinalMedparProcessor(BaseStageProcessor):
                 )
 
             result.rule_results.extend(self._validate_record(target))
+            if actual is not None:
+                result.rule_results.append(validate_trailer_removal(source, actual, self.resolver, self.settings.encoding))
             if expected is not None and actual is not None:
+                from medpar_qa.stages.v3_fields import compare_v3_fields
+                result.rule_results.extend(compare_v3_fields(expected, actual, self.resolver))
+                result.rule_results.append(compare_final_bytes(expected, actual, self.resolver, self.settings.encoding))
                 result.rule_results.extend(
                     compare_expected_actual_fields(
                         stage=self.stage,

@@ -1,11 +1,11 @@
 stage: final_medpar
 change_request: LD-3137
-identity_fields: [hicn, provider_id, split_year_indicator]
+identity_fields: [hicn, provider_id, admission_date, split_year_indicator]
 sort_order: [hicn, provider_id, split_year_indicator, medpar_ss_ls_snf_ind_0140]
-excluded_sort_fields: [admission_date]
+excluded_sort_fields: []
 rules:
   - validate Split-year indicator format and value
-  - validate SS/LS/SNF classification
+  - validate S/L/N classification
   - validate configured bypass rules using expected-output membership
   - compare every configured selected field with approved expected output
   - verify Intermediate discrepancy fields populate into the final extract

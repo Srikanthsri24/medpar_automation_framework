@@ -19,6 +19,11 @@ def parse_date(value: Any, *, allow_none: bool = True) -> date | None:
 
     text = str(value).strip()
     for pattern in DATE_FORMATS:
+        # strptime accepts variable-width months/days. A seven-digit Julian
+        # value such as 2026064 must not be mistaken for Gregorian June 4.
+        widths = {"%Y%m%d": 8, "%Y%j": 7, "%y%j": 5}
+        if pattern in widths and (len(text) != widths[pattern] or not text.isdigit()):
+            continue
         try:
             result = datetime.strptime(text, pattern).date()
             if pattern in ("%Y%j", "%y%j"):

@@ -1,5 +1,5 @@
-required_identity_fields: [hicn, provider_id, split_year_indicator]
-excluded_sort_fields: [admission_date]
+required_identity_fields: [hicn, provider_id, admission_date, split_year_indicator]
+excluded_sort_fields: []
 fixed_width_field: fixed_width_record
 expected_encoded_bytes: 3000
 encoding: ascii

@@ -9,7 +9,7 @@ settings:
     rule6_enabled: true
   split:
     window_years: 4
-    skip_transaction_codes: [0, 4]
+    skip_transaction_codes: []
     require_actual_output: false
 files:
   - path: "data/user_inputs/final_action/source/claim.r2.a (1).json"

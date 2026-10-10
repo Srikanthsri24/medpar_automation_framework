@@ -48,9 +48,10 @@ class StayProcessor(BaseStageProcessor):
     ) -> dict[tuple[Any, ...], list[SourceRecord]]:
         grouped: dict[tuple[Any, ...], list[SourceRecord]] = defaultdict(list)
         for record in records:
-            grouped[
-                record_identity(record, self.resolver, self.settings.identity_fields)
-            ].append(record)
+            identity = record_identity(record,self.resolver,self.settings.identity_fields)
+            if any(self.resolver.get(record.data,field) in (None,"") for field in ("hicn","provider_id","admission_date")):
+                continue
+            grouped[identity].append(record)
         return dict(grouped)
 
     def _actual_or_expected_record(
@@ -67,6 +68,8 @@ class StayProcessor(BaseStageProcessor):
         actual: SourceRecord | None,
     ) -> list[RuleResult]:
         results: list[RuleResult] = []
+        from .merge_rules import validate_merge_rules
+        results.extend(validate_merge_rules(source_group, actual, self.resolver, self.settings.decimal_scale))
         for canonical, rule_id in (
             ("condition_codes", "ST-LATEST-CONDITION-CODES"),
             ("occurrence_codes", "ST-LATEST-OCCURRENCE-CODES"),
@@ -82,6 +85,8 @@ class StayProcessor(BaseStageProcessor):
                         resolver=self.resolver,
                     )
                 )
+                if canonical in {"condition_codes", "occurrence_codes", "value_lines"}:
+                    expected = expected[:36 if canonical == "value_lines" else 30]
                 if canonical == "occurrence_span_lines":
                     discovered_count = len(expected)
                     expected = expected[:10]
@@ -90,7 +95,7 @@ class StayProcessor(BaseStageProcessor):
                             stage=self.stage,
                             rule_id="ST-SPAN-CODE-LIMIT",
                             status=ValidationStatus.PASS,
-                            message="Unique Span Codes were consolidated and limited to the first 10 by latest-record precedence",
+                            message="Unique span code/from/thru sets consolidated and limited to 10",
                             expected="At most 10 unique Span Code/date groups in combined Stay",
                             actual={"unique_source_codes": discovered_count, "selected_output_count": len(expected)},
                             field_name=canonical,
@@ -353,7 +358,7 @@ class StayProcessor(BaseStageProcessor):
             actual, expected = self._actual_or_expected_record(
                 identity, actual_index, expected_index
             )
-            if actual is None and self.settings.require_actual_output:
+            if actual is None and (self.settings.require_actual_output or actuals):
                 result.rule_results.append(
                     RuleResult(
                         stage=self.stage,
@@ -367,7 +372,7 @@ class StayProcessor(BaseStageProcessor):
                         ),
                     )
                 )
-            if expected is None and self.settings.require_expected_output:
+            if expected is None and (self.settings.require_expected_output or expecteds):
                 result.rule_results.append(
                     RuleResult(
                         stage=self.stage,

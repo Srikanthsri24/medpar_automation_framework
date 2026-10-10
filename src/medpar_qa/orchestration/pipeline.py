@@ -197,6 +197,19 @@ class Pipeline:
 
     def run(self) -> list[StageResult]:
         records_by_stage, diagnostics = self.load_with_diagnostics()
+        reference_config = self.manifest.settings.get("reference_feeds")
+        if reference_config:
+            from medpar_qa.reference_data import ReferenceData
+            try:
+                references = ReferenceData(reference_config, self.manifest.base_directory)
+                for record in records_by_stage.get(Stage.INTERMEDIATE, []):
+                    if record.source.role == FileRole.SOURCE:
+                        record.data = references.enrich(record.data, self.field_resolver)
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                diagnostics.setdefault(Stage.INTERMEDIATE, StageResult(stage=Stage.INTERMEDIATE)).rule_results.append(
+                    RuleResult(stage=Stage.INTERMEDIATE,rule_id="INT-REFERENCE-FEED",status=ValidationStatus.BLOCKED,
+                        message=f"Configured reference feed is unavailable or invalid ({type(exc).__name__})",
+                        expected="Readable, valid DOD/SSI reference feed"))
         processors = self._processors()
         results: list[StageResult] = []
 
@@ -207,6 +220,8 @@ class Pipeline:
 
             preliminary = diagnostics.get(stage, StageResult(stage=stage))
             records = records_by_stage.get(stage, [])
+            from medpar_qa.stages.record_contracts import validate_record_contracts
+            preliminary.rule_results.extend(validate_record_contracts(records,self.field_resolver))
             if records:
                 processed = processors[stage].validate(records)
                 processed.rule_results = [

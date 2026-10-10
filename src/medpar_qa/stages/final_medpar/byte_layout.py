@@ -43,7 +43,11 @@ def validate_field_layout(
     Each layout item supports: name, start, length, expected, strip, required.
     This intentionally does not guess the proprietary MEDPAR 3000-byte layout.
     """
-    encoded = value if isinstance(value, bytes) else value.encode(encoding)
+    try:
+        encoded = value if isinstance(value, bytes) else value.encode(encoding)
+    except UnicodeEncodeError:
+        return [RuleResult(stage=Stage.FINAL_MEDPAR,rule_id="FM-BYTE-FIELD",status=ValidationStatus.FAIL,
+                           message=f"Record cannot be encoded using {encoding}")]
     results: list[RuleResult] = []
     for spec in field_layout:
         name = str(spec.get("name") or "unnamed_field")

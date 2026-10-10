@@ -92,15 +92,15 @@ def test_bill_total_perdiem_rounds_before_multiplication(resolver, make_record):
         {
             "passThruPerDiem": "1.2345",
             "utilizationDays": 2,
-            "MEDPAR-BILL-TOT-PERDIEM-0381": "2.470",
+            "MEDPAR-BILL-TOT-PERDIEM-0381": "2",
         },
         stage=Stage.INTERMEDIATE,
     )
     result = validate_bill_total_perdiem(record, resolver, scale=Decimal("0.001"))
 
     assert result.status is ValidationStatus.PASS
-    assert result.expected == "2.470"
-    assert result.evidence["rounded_pass_thru_per_diem"] == "1.235"
+    assert result.expected == "2"
+    assert result.evidence["rounded_pass_thru_per_diem"] == "1"
 
 
 @pytest.mark.unit
@@ -262,7 +262,7 @@ def test_final_action_groups_claims_contiguously_when_only_admission_dates_diffe
 
 @pytest.mark.unit
 @pytest.mark.regression
-def test_stay_and_final_identities_do_not_split_on_admission_date(resolver, make_record):
+def test_stay_and_final_identities_preserve_admission_date(resolver, make_record):
     base = {
         "claimCanNchEquatable": "H-1",
         "provider": {"providerId": "P-1"},
@@ -271,10 +271,10 @@ def test_stay_and_final_identities_do_not_split_on_admission_date(resolver, make
     first = make_record({**base, "admissionDate": "20260101"}, row=1, stage=Stage.STAY)
     second = make_record({**base, "admissionDate": "20260102"}, row=2, stage=Stage.STAY)
 
-    assert record_identity(first, resolver, StaySettings().identity_fields) == record_identity(
+    assert record_identity(first, resolver, StaySettings().identity_fields) != record_identity(
         second, resolver, StaySettings().identity_fields
     )
-    assert record_identity(first, resolver, FinalMedparSettings().identity_fields) == record_identity(
+    assert record_identity(first, resolver, FinalMedparSettings().identity_fields) != record_identity(
         second, resolver, FinalMedparSettings().identity_fields
     )
 

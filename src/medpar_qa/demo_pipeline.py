@@ -88,13 +88,11 @@ def split_claims(claims: list[dict[str, Any]], run_year: int) -> tuple[list[dict
         else:
             key = (str(claim["hicn"]), str(claim["provider_id"]), iso(claim["admission_date"]))
         groups[key].append(claim)
-    output, exclusions, exceptions = [], [], []
+    output, exclusions, exceptions, over_capacity = [], [], [], []
     exception_bills = 0
     for key, group in groups.items():
         if len(group) > 75:
-            exceptions.append({"stay": key, "bill_count": len(group), "reason": "More than 75 bills; V3 does not specify replacement limit"})
-            exception_bills += len(group)
-            continue
+            over_capacity.append({"stay": key, "bill_count": len(group), "reason": "Audit only: MM removes the legacy 75-bill cap"})
         ordered = sorted(group, key=lambda r: (iso(r["processing_date"]), iso(r.get("accrete_date") or r["processing_date"]), str(r["claim_id"])))
         is_snf = int(ordered[0]["transaction_code"]) in (0, 4)
         routing_date = iso(ordered[0]["admission_date"]) if is_snf else iso(ordered[-1]["stay_thru_date"])
@@ -102,17 +100,17 @@ def split_claims(claims: list[dict[str, Any]], run_year: int) -> tuple[list[dict
         if not (run_year - 3 <= d.year <= run_year):
             exclusions.extend(str(x["claim_id"]) for x in group)
             continue
-        bucket = f"Y{run_year-d.year}Q{'0109' if d.month <= 9 else '1012'}"
+        bucket = f"Y{run_year-d.year}{'0109' if d.month <= 9 else '1012'}"
         for claim in ordered:
             item = deepcopy(claim)
             item["split_bucket"] = bucket
             item["split_type"] = "SNF" if is_snf else "INP"
             item["split_routing_date"] = routing_date
-            item["sample_1pct"] = str(item.get("claim_can", "")).endswith("595")
+            item["sample_0_1pct"] = str(item.get("claim_can", "")).endswith("595")
             output.append(item)
     if len(output) + len(exclusions) + exception_bills != len(claims):
         raise AssertionError("Split count balancing mismatch")
-    return output, {"input": len(claims), "output": len(output), "outside_window": exclusions, "exception_bills": exception_bills, "exceptions": exceptions, "buckets": dict(Counter(x["split_bucket"] for x in output))}
+    return output, {"input": len(claims), "output": len(output), "outside_window": exclusions, "exception_bills": exception_bills, "exceptions": exceptions, "over_75_bill_audit": over_capacity, "buckets": dict(Counter(x["split_bucket"] for x in output))}
 
 
 def _unique_items(groups: list[dict[str, Any]], name: str) -> list[Any]:
@@ -157,6 +155,8 @@ def stay_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dic
 
 
 def intermediate_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    from medpar_qa.stages.intermediate.business_rules import length_of_stay, validate_business_rules
+    resolver = FieldResolver.from_yaml(Path(__file__).resolve().parents[2]/"config/field_aliases.yaml")
     result = []
     for c in claims:
         row = deepcopy(c)
@@ -164,9 +164,14 @@ def intermediate_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, An
         thru = date.fromisoformat(iso(c["stay_thru_date"]))
         if thru < start:
             raise ValueError(f"Claim {c['claim_id']}: thru before admission")
-        row["medpar_lgth_stay_0260"] = (thru - start).days
+        row["medpar_lgth_stay_0260"] = length_of_stay(start,thru,c.get("discharge_status",1))
         row["medpar_adm_date_0200_julian"] = start.strftime("%Y%j")
         row["medpar_dischg_date_0210_julian"] = thru.strftime("%Y%j")
+        source=SourceRecord(data=c,record_id=str(c["claim_id"]),source=SourceLocation(file_path="demo_stay",row_number=1,file_format="json",stage=Stage.INTERMEDIATE,role=FileRole.SOURCE))
+        rules=validate_business_rules(source,source,resolver)
+        for rule in rules:
+            if rule.evidence.get("calculation_completed") and rule.expected is not None:
+                row[rule.field_name]=rule.expected
         # Do not invent SSA/3M/DRG, payment and revenue derivations.
         row["external_calculation_status"] = "NOT_COMPUTED_WITHOUT_REFERENCE_INPUTS"
         result.append(row)
@@ -174,14 +179,17 @@ def intermediate_claims(claims: list[dict[str, Any]]) -> tuple[list[dict[str, An
 
 
 def final_medpar(claims: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    output, excluded = [], []
+    output, excluded, bypass = [], [], []
     for c in claims:
         is_snf = c["split_type"] == "SNF"
+        if c.get("covered_days") is not None and c.get("medpar_lgth_stay_0260") is not None and int(c["covered_days"])>int(c["medpar_lgth_stay_0260"]):
+            bypass.append(str(c["claim_id"]))
+            continue
         if not is_snf and not c.get("discharge_date"):
             excluded.append(str(c["claim_id"]))
             continue
         output.append(deepcopy(c))
-    return output, {"input": len(claims), "output": len(output), "excluded_undischarged_inpatient": excluded, "fixed_width_3000_bytes": "not emitted: approved copybook offsets unavailable"}
+    return output, {"input": len(claims), "output": len(output), "excluded_undischarged_inpatient": excluded, "bypass_covered_days_gt_los":bypass, "fixed_width_3000_bytes": "not emitted: approved copybook offsets unavailable"}
 
 
 def run_pipeline(source: Path, destination: Path, run_year: int, aliases: Path) -> dict[str, Any]:

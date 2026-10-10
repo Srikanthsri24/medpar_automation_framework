@@ -30,6 +30,9 @@ def write_report_bundle(
     stage_results = list(results)
     directory = Path(output_directory)
     directory.mkdir(parents=True, exist_ok=True)
+    from .stage_audit import write_stage_audit
+    for result in stage_results:
+        write_stage_audit(result, directory)
 
     html_path = write_html_report(
         run_id,

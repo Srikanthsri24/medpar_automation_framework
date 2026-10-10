@@ -7,8 +7,8 @@ def test_stage_runs_is_authoritative():
     assert not hasattr(runner, "INPUT_PATH")
 
 def test_approved_fa01_direction():
-    assert FinalActionSettings().bypass_direction == "covered_gt_los"
-    assert FinalActionSettings.from_mapping({}).bypass_direction == "covered_gt_los"
+    assert FinalActionSettings().bypass_direction is None
+    assert FinalActionSettings.from_mapping({}).bypass_direction is None
 
 def test_approved_qcs_and_rule6():
     s = FinalActionSettings()

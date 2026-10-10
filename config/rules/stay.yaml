@@ -1,6 +1,6 @@
 stage: stay
 change_request: LD-3137
-group_key: [hicn, provider_id, split_year_indicator]
+group_key: [hicn, provider_id, admission_date, split_year_indicator]
 sort_order: [hicn, provider_id, split_year_indicator, stay_from_date, stay_thru_date, processing_date, accrete_date, source_sequence]
 excluded_sort_fields: [admission_date]
 selected_fields:

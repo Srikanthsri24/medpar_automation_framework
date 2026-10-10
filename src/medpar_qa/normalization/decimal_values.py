@@ -15,7 +15,10 @@ def to_decimal(value: Any, *, allow_none: bool = False) -> Decimal | None:
     if isinstance(value, bool):
         raise ValueError("Boolean is not a valid amount")
     try:
-        return Decimal(str(value).strip())
+        result = Decimal(str(value).strip())
+        if not result.is_finite():
+            raise ValueError("Amount must be finite")
+        return result
     except (InvalidOperation, ValueError) as exc:
         raise ValueError(f"Invalid decimal value: {value!r}") from exc
 

@@ -1,8 +1,41 @@
 [
   {
     "claimCanNchEquatable": "HICN-201",
-    "provider": {"providerId": "PRV-201"},
+    "provider": {
+      "providerId": "123201"
+    },
     "admissionDate": "20260301",
-    "splitYearIndicator": "Y60109"
+    "splitYearIndicator": "Y00109",
+    "stayFromDate": "20260301",
+    "stayThruDate": "20260310",
+    "transactionCode": 0,
+    "patientStatus": 1,
+    "beneficiaryDateOfBirth": "19560301",
+    "dateOfDeath": "20260305",
+    "claimPaymentAmount": "900.125",
+    "primaryPayerClaimPaidAmount": 0,
+    "beneficiaryCoinsuranceAmount": 0,
+    "inpatientDeductibleAmount": 0,
+    "bloodDeductibleAmount": 0,
+    "outlierApprovedPaymentAmount": 0,
+    "occurrenceSpanLines": [
+      {
+        "code": "70",
+        "fromDate": "20260301",
+        "toDate": "20260310"
+      }
+    ],
+    "revenueLines": [
+      {
+        "code": "0110",
+        "units": 1,
+        "charges": "10.125"
+      },
+      {
+        "code": "0120",
+        "units": 2,
+        "charges": "20.250"
+      }
+    ]
   }
 ]

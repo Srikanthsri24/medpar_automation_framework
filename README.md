@@ -2,7 +2,7 @@
 
 The project now includes the supplied 2026 byte-by-byte corrections, missing-field registry expansion, Final Action Rule 6 implementation, and admissionDate sort-order removal for Final Action, Split, Stay, and Final MEDPAR. See `docs/AUGUST_2026_DISCREPANCY_AND_LD3137_UPDATE.md` and `docs/OPEN_BUSINESS_DECISIONS.md`.
 
-Verified: **104 tests passed, 0 failed**, the working all-five-stage manifest passed, and the default seven-command reporting session completed without unexpected results.
+Latest review (11 October 2026): **227 tests passed, 0 failed**. The all-five-stage example manifest also passed. See [the gap submission review](docs/MEDPAR_GAP_SUBMISSION.md) and [current test evidence](docs/TEST_RESULTS.md) for implemented checks and remaining production dependencies. Earlier v0.5.0 descriptions below are historical where the latest supplied requirements differ.
 
 Key update documents:
 

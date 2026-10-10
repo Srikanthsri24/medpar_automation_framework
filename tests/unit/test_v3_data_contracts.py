@@ -8,6 +8,7 @@ from medpar_qa.normalization.fields import FieldResolver
     ("2024366", date(2024, 12, 31)),
     ("24060", date(2024, 2, 29)),
     ("2024001", date(2024, 1, 1)),
+    ("2026064", date(2026, 3, 5)),
 ])
 def test_julian_dates(raw, expected):
     assert parse_date(raw) == expected

@@ -9,4 +9,6 @@ def test_run_commands_file_loads_and_has_all_five_stages():
         for command in commands
         if "--stage" in command.args
     }
-    assert stages == {"final_action", "split", "stay", "intermediate", "final_medpar"}
+    configured = namespace["STAGE_RUNS"]
+    assert set(configured) == {"final_action", "split", "stay", "intermediate", "final_medpar"}
+    assert stages == {stage for stage,item in configured.items() if item.get("enabled", True)}

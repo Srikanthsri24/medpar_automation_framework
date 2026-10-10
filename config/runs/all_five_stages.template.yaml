@@ -9,7 +9,7 @@ settings:
     rule6_enabled: true
   split:
     window_years: 4
-    skip_transaction_codes: [0, 4]
+    skip_transaction_codes: []
     require_actual_output: true
   stay:
     decimal_scale: "0.001"
@@ -26,7 +26,7 @@ settings:
     encoding: ascii
     require_actual_output: true
     require_expected_output: true
-    allowed_classifications: [SS, LS, SNF]
+    allowed_classifications: [S, L, N]
 files:
   # Replace these example paths with your real folders.
   - {path: data/final_action/source/*.json, stage: final_action, role: source}

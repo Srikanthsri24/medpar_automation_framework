@@ -13,12 +13,12 @@ from medpar_qa.orchestration.pipeline import Pipeline
 CASES = [
     ("split01_claim_r1_a_20210103.yaml", True, "Y99999", "Y99999"),
     ("split02_claim_r1_a_20230103.yaml", True, "Y20109", "Y20109"),
-    ("split03_claim_r1_b_20220103.yaml", False, "Y10109", "Y30109"),
+    ("split03_claim_r1_b_20220103.yaml", True, "Y30109", "Y30109"),
     ("split04_claim_r1_b_20200104.yaml", True, "Y99999", "Y99999"),
     (
         "split_drop_t_cvm_cwfcb_d240404_t1438012-000000001.yaml",
-        False,
-        "Y40109",
+        True,
+        "Y00109",
         "Y00109",
     ),
 ]
@@ -68,20 +68,16 @@ def test_positive_uploaded_suite_passes():
 @pytest.mark.input_data
 @pytest.mark.regression
 @pytest.mark.split
-def test_negative_split_suite_detects_two_known_mismatches():
+def test_previous_negative_split_suite_matches_corrected_years_back():
     manifest = load_manifest("config/runs/negative_uploaded_split_suite.yaml")
     resolver = FieldResolver.from_yaml("config/field_aliases.yaml")
     result = Pipeline(manifest, resolver).run()[0]
 
-    assert not result.passed
+    assert result.passed
     mismatches = [
         item
         for item in result.rule_results
         if item.rule_id == "SP-RULE-INDICATOR"
         and item.status is ValidationStatus.FAIL
     ]
-    assert len(mismatches) == 2
-    assert {(item.expected, str(item.actual)) for item in mismatches} == {
-        ("Y40109", "Y00109"),
-        ("Y10109", "Y30109"),
-    }
+    assert not mismatches

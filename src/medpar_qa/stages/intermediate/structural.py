@@ -264,10 +264,12 @@ def validate_death_after_admission(
     try:
         admission = parse_date(admission_raw, allow_none=False)
         death = parse_date(death_raw, allow_none=True)
-        expected = "Y" if death is not None and death >= admission else "N"
-        status = ValidationStatus.PASS if actual == expected else ValidationStatus.FAIL
-        message = "Death-after-admission indicator matches" if status == ValidationStatus.PASS else "Death-after-admission indicator mismatch"
-    except ValueError as exc:
+        from .business_rules import death_after_admission
+        expected = death_after_admission(admission, death)
+        normalized = None if actual in (None, "") else int(actual)
+        status = ValidationStatus.PASS if normalized == expected else ValidationStatus.FAIL
+        message = "Death-after-admission day count matches" if status == ValidationStatus.PASS else "Death-after-admission day count mismatch"
+    except (TypeError, ValueError) as exc:
         expected = "Valid admission/death dates"
         status = ValidationStatus.FAIL
         message = str(exc)

@@ -415,7 +415,7 @@ def test_ambiguous_ordering_is_blocked(resolver, make_record):
             row=1,
         ),
         make_record(
-            base_claim(queryCode=1, internalControlNumber="B", sourceSequence=None),
+            base_claim(queryCode=3, internalControlNumber="B", sourceSequence=None),
             row=2,
         ),
     ]

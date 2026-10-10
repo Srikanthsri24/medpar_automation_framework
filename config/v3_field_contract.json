@@ -1,0 +1,2211 @@
+{
+  "source": "Medpar functionality notes V3; gap register Field Register",
+  "fields": [
+    {
+      "id": 1,
+      "page": 12,
+      "group": "DRG Lookups",
+      "name": "MED-DRG-CODE-0531",
+      "fields": [
+        "med_drg_code_0531"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 2,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-BASE-OPRTG-DRG-AMT-0870",
+      "fields": [
+        "medpar_base_oprtg_drg_amt_0870"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 3,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-BNDLD-ADJSTMT-AMT-1150",
+      "fields": [
+        "medpar_bndld_adjstmt_amt_1150"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 4,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-CLM-MODL-REIMB-AMT-1480",
+      "fields": [
+        "medpar_clm_modl_reimb_amt_1480"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 5,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-CR-RCV-REPL-DVC-SW-0840",
+      "fields": [
+        "medpar_cr_rcv_repl_dvc_sw_0840"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 6,
+      "page": 12,
+      "group": "Calc. Length of Stay",
+      "name": "MEDPAR-DEATH-AFTER-ADM-0611",
+      "fields": [
+        "medpar_death_after_adm_0611"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 7,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-DGNS-E-CD",
+      "fields": [
+        "medpar_dgns_e_cd"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 8,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-DGNS-E-CD-CNT",
+      "fields": [
+        "medpar_dgns_e_cd_cnt"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 9,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-DGNS-E-VRSN-CD",
+      "fields": [
+        "medpar_dgns_e_vrsn_cd"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 10,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-DGNS-VRSN-CD",
+      "fields": [
+        "medpar_dgns_vrsn_cd"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 11,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-DIAG-CODE-0492",
+      "fields": [
+        "medpar_diag_code_0492"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 12,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-DISPROPORTIONATE-0360",
+      "fields": [
+        "medpar_disproportionate_0360"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 13,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-EHR-ADJSTMT-AMT-1180",
+      "fields": [
+        "medpar_ehr_adjstmt_amt_1180"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 14,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-EMER-USE-SW-1590",
+      "fields": [
+        "medpar_emer_use_sw_1590"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 15,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-ESRD-CONDITION-0550",
+      "fields": [
+        "medpar_esrd_condition_0550"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 16,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-EXPNDD-ACS-SW-1570",
+      "fields": [
+        "medpar_expndd_acc_sw_1570"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 17,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-FINL-STD-AMT-1200",
+      "fields": [
+        "medpar_finl_std_amt_1200"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 18,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-FULL-STD-PMT-AMT-1310",
+      "fields": [
+        "medpar_full_std_pmt_amt_1310"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 19,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-HAC-RDCTN-PMT-AMT-1210",
+      "fields": [
+        "medpar_hac_rdctn_pmt_amt_1210"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 20,
+      "page": 12,
+      "group": "Get DOD from external file",
+      "name": "MEDPAR-HIMASTER-DOD-0230",
+      "fields": [
+        "medpar_himaster_dod_0230"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 21,
+      "page": 12,
+      "group": "Get DOD Ind from external file",
+      "name": "MEDPAR-HIMASTER-DOD-IND-0240",
+      "fields": [
+        "medpar_dod_ind_0240"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 22,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-HRR-ADJSTMT-AMT-1170",
+      "fields": [
+        "medpar_hrr_adjstmt_amt_1170"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 23,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-IME-AMOUNT-0370",
+      "fields": [
+        "medpar_ime_amount_0370"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 24,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-INFOR-ENCTR-IND-SW-0800",
+      "fields": [
+        "medpar_infor_enctr_ind_sw_0800"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 25,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-ISLET-ADDON-PMTAMT-1450",
+      "fields": [
+        "medpar_islet_addon_pmt_amt_1450"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 26,
+      "page": 12,
+      "group": "Calc. Length of Stay",
+      "name": "MEDPAR-LGTH-STAY-0260",
+      "fields": [
+        "medpar_lgth_stay_0260"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 27,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-LTCH-DPP-ADJ-AMT-1540",
+      "fields": [
+        "medpar_ltch_dpp_adj_amt_1540"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 28,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-MA-TEACH-IND-SW-0810",
+      "fields": [
+        "medpar_ma_teach_ind_sw_0810"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 29,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-NEW-TECH-ADD-O-AMT-0860",
+      "fields": [
+        "medpar_new_tech_add_on_amt_0860"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 30,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-NO-DIAG-CODES-0491",
+      "fields": [
+        "medpar_no_diag_codes_0491"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 31,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-NO-PSTV-TEST-SW-1560",
+      "fields": [
+        "medpar_no_pstv_test_sw_1560"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 32,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-OPRTG-HSP-AMT-0880",
+      "fields": [
+        "medpar_oprtg_hsp_amt_0880"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 33,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-OTHR-CLNCL-TRIL-SW-1580",
+      "fields": [
+        "medpar_othr_clncl_tril_sw_1580"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 34,
+      "page": 12,
+      "group": "Calculate DRG/Outlier Days",
+      "name": "MEDPAR-OUTLIER-DAYS-0270",
+      "fields": [
+        "medpar_outlier_days_0270"
+      ],
+      "original_coverage": "Approved for deletion",
+      "deleted": true
+    },
+    {
+      "id": 35,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-POA-DGNS-CD-CNT",
+      "fields": [
+        "medpar_poa_dgns_cd_cnt"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 36,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-POA-DGNS-E-CD-CNT",
+      "fields": [
+        "medpar_poa_dgns_e_cd_cnt"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 37,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-POA-DGNS-E-IND-CD",
+      "fields": [
+        "medpar_poa_dgns_e_ind_cd"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 38,
+      "page": 12,
+      "group": "Diag Codes derivations",
+      "name": "MEDPAR-POA-DGNS-IND-CD",
+      "fields": [
+        "medpar_poa_dgns_ind_cd"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 39,
+      "page": 12,
+      "group": "Provider Info",
+      "name": "MEDPAR-PPS-IND-0120",
+      "fields": [
+        "medpar_pps_ind_0120"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 40,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-PPS-STD-VAL-AMT-1190",
+      "fields": [
+        "medpar_pps_std_val_amt_1190"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 41,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-PR-REPL-LIFECYC-SW-0820",
+      "fields": [
+        "medpar_pr_repl_lifecyc_sw_0820"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 42,
+      "page": 12,
+      "group": "Condition Codes and other",
+      "name": "MEDPAR-PR-REPL-RECALL-SW-0830",
+      "fields": [
+        "medpar_pr_repl_recall_sw_0830"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 43,
+      "page": 12,
+      "group": "Provider Info",
+      "name": "MEDPAR-PROV-CODE-0137",
+      "fields": [
+        "medpar_prov_code_0137"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 44,
+      "page": 12,
+      "group": "Provider Info",
+      "name": "MEDPAR-PROVIDER-0130",
+      "fields": [
+        "medpar_provider_0130"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 45,
+      "page": 12,
+      "group": "Provider Info",
+      "name": "MEDPAR-PRVDR-BASE-FAC-CCN-1650",
+      "fields": [
+        "medpar_prvdr_base_fac_ccn_1650"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 46,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-S-NTRL-PMT-CST-AMT-1290",
+      "fields": [
+        "medpar_s_ntrl_pmt_cst_amt_1290"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 47,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-S-NTRL-PMT-IPPS-AM-1300",
+      "fields": [
+        "medpar_s_ntrl_pmt_ipps_am_1300"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 48,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-SQSTRTN-RDCTN-AMT-1130",
+      "fields": [
+        "medpar_sqstrtn_rdctn_amt_1130"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 49,
+      "page": 12,
+      "group": "Populate SS/LS/SNF indicator",
+      "name": "MEDPAR-SS-LS-SNF-IND-0140",
+      "fields": [
+        "medpar_ss_ls_snf_ind_0140"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 50,
+      "page": 12,
+      "group": "Calculate SSI Day Cnt",
+      "name": "MEDPAR-SSI-DATA-0251",
+      "fields": [
+        "medpar_ssi_data_0251"
+      ],
+      "original_coverage": "Name known, not tested",
+      "deleted": false
+    },
+    {
+      "id": 51,
+      "page": 12,
+      "group": "Calculate SSI Indicator",
+      "name": "MEDPAR-SSI-DATA-0252",
+      "fields": [
+        "medpar_ssi_data_0252"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 52,
+      "page": 12,
+      "group": "Calculate SSI Indicator",
+      "name": "MEDPAR-SSI-DATA-0253",
+      "fields": [
+        "medpar_ssi_data_0253"
+      ],
+      "original_coverage": "Name known, not tested",
+      "deleted": false
+    },
+    {
+      "id": 53,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-SSO-STD-PMT-AMT-1320",
+      "fields": [
+        "medpar_sso_std_pmt_amt_1320"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 54,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-UNCMP-CARE-PMT-AMT-1140",
+      "fields": [
+        "medpar_uncmp_care_pmt_amt_1140"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 55,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-VALQ1-PMT-RDCTN-AM-1470",
+      "fields": [
+        "medpar_val_q1_pmt_rdctn_amt_1470"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 56,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-VALQB-PMT-ADJ-AMT-1500",
+      "fields": [
+        "medpar_val_qb_pmt_adj_amt_1500"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 57,
+      "page": 12,
+      "group": "Value Codes derivations",
+      "name": "MEDPAR-VBP-ADJSTMT-AMT-1160",
+      "fields": [
+        "medpar_vbp_adjstmt_amt_1160"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 58,
+      "page": 13,
+      "group": "SPAN-CODE TRAILER derivations",
+      "name": "MEDPAR-2-MIDNGHT-STAY-IND-1280",
+      "fields": [
+        "medpar_2_midnight_stay_ind_1280"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 59,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-ACCOMMODATION-CHRG-0460",
+      "fields": [
+        "medpar_accommodation_chrg_0460"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 60,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-ACCOMMODATION-DAYS-0450",
+      "fields": [
+        "medpar_accommodation_days_0450"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 61,
+      "page": 13,
+      "group": "YYYYDDD",
+      "name": "MEDPAR-ACCRETION-DATE-0160",
+      "fields": [
+        "medpar_accretion_date_0160"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 62,
+      "page": 13,
+      "group": "YYYYDDD",
+      "name": "MEDPAR-ADM-DATE-0200",
+      "fields": [
+        "medpar_adm_date_0200"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 63,
+      "page": 13,
+      "group": "YYYYDDD",
+      "name": "MEDPAR-ADM-DAY-0090",
+      "fields": [
+        "medpar_adm_day_0090"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 64,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-ALGNC-STEM-CELLAMT-1440",
+      "fields": [
+        "medpar_algnc_stem_cellamt_1440"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 65,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-CELL-GENE-PRC-AMT-1510",
+      "fields": [
+        "medpar_cell_gene_prc_amt_1510"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 66,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-CELL-TPY-DRUG-AMT-1520",
+      "fields": [
+        "medpar_cell_tpy_drug_amt_1520"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 67,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-CORONARY-CARE-IND-0482",
+      "fields": [
+        "medpar_coronary_care_ind_0482"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 68,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-COV-CHRG-0410",
+      "fields": [
+        "medpar_cov_chrg_0410"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 69,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-CRDC-CATHRZTN-AMT-1120",
+      "fields": [
+        "medpar_crdc_cathrztn_amt_1120"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 70,
+      "page": 13,
+      "group": "YYYYDDD",
+      "name": "MEDPAR-DATE-BENFEX-0170",
+      "fields": [
+        "medpar_date_benfex_0170"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 71,
+      "page": 13,
+      "group": "YYYYDDD",
+      "name": "MEDPAR-DISCHG-DATE-0210",
+      "fields": [
+        "medpar_dischg_date_0210"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 72,
+      "page": 13,
+      "group": "YYYYDDD",
+      "name": "MEDPAR-DTE-CR-ENDED-0220",
+      "fields": [
+        "medpar_dte_cr_ended_0220"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 73,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-ESRD-SETTING-IND-0488",
+      "fields": [
+        "medpar_esrd_setting_ind_0488"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 74,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-GENE-TPY-DRUG-AMT-1530",
+      "fields": [
+        "medpar_gene_tpy_drug_amt_1530"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 75,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-HOSP-HOME-CHRG-AMT-1620",
+      "fields": [
+        "medpar_hosp_home_chrg_amt_1620"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 76,
+      "page": 13,
+      "group": "SPAN-CODE TRAILER derivations",
+      "name": "MEDPAR-HOSP-HOME-FROM-DT-1630",
+      "fields": [
+        "medpar_hosp_home_from_dt_1630"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 77,
+      "page": 13,
+      "group": "SPAN-CODE TRAILER derivations",
+      "name": "MEDPAR-HOSP-HOME-THRU-DT-1640",
+      "fields": [
+        "medpar_hosp_home_thru_dt_1640"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 78,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-INCDNT-DGN-SRV-AMT-1000",
+      "fields": [
+        "medpar_incdnt_dgn_srv_amt_1000"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 79,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-INCDNT-RDLGY-AMT-0990",
+      "fields": [
+        "medpar_incdnt_rdlgy_amt_0990"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 80,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-INTERSIVE-CARE-IND-0481",
+      "fields": [
+        "medpar_intensive_care_ind_0481"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 81,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-INTRAOCULAR-LN-AMT-0950",
+      "fields": [
+        "medpar_intraocular_ln_amt_0950"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 82,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-INVSTGTNL-DVC-AMT-1020",
+      "fields": [
+        "medpar_invstgtnl_dvc_amt_1020"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 83,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-MDCL-SRG-DRSNG-AMT-1010",
+      "fields": [
+        "medpar_mdcl_srg_drsng_amt_1010"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 84,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-MDCL-SRG-GEN-AMT-0890",
+      "fields": [
+        "medpar_mdcl_srg_gen_amt_0890"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 85,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-MDCL-SRG-NSTRL-AMT-0900",
+      "fields": [
+        "medpar_mdcl_srg_nstrl_amt_0900"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 86,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-MDCL-SRG-PCMKR-AMT-0940",
+      "fields": [
+        "medpar_mdcl_srg_pcmkr_amt_0940"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 87,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-MDCL-SRG-STRL-AMT-0910",
+      "fields": [
+        "medpar_mdcl_srg_strl_amt_0910"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 88,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-MDCL-SRG-TKHME-AMT-0920",
+      "fields": [
+        "medpar_mdcl_srg_tkhme_amt_0920"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 89,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-MDCL-SRGL-MISC-AMT-1030",
+      "fields": [
+        "medpar_mdcl_srgl_misc_amt_1030"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 90,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-OBSRVTN-SW-0850",
+      "fields": [
+        "medpar_obsrvtn_sw_0850"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 91,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-OPRTG-ROOM-AMT-1100",
+      "fields": [
+        "medpar_oprtg_room_amt_1100"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 92,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-OR-LABOR-DLVRY-AMT-1110",
+      "fields": [
+        "medpar_or_labor_dlvry_amt_1110"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 93,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-ORGAN-IND-0487",
+      "fields": [
+        "medpar_organ_ind_0487"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 94,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-OTHR-IMPLANTS-AMT-0970",
+      "fields": [
+        "medpar_othr_implants_amt_0970"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 95,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-OTHR-SUPPL-DVC-AMT-0980",
+      "fields": [
+        "medpar_othr_suppl_dvc_amt_0980"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 96,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-OUTPATIENT-SRV-IND-0486",
+      "fields": [
+        "medpar_outpatient_srv_ind_0486"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 97,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-OXYGN-TKEHOME-AMT-0960",
+      "fields": [
+        "medpar_oxygn_tkehome_amt_0960"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 98,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-PHARMACY-IND-0483",
+      "fields": [
+        "medpar_pharmacy_ind_0483"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 99,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-PRSTHTC-ORTHTC-AMT-0930",
+      "fields": [
+        "medpar_prsthtc_orthtc_amt_0930"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 100,
+      "page": 13,
+      "group": "REV-CNTR Multi Bill",
+      "name": "MEDPAR-PTNT-ADD-ON-AMT-1230",
+      "fields": [
+        "medpar_ptnt_add_on_amt_1230"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 101,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-RADIOLOGY-IND-O485",
+      "fields": [
+        "medpar_radiology_ind_o485"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 102,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-RDLGY-CT-SCAN-AMT-1080",
+      "fields": [
+        "medpar_rdlgy_ct_scan_amt_1080"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 103,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-RDLGY-DGNSTC-AMT-1050",
+      "fields": [
+        "medpar_rdlgy_dgnstc_amt_1050"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 104,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-RDLGY-NUCLR-MD-AMT-1070",
+      "fields": [
+        "medpar_rdlgy_nuclr_md_amt_1070"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 105,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-RDLGY-ONCOLOGY-AMT-1040",
+      "fields": [
+        "medpar_rdlgy_oncology_amt_1040"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 106,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-RDLGY-OTHR-IMG-AMT-1090",
+      "fields": [
+        "medpar_rdlgy_othr_img_amt_1090"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 107,
+      "page": 13,
+      "group": "REV-CNTR Totals",
+      "name": "MEDPAR-RDLGY-THRPTC-AMT-1060",
+      "fields": [
+        "medpar_rdlgy_thrptc_amt_1060"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 108,
+      "page": 13,
+      "group": "REV-CNTR Multi Bill",
+      "name": "MEDPAR-REV-CNTR-MODL-AMT-1490",
+      "fields": [
+        "medpar_rev_cntr_modl_amt_1490"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 109,
+      "page": 13,
+      "group": "REV-CNTR Multi Bill",
+      "name": "MEDPAR-REV-CNTR-NDC-NUM-1550",
+      "fields": [
+        "medpar_rev_cntr_ndc_num_1550"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 110,
+      "page": 13,
+      "group": "REV-CNTR Multi Bill",
+      "name": "MEDPAR-REV-CNTR-RP-IND-CD-1400",
+      "fields": [
+        "medpar_rev_cntr_rp_ind_cd_1400"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 111,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-SERVICE-CHARGES-0470",
+      "fields": [
+        "medpar_service_charges_0470"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 112,
+      "page": 13,
+      "group": "SPAN-CODE TRAILER derivations",
+      "name": "MEDPAR-SNF-QUAL-FROM-DATE-0180",
+      "fields": [
+        "qualified_stay_from_date"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 113,
+      "page": 13,
+      "group": "SPAN-CODE TRAILER derivations",
+      "name": "MEDPAR-SNF-QUAL-THRU-DATE-0190",
+      "fields": [
+        "qualified_stay_thru_date"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 114,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-TOT-ACC-CHRG-0430",
+      "fields": [
+        "medpar_tot_acc_chrg_0430"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 115,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-TOT-DPT-CHRG-0440",
+      "fields": [
+        "medpar_tot_dpt_chrg_0440"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 116,
+      "page": 13,
+      "group": "REV-CNTR TRAILER derivations",
+      "name": "MEDPAR-TRANSPLANT-IND-0484",
+      "fields": [
+        "medpar_transplant_ind_0484"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 117,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MED-DISCH-DEST-0532",
+      "fields": [
+        "med_disch_dest_0532"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 118,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MED-OLD-BIC-0530",
+      "fields": [
+        "med_old_bic_0530"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 119,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MED-OUTLIER-CODE-0533",
+      "fields": [
+        "med_outlier_code_0533"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 120,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-ACO-ID-NUM-1410",
+      "fields": [
+        "medpar_aco_id_num_1410"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 121,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-ADM-DIAG-CODE-0590",
+      "fields": [
+        "medpar_adm_diag_code_0590"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 122,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-ADM-SOURCE-0560",
+      "fields": [
+        "medpar_adm_source_0560"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 123,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-ADMTG-DGNS-VRSN-CD",
+      "fields": [
+        "medpar_admtg_dgns_vrsn_cd"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 124,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-AGE-0030",
+      "fields": [
+        "medpar_age_0030"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 125,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-AMT-REIMB-0420",
+      "fields": [
+        "medpar_amt_reimb_0420"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 126,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-AT-PHYS-0650",
+      "fields": [
+        "medpar_at_phys_0650"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 127,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-BENE-COUN-0072",
+      "fields": [
+        "medpar_bene_coun_0072"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 128,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-BENE-ST-0071",
+      "fields": [
+        "medpar_bene_st_0071"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 129,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-BIC-CODE-0022",
+      "fields": [
+        "medpar_bic_code_0022"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 130,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-BILL-TOT-PERDIEM-0381",
+      "fields": [
+        "medpar_bill_tot_perdiem_0381"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 131,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-BLOOD-DED-0330",
+      "fields": [
+        "medpar_blood_ded_0330"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 132,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-BLOOD-PINTS-0520",
+      "fields": [
+        "medpar_blood_pints_0520"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 133,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-BNDLD-MOD-DSCT-PCT-0770",
+      "fields": [
+        "medpar_bndld_mod_dsct_pct_0770"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 134,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-CAPITAL-ACC92-0382",
+      "fields": [
+        "medpar_capital_acc92_0382"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 135,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-CAR-IMPRV-MOD-1-CD-0710",
+      "fields": [
+        "medpar_car_imprv_mod_1_cd_0710"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 136,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-CAR-IMPRV-MOD-2-CD-0720",
+      "fields": [
+        "medpar_car_imprv_mod_2_cd_0720"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 137,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-CAR-IMPRV-MOD-3-CD-0730",
+      "fields": [
+        "medpar_car_imprv_mod_3_cd_0730"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 138,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-CAR-IMPRV-MOD-4-CD-0740",
+      "fields": [
+        "medpar_car_imprv_mod_4_cd_0740"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 139,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-CLM-BENE-ID-TYP-CD-1430",
+      "fields": [
+        "medpar_clm_bene_id_typ_cd_1430"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 140,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-CLM-DRG-GRPR-VRSN-1610",
+      "fields": [
+        "medpar_clm_drg_grpr_vrsn_1610"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 141,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-CLM-PNT-RLTNSHP-CD-0700",
+      "fields": [
+        "medpar_clm_pnt_rltnshp_cd_0700"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 142,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-CLM-PRCR-VRSN-1600",
+      "fields": [
+        "medpar_clm_prcr_vrsn_1600"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 143,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-CLM-RP-IND-CD-1390",
+      "fields": [
+        "medpar_clm_rp_ind_cd_1390"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 144,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-COIN-AMT-0310",
+      "fields": [
+        "medpar_coin_amt_0310"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 145,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-COIN-DAYS-0290",
+      "fields": [
+        "medpar_coin_days_0290"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 146,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-COV-DAYS-0280",
+      "fields": [
+        "medpar_cov_days_0280"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 147,
+      "page": 14,
+      "group": "DATE OF DATA and Other Small Calc",
+      "name": "MEDPAR-DATE-OF-DATA-0620",
+      "fields": [
+        "medpar_date_of_data_0620"
+      ],
+      "original_coverage": "Approved for deletion",
+      "deleted": true
+    },
+    {
+      "id": 148,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-DISCHG-STATUS-0100",
+      "fields": [
+        "medpar_dischg_status_0100"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 149,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-DRG-PRICE-0380",
+      "fields": [
+        "medpar_drg_price_0380"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 150,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-EHR-PGM-RDCTN-IND-1250",
+      "fields": [
+        "medpar_ehr_pgm_rdctn_ind_1250"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 151,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-HAC-PGM-RDCTN-IND-1240",
+      "fields": [
+        "medpar_hac_pgm_rdctn_ind_1240"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 152,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-HMO-READM-0110",
+      "fields": [
+        "medpar_hmo_readm_0110"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 153,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-HRR-ADJSTMT-PCT-0790",
+      "fields": [
+        "medpar_hrr_adjstmt_pct_0790"
+      ],
+      "original_coverage": "Name known, not tested",
+      "deleted": false
+    },
+    {
+      "id": 154,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-HRR-PRTCPNT-IND-CD-0760",
+      "fields": [
+        "medpar_hrr_prtcpnt_ind_cd_0760"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 155,
+      "page": 14,
+      "group": "DATE OF DATA and Other Small Calc",
+      "name": "MEDPAR-IMCAB-INFO-0619",
+      "fields": [
+        "medpar_imcab_info_0619"
+      ],
+      "original_coverage": "Approved for deletion",
+      "deleted": true
+    },
+    {
+      "id": 156,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-INPAT-DED-0320",
+      "fields": [
+        "medpar_inpat_ded_0320"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 157,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-INTMD-NUM-0580",
+      "fields": [
+        "medpar_intmd_num_0580"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 158,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-IP-INITL-MS-DRG-CD-1460",
+      "fields": [
+        "medpar_ip_initl_ms_drg_cd_1460"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 159,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-IP-LOW-VOL-PMT-AMT-0386",
+      "fields": [
+        "medpar_ip_low_vol_pmt_amt_0386"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 160,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-LIFE-RES-0300",
+      "fields": [
+        "medpar_life_res_0300"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 161,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-MBI-ID-1420",
+      "fields": [
+        "medpar_mbi_id_1420"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 162,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-MRN-0670",
+      "fields": [
+        "medpar_mrn_0670"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 163,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-MSCODE-0060",
+      "fields": [
+        "medpar_mscode_0060"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 164,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-NCH-CLM-TYPE-CD",
+      "fields": [
+        "medpar_nch_clm_type_cd"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 165,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-NG-ACO-IND-1-CD-1330",
+      "fields": [
+        "medpar_ng_aco_ind_1_cd_1330"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 166,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-NG-ACO-IND-2-CD-1340",
+      "fields": [
+        "medpar_ng_aco_ind_2_cd_1340"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 167,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-NG-ACO-IND-3-CD-1350",
+      "fields": [
+        "medpar_ng_aco_ind_3_cd_1350"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 168,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-NG-ACO-IND-4-CD-1360",
+      "fields": [
+        "medpar_ng_aco_ind_4_cd_1360"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 169,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-NG-ACO-IND-5-CD-1370",
+      "fields": [
+        "medpar_ng_aco_ind_5_cd_1370"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 170,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-NO-OF-BILLS-0150",
+      "fields": [
+        "medpar_no_bills_0150"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 171,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-OP-PHYS-0660",
+      "fields": [
+        "medpar_op_phys_0660"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 172,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-ORG-NPI-NUM",
+      "fields": [
+        "medpar_org_npi_num"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 173,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-OUTLIER-AMOUNT-0350",
+      "fields": [
+        "medpar_outlier_amount_0350"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 174,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-PRIMARY-AMOUNT-0340",
+      "fields": [
+        "medpar_primary_amount_0340"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 175,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-PRIMRY-PYR-0540",
+      "fields": [
+        "medpar_primry_pyr_0540"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 176,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-PRIOR-AUTHRZTN-IND-1260",
+      "fields": [
+        "medpar_prior_authrztn_ind_1260"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 177,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-PRVDR-FULL-NUM-1660",
+      "fields": [
+        "medpar_prvdr_full_num_1660"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 178,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-RACE-0050",
+      "fields": [
+        "beneficiary_race"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 179,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-RSDL-PMT-IND-CD-1380",
+      "fields": [
+        "medpar_rsdl_pmt_ind_cd_1380"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 180,
+      "page": 14,
+      "group": "DATE OF DATA and Other Small Calc",
+      "name": "MEDPAR-SAMPLE-SIZE-0630",
+      "fields": [
+        "medpar_sample_size_0630"
+      ],
+      "original_coverage": "Approved for deletion",
+      "deleted": true
+    },
+    {
+      "id": 181,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-SEX-0040",
+      "fields": [
+        "medpar_sex_0040"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 182,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-SSA-NO-0021",
+      "fields": [
+        "medpar_ssa_no_0021"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 183,
+      "page": 14,
+      "group": "float to integer",
+      "name": "MEDPAR-TOT-CHRG-0400",
+      "fields": [
+        "medpar_tot_chrg_0400"
+      ],
+      "original_coverage": "Rule-validated",
+      "deleted": false
+    },
+    {
+      "id": 184,
+      "page": 14,
+      "group": "Direct Move2",
+      "name": "MEDPAR-TYPE-ADMIS-0570",
+      "fields": [
+        "medpar_type_admis_0570"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 185,
+      "page": 14,
+      "group": "Direct Move4",
+      "name": "MEDPAR-UNIQ-TRKNG-NUM-1270",
+      "fields": [
+        "medpar_uniq_trkng_num_1270"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 186,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-VBP-ADJSTMT-PCT-0780",
+      "fields": [
+        "medpar_vbp_adjstmt_pct_0780"
+      ],
+      "original_coverage": "Name known, not tested",
+      "deleted": false
+    },
+    {
+      "id": 187,
+      "page": 14,
+      "group": "Direct Move3",
+      "name": "MEDPAR-VBP-PRTCPNT-IND-CD-0750",
+      "fields": [
+        "medpar_vbp_prtcpnt_ind_cd_0750"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 188,
+      "page": 14,
+      "group": "Warning indicators",
+      "name": "MEDPAR-WARNING-IND-0640",
+      "fields": [
+        "medpar_warning_ind_0640"
+      ],
+      "original_coverage": "Approved for deletion",
+      "deleted": true
+    },
+    {
+      "id": 189,
+      "page": 14,
+      "group": "Direct Move1",
+      "name": "MEDPAR-ZIP-0080",
+      "fields": [
+        "medpar_zip_0080"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 190,
+      "page": 24,
+      "group": "Warning indicators",
+      "name": "Warning indicator 01 (adjustment)",
+      "fields": [
+        "warning_indicator_01"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 191,
+      "page": 24,
+      "group": "Warning indicators",
+      "name": "Warning indicator 06 (intermediary cancel)",
+      "fields": [
+        "warning_indicator_06"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 192,
+      "page": 24,
+      "group": "Warning indicators",
+      "name": "Warning indicator 08 (duplicate / death<admission)",
+      "fields": [
+        "warning_indicator_08"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 193,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicator 02 (edit-code table error)",
+      "fields": [
+        "warning_indicator_02"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 194,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicator 03 (payment/charge sign)",
+      "fields": [
+        "warning_indicator_03"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 195,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicator 04 (utilisation vs LOS days)",
+      "fields": [
+        "warning_indicator_04"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 196,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicator 05 (single/multiple claim)",
+      "fields": [
+        "warning_indicator_05"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 197,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicator 07 (state/county valid)",
+      "fields": [
+        "warning_indicator_07"
+      ],
+      "original_coverage": "Not in repo",
+      "deleted": false
+    },
+    {
+      "id": 198,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicator 09 (pass-thru per diem)",
+      "fields": [
+        "warning_indicator_09"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 199,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicator 10 (RUGs stays)",
+      "fields": [
+        "warning_indicator_10"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    },
+    {
+      "id": 200,
+      "page": 32,
+      "group": "Warning indicators",
+      "name": "Warning indicators 11-17 (set to zero)",
+      "fields": [
+        "warning_indicator_11",
+        "warning_indicator_12",
+        "warning_indicator_13",
+        "warning_indicator_14",
+        "warning_indicator_15",
+        "warning_indicator_16",
+        "warning_indicator_17"
+      ],
+      "original_coverage": "Compared to golden only",
+      "deleted": false
+    }
+  ]
+}

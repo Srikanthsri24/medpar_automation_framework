@@ -27,7 +27,17 @@ def record_identity(
     resolver: FieldResolver,
     identity_fields: Iterable[str],
 ) -> tuple[Any, ...]:
-    return tuple(canonical_scalar(resolver.get(record.data, field)) for field in identity_fields)
+    from medpar_qa.normalization.dates import parse_date
+    values=[]
+    for field in identity_fields:
+        value=canonical_scalar(resolver.get(record.data,field))
+        if field.endswith("_date") and value not in (None,""):
+            try:
+                value=parse_date(value,allow_none=False).isoformat()
+            except ValueError:
+                pass  # Stage preconditions report malformed dates.
+        values.append(value)
+    return tuple(values)
 
 
 def index_unique_records(
@@ -131,7 +141,7 @@ def ld3137_sort_order_result(
 ) -> RuleResult:
     """Verify LD-3137: admissionDate is excluded from the stage sort/group key."""
     normalized = tuple(str(field) for field in sort_fields)
-    forbidden = [field for field in normalized if field in {"admission_date", "admissionDate"}]
+    forbidden = [field for field in normalized if field in {"admission_date", "admissionDate"}] if stage == Stage.FINAL_ACTION else []
     return RuleResult(
         stage=stage,
         rule_id=rule_id,
@@ -139,9 +149,9 @@ def ld3137_sort_order_result(
         message=(
             "admissionDate is present in the configured sort/group key"
             if forbidden
-            else "admissionDate is excluded from the configured sort/group key"
+            else "Configured admission-date policy matches the stage-specific requirement"
         ),
-        expected="Sort/group fields must not contain admissionDate",
+        expected="Final Action excludes admissionDate; later stages may use stay admission",
         actual={"sort_fields": list(normalized), "forbidden_fields": forbidden},
         field_name="admission_date",
         evidence={
@@ -166,7 +176,7 @@ def ld3137_grouping_result(
     confirms they remain one business identity.
     """
     configured = tuple(str(field) for field in identity_fields)
-    forbidden = [field for field in configured if field in {"admission_date", "admissionDate"}]
+    forbidden = [field for field in configured if field in {"admission_date", "admissionDate"}] if stage == Stage.FINAL_ACTION else []
     buckets: dict[tuple[Any, ...], list[SourceRecord]] = defaultdict(list)
     for record in records:
         buckets[record_identity(record, resolver, configured)].append(record)
@@ -192,12 +202,12 @@ def ld3137_grouping_result(
         rule_id=rule_id,
         status=ValidationStatus.PASS if valid else ValidationStatus.FAIL,
         message=(
-            "Claims are bucketed by a business identity that excludes admissionDate"
+            "Claims are bucketed by the configured stage-specific business identity"
             if valid
             else "admissionDate is still present in the configured business identity"
         ),
         expected={
-            "admission_date_in_identity": False,
+            "admission_date_forbidden": stage == Stage.FINAL_ACTION,
             "same_business_key_processed_as_one_bucket": True,
         },
         actual={
@@ -205,6 +215,7 @@ def ld3137_grouping_result(
             "business_group_count": len(buckets),
             "groups_with_multiple_admission_dates": multiple_admission_dates,
             "forbidden_fields": forbidden,
+            "admission_date_in_identity": any(f in {"admission_date","admissionDate"} for f in configured),
         },
         field_name="admission_date",
         record_ids=[record.record_id for record in records],

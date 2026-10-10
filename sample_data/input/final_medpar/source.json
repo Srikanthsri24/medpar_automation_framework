@@ -1,8 +1,10 @@
 [
   {
     "claimCanNchEquatable": "HICN-301",
-    "provider": {"providerId": "PRV-301"},
+    "provider": {
+      "providerId": "PRV-301"
+    },
     "admissionDate": "20260301",
-    "splitYearIndicator": "Y60109"
+    "splitYearIndicator": "Y00109"
   }
 ]

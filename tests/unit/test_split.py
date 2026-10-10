@@ -19,7 +19,7 @@ def test_split_indicator_january_to_september(resolver, make_record):
         stage=Stage.SPLIT,
     )
     processor = SplitProcessor(resolver, date(2026, 7, 19), window_years=4)
-    assert processor.calculate_indicator(record) == "Y60109"
+    assert processor.calculate_indicator(record) == "Y00109"
 
 
 @pytest.mark.unit

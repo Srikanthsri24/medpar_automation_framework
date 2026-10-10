@@ -28,7 +28,7 @@ def validate_stay_source_record(
         rule_prefix="ST-PRE",
         record=record,
         resolver=resolver,
-        fields=("hicn", "provider_id", "stay_from_date", "stay_thru_date"),
+        fields=("hicn", "provider_id", "admission_date", "stay_from_date", "stay_thru_date"),
     )
     results.append(
         date_order_result(

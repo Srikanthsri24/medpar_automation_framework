@@ -1,4 +1,4 @@
-required_group_fields: [hicn, provider_id, split_year_indicator]
+required_group_fields: [hicn, provider_id, admission_date, split_year_indicator]
 required_source_fields: [hicn, provider_id, stay_from_date, stay_thru_date]
 excluded_sort_fields: [admission_date]
 collections: [condition_codes, occurrence_codes, occurrence_span_lines, value_lines, revenue_lines]

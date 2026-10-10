@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from typing import Any, Iterable
 
 from medpar_qa.models import SourceRecord
@@ -59,12 +60,25 @@ def latest_values_by_code(
                         break
             if code is None or str(code).strip() == "":
                 continue
-            key = str(code).strip()
+            key = str(code).strip().upper()
+            if collection_path == "occurrence_span_lines":
+                def span_date(*names: str) -> str:
+                    raw = next((nested_get(item, name) for name in names if nested_get(item, name) is not None), None)
+                    return str(parse_date(raw, allow_none=True) or "")
+                key = (key, span_date("fromDate", "from_date", "from"), span_date("toDate", "thruDate", "thru_date", "thru"))
             if key not in selected:
                 enriched = dict(item)
                 enriched["_source_record_id"] = record.record_id
                 selected[key] = enriched
                 order.append(key)
+            elif collection_path == "value_lines":
+                from medpar_qa.normalization.decimal_values import to_decimal
+                old = selected[key]
+                amount_key = next((name for name in ("amount", "valueAmount", "CLM-VAL-AMT") if nested_get(old, name) is not None), None)
+                new_amount = next((nested_get(item, name) for name in ("amount", "valueAmount", "CLM-VAL-AMT") if nested_get(item, name) is not None), None)
+                if amount_key is None or new_amount is None:
+                    raise ValueError(f"Missing amount for repeated value code {code}")
+                old[amount_key] = str(to_decimal(old[amount_key]) + to_decimal(new_amount))
 
     return [selected[key] for key in order]
 

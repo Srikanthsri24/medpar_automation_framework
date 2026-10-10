@@ -1,0 +1,1821 @@
+{
+  "sheets": {
+    "Field Register": {
+      "firstColumn": 9,
+      "rows": [
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Not required",
+          "Blank/filler deletion check. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "None for approved deletion."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Not required",
+          "Blank/filler deletion check. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "None for approved deletion."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Not required",
+          "Blank/filler deletion check. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "None for approved deletion."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Not required",
+          "Blank/filler deletion check. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "None for approved deletion."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Not required",
+          "Blank/filler deletion check. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "None for approved deletion."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Independent source rule and full-register golden comparison. src/medpar_qa/stages/v3_fields.py; intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden fixture and approved byte offset; see functionality rows for rule-specific limitations."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ],
+        [
+          "Partial",
+          "Canonical alias and full-register golden comparison added; independent derivation not established. src/medpar_qa/stages/v3_fields.py",
+          "Generic full-register comparison regression; no field-specific calculation certification.",
+          "Approved source mapping/calculation and CMS golden fixture required."
+        ]
+      ]
+    },
+    "Functionality Gaps": {
+      "firstColumn": 11,
+      "rows": [
+        [
+          "Partial",
+          "FA ordering includes descending query-code tie breaker; admission retained for Stay identity. src/medpar_qa/reference_data.py; src/medpar_qa/stages/common.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Actual sorted production baseline and EQ-BIC preparation still needed."
+        ],
+        [
+          "Partial",
+          "DOD JSON adapter excludes deaths through 1997 and validates duplicate matches. src/medpar_qa/reference_data.py; src/medpar_qa/stages/common.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "29-to-30-byte feed layout and P suffix require approved feed specification."
+        ],
+        [
+          "Needs input",
+          "SSA/BIC identity aliases corrected; EQ-BIC service not invented. src/medpar_qa/reference_data.py; src/medpar_qa/stages/common.py",
+          "Existing regression suite; no production certification claimed.",
+          "MPREQ030/UTLBICEQ equating tables/API and approved sex default."
+        ],
+        [
+          "Needs input",
+          "Sample orchestration remains available. src/medpar_qa/reference_data.py; src/medpar_qa/stages/common.py",
+          "Existing regression suite; no production certification claimed.",
+          "Production history store and 600\u2013700M-record execution environment."
+        ],
+        [
+          "Needs input",
+          "No unapproved legacy date-edit rules added. src/medpar_qa/reference_data.py; src/medpar_qa/stages/common.py",
+          "Existing regression suite; no production certification claimed.",
+          "Confirm whether MPRDATEVL/MPRDATEL is retained; notes permit removal."
+        ],
+        [
+          "Partial",
+          "Physical input/output length contracts added. src/medpar_qa/reference_data.py; src/medpar_qa/stages/common.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Exact flag positions and initialisation from copybooks."
+        ],
+        [
+          "Implemented",
+          "Default FA bypass removed; covered-days > LOS bypass applied at Final. src/medpar_qa/stages/final_action/",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification remains external."
+        ],
+        [
+          "Existing",
+          "FA unsupported transaction/error audit path and reporting already present. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "Production error fixtures."
+        ],
+        [
+          "Existing",
+          "Single-year continuation check already implemented. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "CMS golden verification."
+        ],
+        [
+          "Existing",
+          "900/875 group size limits already implemented. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "Production boundary fixtures."
+        ],
+        [
+          "Existing",
+          "Rule 5 follows MM-FINAC-21/22: retain latest differing non-QC0 ICN; matching ICNs drop. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "Older V3 p20 wording superseded by supplied requirements."
+        ],
+        [
+          "Existing",
+          "Rule 6 uses action code rather than transaction-code fallback. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "CMS golden verification."
+        ],
+        [
+          "Existing",
+          "QC2 rejected under supported QC0/1/3/5 policy. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "Older July email describing QC>0 includes QC2; newer clarification takes precedence."
+        ],
+        [
+          "Partial",
+          "Rules 7\u201310B covered; revised 10A handles QC0 dominance with latest non-QC0. src/medpar_qa/stages/final_action/",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS authoritative ICN branch matrix and indistinguishable ordering ties."
+        ],
+        [
+          "Partial",
+          "IP/SNF class separation and audits present. src/medpar_qa/stages/final_action/",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Full SNF-specific legacy edit logic."
+        ],
+        [
+          "Existing",
+          "FA record/group/IP/SNF statistics exported. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "Compare production statistics to approved control totals."
+        ],
+        [
+          "Not required",
+          "Outpatient rules 12\u201316 excluded by project scope. src/medpar_qa/stages/final_action/",
+          "Existing regression suite; no production certification claimed.",
+          "None for current IP/SNF scope."
+        ],
+        [
+          "Partial",
+          "IP split indicator uses latest stay thru date and whole calendar window. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Confirm max-thru versus canonical last-bill tie semantics against CMS baseline."
+        ],
+        [
+          "Implemented",
+          "SNF retained; indicator uses admission, zero admission falls back to from date. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Implemented",
+          "Invalid transaction types enter exception audit and record accounting. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "None for documented rule."
+        ],
+        [
+          "Not required",
+          "75-bill rejection removed per October clarification; all records retained. src/medpar_qa/stages/split/processor.py",
+          "Existing regression suite; no production certification claimed.",
+          "Legacy cap must not be restored."
+        ],
+        [
+          "Implemented",
+          "Over-75 stays generate PASS audit without rejecting bills. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "None for documented audit."
+        ],
+        [
+          "Partial",
+          "Record and signed charge balances include retained, outside-window and exception records. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Legacy per-file/weekly parameter control totals."
+        ],
+        [
+          "Implemented",
+          "Y0\u2013Y3 mean years back from run year; suffix 0109/1012, no Q prefix. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Run-year configuration must match production cycle."
+        ],
+        [
+          "Partial",
+          "Synthetic demo exposes CAN-based 0.1% sample. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Confirm optional sample-output scope; actual legacy sample feeds."
+        ],
+        [
+          "Implemented",
+          "Split decisions, exceptions and statistics exported as stage audit JSON. src/medpar_qa/stages/split/processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "None for audit implementation."
+        ],
+        [
+          "Implemented",
+          "Stay key includes HICN, provider and admission; distinct admissions remain separate. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "First/last/high/low/sum and first-nonblank rules added; LD-1314 research recovered from mail. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Conflicting low-volume-payment and procedure-date rules; full 54-field COBOL sum list."
+        ],
+        [
+          "Partial",
+          "Condition/occurrence/value/span consolidation and known caps checked. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Full 8-trailer layouts and approved modernized ordering; old research has index collisions."
+        ],
+        [
+          "Partial",
+          "Warning 01/05 calculations added. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Warnings 06/08 require authoritative net-action/cancel/duplicate policy."
+        ],
+        [
+          "Not required",
+          "All revenue lines preserved; legacy 45-segment limit not imposed. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "Existing regression suite; no production certification claimed.",
+          "Known legacy difference needs CMS baseline if byte-equivalence is required."
+        ],
+        [
+          "Partial",
+          "Revenue-code structural range checks present; positive monetary cap now supplied by LD-1410. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Exact legacy accumulator widths and trailer limits."
+        ],
+        [
+          "Partial",
+          "Non-conflicting declared amount fields summed with Decimal precision. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Complete approved sum list; low-volume field conflicts first versus sum."
+        ],
+        [
+          "Implemented",
+          "Diagnosis/procedure output checked from last bill per MM-Stay-15. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Old LD-1063 accumulation research conflicts; current requirement takes precedence."
+        ],
+        [
+          "Needs input",
+          "Existing structural warning checks retained. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "Existing regression suite; no production certification claimed.",
+          "Approved warning 06/08 decision table and duplicate definition."
+        ],
+        [
+          "Partial",
+          "32004\u219232007\u219232010 physical contracts verified when raw text is supplied. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Exact six-byte flag offsets and meaning."
+        ],
+        [
+          "Needs input",
+          "Optional sample products not fabricated. src/medpar_qa/stages/stay/merge_rules.py; code_precedence.py",
+          "Existing regression suite; no production certification claimed.",
+          "Confirm five sample outputs and their routing rules."
+        ],
+        [
+          "Implemented",
+          "LOS derived independently, same-day minimum 1 and still-patient +1. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "DOD lookup, >1997 cutoff, death fallback to thru and verify B implemented. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "EQ-BIC/cache feed mapping and approved production DOD fixture."
+        ],
+        [
+          "Implemented",
+          "Death-after-admission is day count; same day 1, missing DOD blank. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "SSI monthly overlap uses admission inclusive/discharge exclusive and merged positive flags. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "0253 secondary field and full approved cache/binary table representation."
+        ],
+        [
+          "Needs input",
+          "DRG golden field comparison included. src/medpar_qa/stages/intermediate/business_rules.py",
+          "Existing regression suite; no production certification claimed.",
+          "Licensed/versioned DRG grouper, outlier tables and approved expected results."
+        ],
+        [
+          "Implemented",
+          "DRG price recalculated from six raw amounts with whole-dollar rounding. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Implemented",
+          "PPS indicator checks numeric provider position and absent condition 65. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Needs input",
+          "Final class format S/L/N corrected. src/medpar_qa/stages/intermediate/business_rules.py",
+          "Existing regression suite; no production certification claimed.",
+          "Current COBOL special-unit/class derivation; V3 says rules outdated."
+        ],
+        [
+          "Implemented",
+          "Documented base-facility CCN positional mapping implemented. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Implemented",
+          "Age at admission computed; age64/MS10 or11 becomes65. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Implemented",
+          "Discharge A/B/C mapped from alive/dead/still-patient source status. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Implemented",
+          "Strict YYYYDDD/YYDDD parsing and Julian field conversions added. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Implemented",
+          "Benefits-exhausted date converts to Julian from provided source. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "Span70/72/82/22 derivations added, highest SNF care end and midnight switch. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Approved HAH limits, source span ordering and reference windows."
+        ],
+        [
+          "Implemented",
+          "ESRD condition uses highest code71\u201376. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Implemented",
+          "Condition91 maps emergency switch Y. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "Highest valid organ revenue derives K1\u2026L1/01;0818 excluded. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "No-organ default and other transplant indicator rules require COBOL."
+        ],
+        [
+          "Partial",
+          "Seven value amounts and FD switch derived;17 direct monetary moves covered; LD-1421 recovered. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Additional legacy mappings and approved production fixtures."
+        ],
+        [
+          "Implemented",
+          "Recovered LD-1410 COBOL: round rate to integer before days; cap positive total at999999999. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Needs input",
+          "All registered totals included in golden comparison. src/medpar_qa/stages/intermediate/business_rules.py",
+          "Existing regression suite; no production certification claimed.",
+          "Full 40+ revenue category mapping and approved legacy calculation baseline."
+        ],
+        [
+          "Partial",
+          "Six radiology indicators and outpatient490\u2013509 presence implemented. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "ESRD setting and charge-based ICU/CCU mappings; LD-1514 points to missing MPRPARL."
+        ],
+        [
+          "Implemented",
+          "Five accommodation groups derived including RUG revenue ranges and rounded group charges. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "Warning01/05 at Stay and04/09/11\u201317 at Intermediate implemented. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Full03/06/07/08/10 decision tables; warning10 duplicate wording unresolved."
+        ],
+        [
+          "Implemented",
+          "Whole-dollar half-away-zero storage checks; positive9-digit cap from recovered LD-1410. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Negative field-width handling still depends on copybook."
+        ],
+        [
+          "Partial",
+          "Full200-field golden comparison; source-based LD-1407/1408 direct and ACO moves, MRN fallback, 5% sample added. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Remaining direct-move mappings and current-approved offsets; derived fields excluded from blind copying."
+        ],
+        [
+          "Partial",
+          "3050-byte physical output check added. src/medpar_qa/stages/intermediate/business_rules.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "MPRRECL/UTLIPSNL offsets to rebuild exact fixed-width record from columns."
+        ],
+        [
+          "Not required",
+          "Deleted outlier-days field treated as blank/filler. src/medpar_qa/stages/intermediate/business_rules.py",
+          "Existing regression suite; no production certification claimed.",
+          "None for approved deletion."
+        ],
+        [
+          "Needs input",
+          "Structural checks retained without inventing edit-table values. src/medpar_qa/stages/intermediate/business_rules.py",
+          "Existing regression suite; no production certification claimed.",
+          "Approved state/county/provider/revenue/discharge edit tables."
+        ],
+        [
+          "Implemented",
+          "Covered days > LOS bypass handled before Final presence/golden checks and exported. src/medpar_qa/stages/final_medpar/business_rules.py; processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Needs input",
+          "Stage audit and demo files available. src/medpar_qa/stages/final_medpar/business_rules.py; processor.py",
+          "Existing regression suite; no production certification claimed.",
+          "14-file CY/FY routing mapping and names from approved architecture."
+        ],
+        [
+          "Implemented",
+          "Allowed classification corrected to one byte S/L/N. src/medpar_qa/stages/final_medpar/business_rules.py; processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Independent class derivation tracked in INT-08."
+        ],
+        [
+          "Implemented",
+          "3050\u21923000 compares exact first3000 bytes;50-byte trailing data removed. src/medpar_qa/stages/final_medpar/business_rules.py; processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Full serialization from columns tracked in WP-02."
+        ],
+        [
+          "Needs input",
+          "Distinct-admission stays preserved. src/medpar_qa/stages/final_medpar/business_rules.py; processor.py",
+          "Existing regression suite; no production certification claimed.",
+          "Approved HICN merge-equivalence rule; no collapse based only on HICN."
+        ],
+        [
+          "Partial",
+          "Synthetic demo supports discharged IP and SNF stays. src/medpar_qa/stages/final_medpar/business_rules.py; processor.py",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "Resolve V3 look-into note for undischarged inclusion and production routing."
+        ],
+        [
+          "Needs input",
+          "No undocumented BayState feed constructed. src/medpar_qa/stages/final_medpar/business_rules.py; processor.py",
+          "Existing regression suite; no production certification claimed.",
+          "Approved BayState input/output mapping and inclusion in submission."
+        ],
+        [
+          "Needs input",
+          "Scope and ambiguous DB2 derivation documented. No approved BayState adapter available",
+          "Existing regression suite; no production certification claimed.",
+          "BayState scope, DB2 extract and corrected LOS/SSI formulas."
+        ],
+        [
+          "Needs input",
+          "3004-byte BayState format not guessed. No approved BayState adapter available",
+          "Existing regression suite; no production certification claimed.",
+          "Encoding/offsets for two additional fields and golden output."
+        ]
+      ]
+    },
+    "Whole Project": {
+      "firstColumn": 5,
+      "rows": [
+        [
+          "Partial",
+          "Five-stage synthetic chained demo and integration test available.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "Full production chain still needs missing feed/layout/routing contracts."
+        ],
+        [
+          "Partial",
+          "All stage raw lengths and exact Final prefix checked.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "Approved copybooks required for reconstruction."
+        ],
+        [
+          "Implemented",
+          "All200 Field Register rows included in golden comparison.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "Supply golden values; absent on both sides explicitly N/A."
+        ],
+        [
+          "Existing",
+          "Case/separator-insensitive resolver and lower-case Parquet regression.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "Production export smoke test."
+        ],
+        [
+          "Existing",
+          "Nested list/struct Parquet regression.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "Production export smoke test."
+        ],
+        [
+          "Partial",
+          "DOD/SSI fixture feeds and fail-closed reference adapters.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "DRG/outlier/IDR feeds and EQ-BIC contract."
+        ],
+        [
+          "Implemented",
+          "Gregorian/7-digit/5-digit Julian dates disambiguated.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "Rule-pattern and boundary regressions expanded.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "CMS rare branch matrix and ordered tie baseline."
+        ],
+        [
+          "Needs input",
+          "Small synthetic functional suite passes.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "Production-scale non-functional environment and acceptance limits."
+        ],
+        [
+          "Partial",
+          "Per-stage errors/bypass/statistics/decisions; Split record and signed charge balances.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "CY/FY per-file control totals depend on routing spec."
+        ],
+        [
+          "Existing",
+          "Rule6 enabled in supplied manifests.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "None."
+        ],
+        [
+          "Partial",
+          "Documented differences reconciled where latest requirements are explicit.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "Legacy >45/index-collision differences need approved baseline."
+        ],
+        [
+          "Existing",
+          "Case/spelling aliases retained and expanded.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "None."
+        ],
+        [
+          "Not required",
+          "Outpatient/HHA not included in current IP/SNF project scope.",
+          "tests/unit/; tests/integration/test_demo_pipeline.py",
+          "None."
+        ]
+      ]
+    },
+    "V3 Conflicts": {
+      "firstColumn": 3,
+      "rows": [
+        [
+          "Existing",
+          "MM-FINAC21/22 takes precedence over inconsistent V3p20.",
+          "Document reconciliation; baseline-dependent.",
+          "CMS baseline verification."
+        ],
+        [
+          "Implemented",
+          "Final bypass covered>LOS per October clarification.",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "None for specified direction."
+        ],
+        [
+          "Partial",
+          "Deleted warning0640 blank/filler checked; internal warnings retained.",
+          "Document reconciliation; baseline-dependent.",
+          "Owner confirmation of internal versus physical representation."
+        ],
+        [
+          "Implemented",
+          "Admission exclusion applies to FA; Stay uses admission.",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "None for documented scope."
+        ],
+        [
+          "Implemented",
+          "MM-Stay15 last-bill diagnosis/procedure takes precedence over older accumulation research.",
+          "tests/unit/test_gap_register_business_rules.py; tests/unit/test_2026_discrepancy_updates.py",
+          "CMS golden verification."
+        ],
+        [
+          "Partial",
+          "Three bytes at FA plus three at Stay explain increments.",
+          "Document reconciliation; baseline-dependent.",
+          "Exact flags/offsets from copybooks."
+        ],
+        [
+          "Needs input",
+          "V3 states special-unit/outlier rules partly outdated.",
+          "Document reconciliation; baseline-dependent.",
+          "Current MPRPARL/DRG/outlier baseline."
+        ],
+        [
+          "Needs input",
+          "Warning10 code2/3 duplicate text identified.",
+          "Document reconciliation; baseline-dependent.",
+          "Approved distinct branch meanings."
+        ],
+        [
+          "Partial",
+          "LD-1421 recovered:7value amounts, FD and17 monetary direct fields distinguished.",
+          "Document reconciliation; baseline-dependent.",
+          "Remaining source mappings and CMS fixture."
+        ],
+        [
+          "Needs input",
+          "All registered revenue totals now golden-compared.",
+          "Document reconciliation; baseline-dependent.",
+          "Full40+revenue mapping; recovered LD-1514 still directs to MPRPARL."
+        ]
+      ]
+    }
+  },
+  "testsPassed": 227,
+  "testReport": "reports/20261011_010812/pytest/pytest_complete_suite/report.html",
+  "definitions": {
+    "Implemented": "Documented check implemented with regression evidence; CMS production certification still separate.",
+    "Existing": "Required behaviour already present and verified; original finding retained.",
+    "Partial": "Useful checks added; row lists remaining specification or acceptance work.",
+    "Needs input": "Cannot finish correctly without approved external rules, data, scope or environment.",
+    "Not required": "Removed or outside IP/SNF scope under supplied requirements."
+  }
+}

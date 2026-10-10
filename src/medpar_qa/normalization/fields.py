@@ -46,6 +46,11 @@ class FieldResolver:
             value = nested_get(data, candidate, default=None)
             if value is not None:
                 return value
+        if canonical_name == "hicn":
+            ssa = self.get(data,"medpar_ssa_no_0021")
+            bic = self.get(data,"medpar_bic_code_0022")
+            if ssa not in (None,"") and bic not in (None,""):
+                return str(ssa).strip()+str(bic).strip()
         return default
 
     def require(self, data: dict[str, Any], canonical_name: str) -> Any:

@@ -13,7 +13,7 @@ class Rule10BQC5Fallback(FinalActionRule):
     def applies(self, context: FinalActionGroupContext) -> bool:
         simple_rule6_group = context.count == 2 and set(context.query_codes) == {0, 5}
         rule10a_condition = (
-            context.latest_qc == 0 and context.qc_count(0) > context.qc_count(5)
+            context.qc_count(0) > context.qc_count(5)
         )
         return context.has_qc5 and not simple_rule6_group and not rule10a_condition
 

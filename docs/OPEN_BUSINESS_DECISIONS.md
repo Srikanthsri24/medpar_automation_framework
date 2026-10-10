@@ -1,4 +1,12 @@
-# Open Business Decisions
+# Open business decisions — 11 October 2026
+
+Current authority: `MEDPAR_GAP_SUBMISSION.md` and `medpar_gap_completion.json`. The historical v0.5.0 notes below are superseded where they conflict with the latest supplied requirements.
+
+Resolved: admission exclusion applies to FA only; Stay retains admission; QC2 is unsupported; Rule6 uses action code; bypass belongs to Final for covered days > LOS; organ0818 is excluded; emergency condition91 is supported; Final preserves the first3000bytes of3050; LD-1410 specifies integer-rate rounding before days and a positive999999999cap.
+
+Still open: complete approved copybooks/current MPRPARL, EQ-BIC/cache/IDR contracts, DRG/outlier and revenue mappings, CY/FY routing, HICN merge policy, warning03/06/07/08/10, SSI0253, no-organ default, HAH limits, conflicting sum/date rules, optional samples, undischarged-stay policy, BayState scope/layout, CMS golden fixtures and production-scale performance acceptance.
+
+## Historical v0.5.0 decisions (superseded where noted above)
 
 The August 2026 update implements the rules that are explicitly supported by the supplied discrepancy report and user-story text. The framework still refuses to invent proprietary behavior that was not supplied.
 

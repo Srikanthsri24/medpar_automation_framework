@@ -32,6 +32,7 @@ class IntermediateSettings:
         ("medpar_no_pstv_test_sw_1560", ("ZA",)),
         ("medpar_expndd_acc_sw_1570", ("ZB", "90")),
         ("medpar_othr_clncl_tril_sw_1580", ("ZC",)),
+        ("medpar_emer_use_sw_1590", ("91",)),
     )
     selected_fields: tuple[str, ...] = (
         # Existing byte-by-byte fields

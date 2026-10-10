@@ -13,6 +13,7 @@ from medpar_qa.normalization.fields import FieldResolver
 class BusinessOrderKey:
     processing_date: date
     accrete_date: date
+    query_code: int
     source_sequence: int
 
 
@@ -41,7 +42,7 @@ def business_order_key(record: SourceRecord, resolver: FieldResolver) -> Busines
         resolver.get(record.data, "accrete_date"), allow_none=True
     ) or date.min
     sequence = _as_sequence(resolver.get(record.data, "source_sequence"))
-    return BusinessOrderKey(processing, accrete, sequence)
+    return BusinessOrderKey(processing, accrete, int(resolver.get(record.data, "query_code")), sequence)
 
 
 def order_newest_first(

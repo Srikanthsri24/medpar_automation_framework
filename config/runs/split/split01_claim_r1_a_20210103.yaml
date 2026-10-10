@@ -3,7 +3,7 @@ run_date: "2024-04-04"
 settings:
   split:
     window_years: 4
-    skip_transaction_codes: [0, 4]
+    skip_transaction_codes: []
     require_actual_output: false
 files:
   - path: "data/user_inputs/split/source/Split01_claim.r1.a_20210103.json"

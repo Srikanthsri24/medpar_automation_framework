@@ -9,6 +9,7 @@ class FinalMedparSettings:
     identity_fields: tuple[str, ...] = (
         "hicn",
         "provider_id",
+        "admission_date",
         "split_year_indicator",
     )
     sort_fields: tuple[str, ...] = (
@@ -20,7 +21,7 @@ class FinalMedparSettings:
     require_actual_output: bool = False
     require_expected_output: bool = False
     require_fixed_width: bool = False
-    allowed_classifications: tuple[str, ...] = ("SS", "LS", "SNF")
+    allowed_classifications: tuple[str, ...] = ("S", "L", "N")
     selected_fields: tuple[str, ...] = (
         "split_year_indicator",
         "medpar_ss_ls_snf_ind_0140",

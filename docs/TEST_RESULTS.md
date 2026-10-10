@@ -1,4 +1,16 @@
-# Verification results — v0.5.0
+# Verification results — 11 October 2026
+
+Latest full suite: **227 passed, 0 failed**, in 12.03 seconds.
+
+Report: `reports/20261011_010812/pytest/pytest_complete_suite/report.html`.
+
+All-five-stage example manifest: **PASS**, report `reports/20261011_010607/master/index.html`.
+
+`git diff --check` passed. The updated workbook preserves original cell values and equivalent styles; status formulas reconcile all 74 functionality rows and respond to a temporary status change. Native filters include the added evidence columns.
+
+These checks establish synthetic QA regression behaviour. CMS golden equivalence, complete fixed-width reconstruction, external DRG/reference systems and production-scale performance remain unverified. See `MEDPAR_GAP_SUBMISSION.md` and `medpar_gap_completion.json` for each dependency.
+
+## Historical v0.5.0 results
 
 Validated after implementing the July/August 2026 discrepancy and LD-3137 updates.
 
