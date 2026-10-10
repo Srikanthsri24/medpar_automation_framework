@@ -1822,5 +1822,7 @@
   "productionCertified": false,
   "productionRemediationHandoff": "README.md#production-status",
   "annotatedWorkbook": "outputs/medpar_gap_submission_20261011/MedPAR_Gap_Register_Srikanth.xlsx",
-  "annotationReviewDate": "2026-10-11"
+  "annotationReviewDate": "2026-10-11",
+  "dependencyExplanationColumn": "Reason and closure requirements by Srikanth",
+  "dependencyExplanationReviewDate": "2026-10-11"
 }
