@@ -161,3 +161,34 @@ def test_timestamped_session_writes_stage_and_master_indexes(tmp_path: Path):
     assert master == session.root / "master" / "index.html"
     assert master.exists()
     assert "ST-TOTAL-CHARGE" in master.read_text(encoding="utf-8")
+
+@pytest.mark.unit
+def test_file_review_preserves_shared_checks_and_unattributed_failures():
+    from medpar_qa.reporting.file_review import file_review, readable_time
+    checks = [
+        {'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read 2 records', 'source_files': ['a.json'], 'actual': {'role': 'source'}},
+        {'rule_id': 'ST-TOTAL-CHARGE', 'status': 'FAIL', 'message': 'Expected 10, observed 9', 'source_files': ['a.json', 'b.json'], 'evidence': {}},
+        {'rule_id': 'STAGE-FINAL-SUMMARY', 'status': 'BLOCKED', 'message': 'Reference missing', 'source_files': []},
+    ]
+    rendered = file_review('stay', checks, 'stay-1')
+    assert '2 unique evidence files; 1 successfully read' in rendered
+    assert rendered.count("href='#stay-1-2'") == 2
+    assert rendered.count('Final conclusion for this file:') == 2
+    assert 'Stage-wide checks without an individual file attribution (1)' in rendered
+    assert 'No file-level result recorded' in rendered
+    assert '11 October 2026 at 02:01:38 AM (UTC+05:30)' == readable_time('2026-10-11T02:01:38+05:30')
+
+@pytest.mark.unit
+def test_master_report_defines_metrics_and_file_navigation(tmp_path):
+    import json
+    from medpar_qa.reporting.session_index import write_master_index
+    folder = tmp_path / 'stay' / 'run'
+    folder.mkdir(parents=True)
+    (folder / 'report.json').write_text(json.dumps({'stages': [{'stage': 'stay', 'passed': False, 'rule_results': [{'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read file', 'source_files': ['example.json']}, {'rule_id': 'ST-TOTAL-CHARGE', 'status': 'FAIL', 'message': 'Mismatch', 'source_files': ['example.json']}]}]}))
+    page = write_master_index(tmp_path).read_text()
+    assert 'What these numbers mean' in page
+    assert 'Validations = Pass + Fail + Blocked + N/A' in page
+    assert "id='stay-1-2'" in page
+    assert "href='#stay-1-2'" in page
+    assert 'example.json' in page
+    assert 'Final conclusion for this file' in page

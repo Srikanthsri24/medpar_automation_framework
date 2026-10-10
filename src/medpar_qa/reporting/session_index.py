@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .file_review import file_review, readable_time
 from .path_utils import relative_link
 from .rule_catalog import conclusion_text, get_rule_metadata
 
@@ -85,16 +86,17 @@ def write_stage_index(session_root: str | Path, stage_name: str) -> Path:
 
     master_link = relative_link(stage_dir, root / "master" / "index.html")
     document = f"""<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>{_esc(stage_name)} reports</title>
-<style>body{{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f4f6f9;color:#172033}}header{{background:#102a43;color:#fff;padding:26px}}main{{max-width:1400px;margin:auto;padding:24px}}a{{color:#1864ab}}table{{width:100%;border-collapse:collapse;background:#fff}}th,td{{border:1px solid #d0d5dd;padding:10px;text-align:left}}th{{background:#edf2f7}}.summary{{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}}.summary div{{background:#fff;border:1px solid #d0d5dd;border-radius:9px;padding:12px 18px}}.status{{padding:4px 9px;border-radius:999px;font-weight:800}}.status.pass{{background:#d3f9d8;color:#087f5b}}.status.fail{{background:#ffe3e3;color:#c92a2a}}</style></head>
+<style>body{{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f4f6f9;color:#172033}}header{{background:#102a43;color:#fff;padding:26px}}main{{max-width:1400px;margin:auto;padding:24px}}a{{color:#1864ab}}table{{width:100%;border-collapse:collapse;background:#fff}}th,td{{border:1px solid #d0d5dd;padding:10px;text-align:left}}th{{background:#edf2f7}}.summary{{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}}.summary div{{background:#fff;border:1px solid #d0d5dd;border-radius:9px;padding:12px 18px}}.status{{padding:4px 9px;border-radius:999px;font-weight:800}}.status.pass{{background:#d3f9d8;color:#087f5b}}.status.fail{{background:#ffe3e3;color:#c92a2a}}.file-review{{border:1px solid #d0d5dd;border-radius:10px;margin:10px 0;padding:12px;overflow-wrap:anywhere}}.file-review summary{{cursor:pointer;font-weight:700}}.file-conclusion{{padding:14px;background:#edf2f7;border-radius:8px}}.file-inventory table{{table-layout:fixed}}.file-inventory td{{overflow-wrap:anywhere}}
+</style></head>
 <body><header><a style='color:white' href='{_esc(master_link)}'>← Master report</a><h1>{_esc(stage_name.replace('_',' ').title())} — Stage Report Index</h1><p>Timestamped session: {_esc(root.name)}</p></header><main>
 <section class='summary'><div>Runs <strong>{len(reports)}</strong></div><div>Validations <strong>{total['validation_count']}</strong></div><div>Pass <strong>{total['pass']}</strong></div><div>Fail <strong>{total['fail']}</strong></div><div>Blocked <strong>{total['blocked']}</strong></div></section>
-<table><thead><tr><th>Stage command / file selection</th><th>Status</th><th>Validations</th><th>Pass</th><th>Fail</th><th>Blocked</th><th>N/A</th></tr></thead><tbody>{''.join(rows) or '<tr><td colspan="7">No reports generated for this stage.</td></tr>'}</tbody></table></main></body></html>"""
+<table><thead><tr><th>Stage command / file selection</th><th>Status</th><th>Validations</th><th>Pass</th><th>Fail</th><th>Blocked</th><th>N/A</th></tr></thead><tbody>{''.join(rows) or '<tr><td colspan="7">No reports generated for this stage.</td></tr>'}</tbody></table></main><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script></body></html>"""
     output = stage_dir / "index.html"
     output.write_text(document, encoding="utf-8")
     return output
 
 
-def _render_raw_validation(validation: dict[str, Any], stage: str, number: int) -> str:
+def _render_raw_validation(validation: dict[str, Any], stage: str, number: int, prefix: str = "check") -> str:
     status = str(validation.get("status", "UNKNOWN"))
     rule_id = str(validation.get("rule_id", "UNKNOWN"))
     field = validation.get("field_name")
@@ -111,7 +113,7 @@ def _render_raw_validation(validation: dict[str, Any], stage: str, number: int) 
     )
     remediation = f"<p><strong>Recommended action:</strong> {_esc(metadata.remediation)}</p>" if status in {"FAIL", "BLOCKED"} else ""
     return f"""
-    <article class='validation status-{_esc(status.lower())}'>
+    <article id='{_esc(prefix)}-{number}' class='validation status-{_esc(status.lower())}'>
       <div><span class='badge {_esc(status.lower())}'>{_esc(status)}</span> <code>{_esc(rule_id)}</code> {f'<span class="field">{_esc(field)}</span>' if field else ''}</div>
       <h4>#{number} {_esc(metadata.title)}</h4>
       <div class='three'><section><strong>Business requirement</strong><p>{_esc(metadata.requirement)}</p></section><section><strong>What was checked</strong><p>{_esc(metadata.validation)}</p></section><section><strong>Evaluation logic</strong><p>{_esc(metadata.logic)}</p></section></div>
@@ -138,6 +140,10 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
                 totals[str(result.get("status", "UNKNOWN")).lower()] += 1
                 totals["validations"] += 1
 
+    try:
+        session_started = datetime.strptime(root.name, "%Y%m%d_%H%M%S").strftime("%d %B %Y at %I:%M:%S %p")
+    except ValueError:
+        session_started = "Not recorded in session ID"
     command_cards: list[str] = []
     if executions:
         for index, item in enumerate(executions, start=1):
@@ -172,16 +178,20 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
                 for path in unique_paths
                 if not (path == master / "index.html")
             ) or "<li>No detailed report was generated.</li>"
+            console_output = str(item.get('output', ''))
+            if len(console_output) > 20000:
+                console_output = console_output[:20000] + "\n[Console preview shortened. Complete rule results are shown below; the full console.log remains in the command report folder.]"
             execution_label = "EXECUTION COMPLETED AS EXPECTED" if execution_expected else "UNEXPECTED EXECUTION RESULT"
             command_cards.append(
-                f"<details class='command {'pass' if execution_expected else 'fail'}'><summary>#{index} — {_esc(item.get('name','Command'))} · {_esc(execution_label)} · {_esc(result_label)}</summary><p><strong>Execution status:</strong> {_esc(execution_label)} (exit {_esc(item.get('returncode'))}; expected {_esc(item.get('expected_exit_codes'))})</p><p><strong>Business/test status:</strong> <span class='business-status {result_class}'>{_esc(result_label)}</span></p><p><strong>Category:</strong> {_esc(item.get('stage','other'))}</p><p><strong>Relative command:</strong> <code>{_esc(item.get('command',''))}</code></p><p><strong>Generated reports:</strong></p><ul>{report_links}</ul><details><summary>Console output</summary><pre>{_esc(item.get('output',''))}</pre></details></details>"
+                f"<details class='command {'pass' if execution_expected else 'fail'}'><summary>#{index} — {_esc(item.get('name','Command'))} · {_esc(execution_label)} · {_esc(result_label)}</summary><p><strong>Execution status:</strong> {_esc(execution_label)} (exit {_esc(item.get('returncode'))}; expected {_esc(item.get('expected_exit_codes'))})</p><p><strong>Business/test status:</strong> <span class='business-status {result_class}'>{_esc(result_label)}</span></p><p><strong>Category:</strong> {_esc(item.get('stage','other'))}</p><p><strong>Relative command:</strong> <code>{_esc(item.get('command',''))}</code></p><p><strong>Generated reports:</strong></p><ul>{report_links}</ul><details><summary>Console output</summary><pre>{_esc(console_output)}</pre></details></details>"
             )
 
     stage_sections: list[str] = []
-    for stage, items in by_stage.items():
+    for stage in sorted(by_stage, key=lambda name: ['final_action', 'split', 'stay', 'intermediate', 'final_medpar'].index(name) if name in ['final_action', 'split', 'stay', 'intermediate', 'final_medpar'] else 99):
+        items = by_stage[stage]
         command_sections: list[str] = []
         stage_count = Counter()
-        for item in items:
+        for command_index, item in enumerate(items, 1):
             entry = item["entry"]
             stage_payload = item["stage"]
             validations = stage_payload.get("rule_results", [])
@@ -190,11 +200,12 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
             report_link = relative_link(master, entry["path"].parent / "report.html")
             command_name = (entry["payload"].get("context") or {}).get("command_name") or entry["command_folder"].replace("_", " ").title()
             cards = "".join(
-                _render_raw_validation(validation, stage, number)
+                _render_raw_validation(validation, stage, number, f"{stage}-{command_index}")
                 for number, validation in enumerate(validations, start=1)
             )
+            run_info = f"<p><strong>Business processing date:</strong> {_esc(entry['payload'].get('run_date', 'Not recorded'))} · <strong>Validation generated:</strong> {_esc(readable_time(entry['payload'].get('generated_at', 'Not recorded')))}</p>"
             command_sections.append(
-                f"<details class='command-report'><summary>{_esc(command_name)} — {'PASS' if stage_payload.get('passed') else 'FAIL / BLOCKED'} · {len(validations)} validations</summary><p><a href='{_esc(report_link)}'>Open standalone detailed report</a></p>{cards}</details>"
+                f"<details class='command-report'><summary>{_esc(command_name)} — {'PASS' if stage_payload.get('passed') else 'FAIL / BLOCKED'} · {len(validations)} validations</summary><p><a href='{_esc(report_link)}'>Open standalone detailed report</a></p>{run_info}{file_review(stage, validations, stage + '-' + str(command_index))}<h3>Full rule explanations and evidence</h3>{cards}</details>"
             )
         stage_index_link = relative_link(master, root / stage / "index.html")
         stage_sections.append(
@@ -208,13 +219,14 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
         pytest_rows += f"<tr><td><a href='{_esc(link)}'>{_esc(entry['command_folder'].replace('_',' ').title())}</a></td><td>{_esc(summary.get('passed',0))}</td><td>{_esc(summary.get('failed',0))}</td><td>{_esc(summary.get('skipped',0))}</td></tr>"
 
     document = f"""<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>MEDPAR Master Report</title>
-<style>body{{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f4f6f9;color:#172033;line-height:1.45}}header{{background:linear-gradient(135deg,#102a43,#243b53);color:#fff;padding:30px}}main{{max-width:1650px;margin:auto;padding:24px}}.summary{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}}.summary div{{background:#fff;border:1px solid #d0d5dd;border-radius:10px;padding:15px}}.summary strong{{display:block;font-size:26px}}details.stage,details.command,details.command-report{{background:#fff;border:1px solid #d0d5dd;border-radius:10px;margin:12px 0;padding:0 14px 14px}}summary{{cursor:pointer;font-weight:800;padding:14px 0}}.command.pass{{border-left:6px solid #087f5b}}.command.fail{{border-left:6px solid #c92a2a}}.business-status{{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:800}}.business-status.pass{{background:#d3f9d8;color:#087f5b}}.business-status.fail{{background:#ffe3e3;color:#c92a2a}}.business-status.neutral{{background:#f1f3f5;color:#667085}}.validation{{border:1px solid #d0d5dd;border-left:6px solid #98a2b3;border-radius:9px;padding:14px;margin:12px 0}}.validation.status-pass{{border-left-color:#087f5b}}.validation.status-fail{{border-left-color:#c92a2a}}.validation.status-blocked{{border-left-color:#d97706}}.validation.status-not_applicable{{border-left-color:#1864ab}}.badge,.field{{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800}}.badge.pass{{background:#d3f9d8;color:#087f5b}}.badge.fail{{background:#ffe3e3;color:#c92a2a}}.badge.blocked{{background:#fff3bf;color:#8d5500}}.badge.not_applicable{{background:#dbeafe;color:#1864ab}}.field{{background:#ede9fe;color:#5f3dc4}}.three,.two{{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin:10px 0}}.three section,.two section{{border:1px solid #d0d5dd;border-radius:8px;padding:10px;min-width:0}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;background:#172033;color:#fff;padding:11px;border-radius:7px;max-height:400px;overflow:auto}}.conclusion{{padding:12px;border-radius:8px}}.conclusion.pass{{background:#e6fcf5}}.conclusion.fail{{background:#fff0f0}}.conclusion.blocked{{background:#fff9db}}.conclusion.not_applicable{{background:#e7f5ff}}a{{color:#1864ab}}table{{width:100%;border-collapse:collapse;background:#fff}}th,td{{border:1px solid #d0d5dd;padding:9px;text-align:left}}th{{background:#edf2f7}}</style></head>
-<body><header><h1>MEDPAR QA — Master Report</h1><p>Timestamped report session: {_esc(root.name)}</p><p>Generated: {_esc(datetime.now().astimezone().isoformat(timespec='seconds'))}</p><p>This page contains all generated stage validations, rule outcomes, expected/observed values, explanations, command outputs, and links.</p></header><main>
+<style>body{{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f4f6f9;color:#172033;line-height:1.45}}header{{background:linear-gradient(135deg,#102a43,#243b53);color:#fff;padding:30px}}main{{max-width:1650px;margin:auto;padding:24px}}.summary{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}}.summary div{{background:#fff;border:1px solid #d0d5dd;border-radius:10px;padding:15px}}.summary strong{{display:block;font-size:26px}}details.stage,details.command,details.command-report{{background:#fff;border:1px solid #d0d5dd;border-radius:10px;margin:12px 0;padding:0 14px 14px}}summary{{cursor:pointer;font-weight:800;padding:14px 0}}.command.pass{{border-left:6px solid #087f5b}}.command.fail{{border-left:6px solid #c92a2a}}.business-status{{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:800}}.business-status.pass{{background:#d3f9d8;color:#087f5b}}.business-status.fail{{background:#ffe3e3;color:#c92a2a}}.business-status.neutral{{background:#f1f3f5;color:#667085}}.validation{{border:1px solid #d0d5dd;border-left:6px solid #98a2b3;border-radius:9px;padding:14px;margin:12px 0}}.validation.status-pass{{border-left-color:#087f5b}}.validation.status-fail{{border-left-color:#c92a2a}}.validation.status-blocked{{border-left-color:#d97706}}.validation.status-not_applicable{{border-left-color:#1864ab}}.badge,.field{{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800}}.badge.pass{{background:#d3f9d8;color:#087f5b}}.badge.fail{{background:#ffe3e3;color:#c92a2a}}.badge.blocked{{background:#fff3bf;color:#8d5500}}.badge.not_applicable{{background:#dbeafe;color:#1864ab}}.field{{background:#ede9fe;color:#5f3dc4}}.three,.two{{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin:10px 0}}.three section,.two section{{border:1px solid #d0d5dd;border-radius:8px;padding:10px;min-width:0}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;background:#172033;color:#fff;padding:11px;border-radius:7px;max-height:400px;overflow:auto}}.conclusion{{padding:12px;border-radius:8px}}.conclusion.pass{{background:#e6fcf5}}.conclusion.fail{{background:#fff0f0}}.conclusion.blocked{{background:#fff9db}}.conclusion.not_applicable{{background:#e7f5ff}}a{{color:#1864ab}}table{{width:100%;border-collapse:collapse;background:#fff}}th,td{{border:1px solid #d0d5dd;padding:9px;text-align:left}}th{{background:#edf2f7}}.file-review{{border:1px solid #d0d5dd;border-radius:10px;margin:10px 0;padding:12px;overflow-wrap:anywhere}}.file-review summary{{cursor:pointer;font-weight:700}}.file-conclusion{{padding:14px;background:#edf2f7;border-radius:8px}}.file-inventory table{{table-layout:fixed}}.file-inventory td{{overflow-wrap:anywhere}}
+</style></head>
+<body><header><h1>MEDPAR QA — Master Report</h1><p><strong>Session ID:</strong> {_esc(root.name)}</p><p><strong>Session started (local time):</strong> {_esc(session_started)}</p><p>Report page generated: {_esc(readable_time(datetime.now().astimezone().isoformat(timespec='seconds')))}</p><p>This page contains all generated stage validations, rule outcomes, expected/observed values, explanations, command outputs, and links.</p></header><main>
 <section class='summary'><div>Business runs<strong>{len(business_entries)}</strong></div><div>Validations<strong>{totals['validations']}</strong></div><div>Pass<strong>{totals['pass']}</strong></div><div>Fail<strong>{totals['fail']}</strong></div><div>Blocked<strong>{totals['blocked']}</strong></div><div>N/A<strong>{totals['not_applicable']}</strong></div><div>Pytest runs<strong>{len(pytest_entries)}</strong></div></section>
-<h2>Command execution summary</h2>{''.join(command_cards) or '<p>No command execution metadata supplied. Stage reports are shown below.</p>'}
+<section class='guide'><h2>What these numbers mean</h2><p><strong>Business runs:</strong> validation report runs in this session; one run may review many files. <strong>Validations:</strong> individual recorded checks across all stages, including ingestion and stage-summary checks; this is not the number of files or claims.</p><p><strong>Pass:</strong> the recorded check met its expected condition. <strong>Fail:</strong> the check found a discrepancy. <strong>Blocked:</strong> the check could not reach a decision because a required input, reference or prerequisite was missing. <strong>N/A:</strong> the check did not apply to the records or circumstances reviewed; it is not a pass.</p><p><strong>Pytest runs:</strong> automated software test sessions included here, separate from production business validation. Zero means no pytest report was included in this session. Validations = Pass + Fail + Blocked + N/A. Counts may overlap records; they are not unique defective claim counts.</p></section><h2>Command execution summary</h2>{''.join(command_cards) or '<p>No command execution metadata supplied. Stage reports are shown below.</p>'}
 <h2>All stage validations</h2>{''.join(stage_sections) or '<p>No business-stage report JSON files were found.</p>'}
 <h2>Pytest report index</h2><table><thead><tr><th>Pytest selection</th><th>Passed</th><th>Failed</th><th>Skipped</th></tr></thead><tbody>{pytest_rows or '<tr><td colspan="4">No pytest reports found.</td></tr>'}</tbody></table>
-</main></body></html>"""
+</main><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script></body></html>"""
     output = master / "index.html"
     output.write_text(document, encoding="utf-8")
     return output
