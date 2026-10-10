@@ -92,7 +92,9 @@ def validate_procedure_structure(
     actual_code_count = resolver.get(record.data, "medpar_no_surg_codes_0511")
     actual_date_count = resolver.get(record.data, "medpar_no_surg_dates_0512")
     actual_indicator = resolver.get(record.data, "medpar_surg_ind_0500")
-    expected_indicator = "Y" if codes else "N"
+    # CMS CR14 p142 procedure switch is 1/0, not Y/N.
+    expected_indicator = "1" if codes else "0"
+    actual_indicator = str(actual_indicator).strip() if actual_indicator is not None else None
 
     def normalized_count(value):
         try:
@@ -269,6 +271,9 @@ def validate_death_after_admission(
         normalized = None if actual in (None, "") else int(actual)
         status = ValidationStatus.PASS if normalized == expected else ValidationStatus.FAIL
         message = "Death-after-admission day count matches" if status == ValidationStatus.PASS else "Death-after-admission day count mismatch"
+        if death is None and normalized in (None, 0):
+            status = ValidationStatus.NOT_APPLICABLE
+            message = "No populated death date; day-count calculation requires matched DOD reference"
     except (TypeError, ValueError) as exc:
         expected = "Valid admission/death dates"
         status = ValidationStatus.FAIL
@@ -319,8 +324,8 @@ def validate_age_and_ndc(
         normalized_ndc = None
     else:
         values = ndc if isinstance(ndc, list) else [ndc]
-        normalized_values = [str(value).strip().zfill(ndc_length) for value in values]
-        ndc_valid = bool(values) and all(value.isdigit() and len(value) == ndc_length for value in normalized_values)
+        normalized_values = [str(value).strip() for value in values]
+        ndc_valid = bool(values) and len(values) <= 10 and all(value.isdigit() and len(value) == ndc_length for value in normalized_values)
         normalized_ndc = normalized_values if isinstance(ndc, list) else normalized_values[0]
     results.append(
         RuleResult(

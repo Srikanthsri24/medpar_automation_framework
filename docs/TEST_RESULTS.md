@@ -1,10 +1,10 @@
 # Verification results — 11 October 2026
 
-Latest full suite: **242 passed, 0 failed**, in 12.24 seconds.
+Latest full suite: **254 passed, 0 failed**, in 12.35 seconds.
 
-Report: `reports/20261011_013550/pytest/pytest_complete_suite/report.html`.
+Report: `reports/20261011_015557/pytest/pytest_complete_suite/report.html`.
 
-All-five-stage example manifest: **PASS**, report `reports/20261011_013423/master/index.html`.
+All-five-stage example manifest: **PASS**, report `reports/20261011_015646/master/index.html`.
 
 `git diff --check` passed. The updated workbook preserves original cell values and equivalent styles; status formulas reconcile all 74 functionality rows and respond to a temporary status change. Native filters include the added evidence columns.
 

@@ -356,16 +356,8 @@ class IntermediateProcessor(BaseStageProcessor):
                 record, self.resolver, scale=self.settings.decimal_scale
             )
         )
-        results.append(
-            validate_revenue_indicator(
-                record,
-                self.resolver,
-                field_name="medpar_intensive_care_ind_0481",
-                rule_id="INT-INTENSIVE-CARE-IND-0481",
-                search_codes=self.settings.intensive_care_revenue_codes,
-                source=source,
-            )
-        )
+        # ICU/CCU are care-type codes selected by accumulated source charges.
+        # validate_business_rules checks them independently from the Stay input.
         # Organ acquisition is a two-character type, checked from source below.
         results.append(validate_admission_day(record, self.resolver))
         results.extend(

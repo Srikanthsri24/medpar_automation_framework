@@ -1,6 +1,19 @@
 # Production archive validation review — 11 October 2026
 
-## Latest follow-up validation
+## Latest verified release — 11 October 2026
+
+254 tests pass; all five synthetic stages pass (`reports/20261011_015646/master/index.html`). Production acceptance remains open.
+
+Fixed incorrect raw DOB/Medicare-status/MRN comparisons; ICU/CCU types derived from accumulated charges; outpatient types 0–3; surgical types 0/1; blank no-organ default; optional date sentinel comparisons; absent-reference DOD handling; 11-character NDC width and first-ten source-order checks. Snapshot validation now blocks comparisons between March Split inputs and May Stay outputs. No supplied production file was changed.
+
+Supplementary primary definitions: [CMS CR14](https://www.cms.gov/files/document/medpar-cr14-rif-report.pdf) and [CMS CR18](https://www.cms.gov/files/document/medpar-cr18-rif-report.pdf). These establish the field semantics above, not certification of the current full byte layout.
+
+Latest Intermediate distinct-payload diagnostic: **16,909 PASS, 785 FAIL, 498 BLOCKED, 1,569 N/A** checks across 83 source/output pairs. These are check counts, including one failed final summary, not unique defective-record counts. Original archive still contains 166 output files with 83 repeated payloads. All copied NDC lists agree with source; the supplied 11-character values contain alphabetic characters and still fail numeric validity. Missing source DOBs remain zero while output ages are -1; 83 base-facility CCNs are 0. Date-window, covered-care-end, 29 value-amount and four death-day disagreements remain.
+
+Full archive report: `reports/20261011_014942/master/index.html`. Final Action has 1,250 failed and 130 blocked checks; Split has 624 failed checks; Stay has one snapshot block and a failed summary; Intermediate has 85 failed checks because duplicate outputs prevent unique reconciliation. Final MEDPAR has no identifiable production files. See `PRODUCTION_REMEDIATION_HANDOFF.md` for exact required corrections and inputs.
+
+
+## Earlier follow-up validation
 
 Additional framework defects have been fixed: nested revenue/condition/span identifier objects; production `totalAmount` charges; repeated service charges and NDC values; blank/zero optional date sentinels while required zero dates still fail; zero birth dates block age calculation; source-based revenue/condition derivations; verified gender/state/county aliases. Missing required outputs no longer trigger structural checks against source records. Original production inputs remain unchanged.
 

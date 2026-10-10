@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--actual", action="append", default=[], help="Relative actual-output file or wildcard")
     parser.add_argument("--expected", action="append", default=[], help="Relative expected/golden file or wildcard")
     parser.add_argument("--mode", choices=("calculate", "reconcile", "golden"), default="calculate")
+    parser.add_argument("--require-matching-snapshot", action="store_true", help="Block reconciliation when extraction snapshot metadata differs or is unavailable")
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--command-id", default=None, help="Folder name for this command inside the stage folder")
     parser.add_argument("--aliases", default="config/field_aliases.yaml")
@@ -63,7 +64,7 @@ def _stage_settings(stage: Stage, mode: str) -> dict:
         },
         "split": {"window_years": 4, "skip_transaction_codes": [], "require_actual_output": require_actual},
         "stay": {"decimal_scale": "0.001", "require_actual_output": require_actual, "require_expected_output": require_expected},
-        "intermediate": {"window_years": 5, "decimal_scale": "0.001", "require_actual_output": require_actual, "require_expected_output": require_expected, "ndc_length": 10},
+        "intermediate": {"window_years": 5, "decimal_scale": "0.001", "require_actual_output": require_actual, "require_expected_output": require_expected, "ndc_length": 11},
         "final_medpar": {"expected_bytes": 3000, "encoding": "ascii", "require_actual_output": require_actual, "require_expected_output": require_expected, "allowed_classifications": ["S", "L", "N"]},
     }
     return {stage.value: all_settings[stage.value]}
@@ -96,11 +97,13 @@ def main() -> int:
     ]
     run_id = args.run_id or f"{stage.value}_{run_date.isoformat()}"
     command_id = args.command_id or slugify(run_id)
+    settings = _stage_settings(stage, args.mode)
+    settings[stage.value]["require_matching_snapshot"] = args.require_matching_snapshot
     manifest = RunManifest(
         run_id=run_id,
         run_date=run_date,
         files=files,
-        settings=_stage_settings(stage, args.mode),
+        settings=settings,
         base_directory=PROJECT_ROOT,
     )
 

@@ -20,7 +20,7 @@ settings:
     decimal_scale: "0.001"
     require_actual_output: true
     require_expected_output: true
-    ndc_length: 10
+    ndc_length: 11
   final_medpar:
     expected_bytes: 3000
     encoding: ascii

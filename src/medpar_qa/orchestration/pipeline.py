@@ -26,6 +26,31 @@ class Pipeline:
         self.manifest = manifest
         self.field_resolver = field_resolver
 
+    def _snapshot_check(self, stage: Stage, records: list[SourceRecord]) -> RuleResult:
+        from medpar_qa.enums import FileRole
+        axes = ("rundate", "yearQuarter")
+        snapshots = {role: {axis: set() for axis in axes}
+                     for role in (FileRole.SOURCE, FileRole.ACTUAL_OUTPUT)}
+        for record in records:
+            if record.source.role not in snapshots:
+                continue
+            for part in Path(record.source.file_path).parts:
+                for axis in axes:
+                    if part.startswith(axis + "="):
+                        snapshots[record.source.role][axis].add(part.split("=", 1)[1])
+        common = [axis for axis in axes if all(snapshots[role][axis] for role in snapshots)]
+        mismatched = [axis for axis in common
+                      if snapshots[FileRole.SOURCE][axis] != snapshots[FileRole.ACTUAL_OUTPUT][axis]]
+        valid = bool(common) and not mismatched
+        return RuleResult(stage=stage, rule_id="INGEST-SNAPSHOT-MATCH",
+                          status=ValidationStatus.PASS if valid else ValidationStatus.BLOCKED,
+                          message="Source/output snapshot metadata matches" if valid else
+                          "Source/output snapshots differ or cannot be established; supply matching extraction before reconciliation",
+                          expected="Matching source/output snapshot metadata",
+                          actual={role.value: {axis: sorted(values) for axis, values in data.items()}
+                                  for role, data in snapshots.items()},
+                          evidence={"compared_axes": common, "mismatched_axes": mismatched})
+
     def load_with_diagnostics(
         self,
     ) -> tuple[dict[Stage, list[SourceRecord]], dict[Stage, StageResult]]:
@@ -220,9 +245,14 @@ class Pipeline:
 
             preliminary = diagnostics.get(stage, StageResult(stage=stage))
             records = records_by_stage.get(stage, [])
+            snapshot_blocked = False
+            if self.manifest.settings.get(stage.value, {}).get("require_matching_snapshot"):
+                snapshot = self._snapshot_check(stage, records)
+                preliminary.rule_results.append(snapshot)
+                snapshot_blocked = snapshot.status == ValidationStatus.BLOCKED
             from medpar_qa.stages.record_contracts import validate_record_contracts
             preliminary.rule_results.extend(validate_record_contracts(records,self.field_resolver))
-            if records:
+            if records and not snapshot_blocked:
                 processed = processors[stage].validate(records)
                 processed.rule_results = [
                     *preliminary.rule_results,

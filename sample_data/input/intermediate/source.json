@@ -29,7 +29,8 @@
       {
         "code": "0110",
         "units": 1,
-        "charges": "10.125"
+        "charges": "10.125",
+        "investigationalDeviceExemption": "00012345678"
       },
       {
         "code": "0120",

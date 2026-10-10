@@ -17,7 +17,7 @@ class IntermediateSettings:
     window_years: int = 5
     require_actual_output: bool = False
     require_expected_output: bool = False
-    ndc_length: int = 10
+    ndc_length: int = 11
     # Full 020X intensive-care revenue-code family. The newly reported missing
     # codes 0200 and 0201 are therefore always included.
     intensive_care_revenue_codes: tuple[str, ...] = tuple(f"020{i}" for i in range(10))
@@ -131,13 +131,12 @@ class IntermediateSettings:
         "medpar_bene_st_0071",
         "medpar_zip_0080",
         "beneficiary_gender",
-        "beneficiary_date_of_birth",
         "beneficiary_race",
         "beneficiary_zip_code",
         "county_code",
         "state_code",
-        "medicare_status",
-        "medical_record",
+        # DOB/Medicare status are age operands, not raw MEDPAR output fields.
+        # MRN is checked separately using the documented patient-control fallback.
     )
 
     @property
@@ -161,7 +160,7 @@ class IntermediateSettings:
             window_years=int(raw.get("window_years", 5)),
             require_actual_output=bool(raw.get("require_actual_output", False)),
             require_expected_output=bool(raw.get("require_expected_output", False)),
-            ndc_length=int(raw.get("ndc_length", 10)),
+            ndc_length=int(raw.get("ndc_length", 11)),
             intensive_care_revenue_codes=tuple(
                 str(value) for value in (raw.get("intensive_care_revenue_codes") or cls.intensive_care_revenue_codes)
             ),

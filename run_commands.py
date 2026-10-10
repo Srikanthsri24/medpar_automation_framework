@@ -1034,6 +1034,7 @@ def _production_run(name: str, folders: tuple[str, ...], *, enabled: bool = True
         "name": f"{name} ({len(paths)} files)",
         "enabled": enabled and bool(paths),
         "mode": "reconcile" if actual_folders else "calculate",
+        "require_matching_snapshot": bool(actual_folders),
         "source": paths,
         "actual": actual_paths,
         "expected": [],
@@ -1163,6 +1164,8 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
     _append_paths(args, "--source", list(item.get("source") or []))
     _append_paths(args, "--actual", list(item.get("actual") or []))
     _append_paths(args, "--expected", list(item.get("expected") or []))
+    if item.get("require_matching_snapshot"):
+        args.append("--require-matching-snapshot")
     return Command(name, stage, command_id, args, bool(item.get("enabled", True)), tuple(item.get("expected_exit_codes", (0,))))
 
 

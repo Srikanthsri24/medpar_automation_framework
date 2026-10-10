@@ -336,11 +336,14 @@ def test_dead_status_fallback_and_verify_b(resolver,make_record):
     assert all(r.status==ValidationStatus.PASS for r in checks if r.rule_id in {'INT-DOD-CALCULATION','INT-DOD-VERIFY','INT-DEATH-DAYS-CALCULATION'})
 
 
-def test_unconfirmed_no_organ_default_is_blocked(resolver,make_record):
+def test_cms_no_organ_default_is_blank_and_rejects_zero_code(resolver,make_record):
     source=make_record({'revenueLines':[{'code':'0818'}]},stage=Stage.INTERMEDIATE)
     actual=make_record({'medparOrganInd0487':'00'},stage=Stage.INTERMEDIATE,row=2)
     rule=next(r for r in validate_business_rules(source,actual,resolver) if r.rule_id=='INT-ORGAN-TYPE-CALCULATION')
-    assert rule.status==ValidationStatus.BLOCKED
+    assert rule.status==ValidationStatus.FAIL
+    actual.data['medparOrganInd0487']=' '
+    rule=next(r for r in validate_business_rules(source,actual,resolver) if r.rule_id=='INT-ORGAN-TYPE-CALCULATION')
+    assert rule.status==ValidationStatus.PASS
 
 
 def test_nested_production_code_groups_and_accommodation_amounts():
@@ -372,8 +375,8 @@ def test_repeated_service_charges_validate_each_entry(resolver,make_record):
 
 def test_indicator_derivations_use_source_arrays_not_output(resolver,make_record):
     from medpar_qa.stages.intermediate.legacy_discrepancies import validate_condition_switches, validate_revenue_indicator
-    source=make_record({'conditionCodes':[{'conditionCodeId':'04'}], 'revenueLines':[{'revenueCenter':{'revenueCenterId':'0200'}}]},stage=Stage.INTERMEDIATE)
-    target=make_record({'medparInforEnctrIndSw0800':'Y', 'medparIntensiveCareInd0481':'Y'},stage=Stage.INTERMEDIATE,row=2)
+    source=make_record({'conditionCodes':[{'conditionCodeId':'04'}], 'revenueLines':[{'revenueCenter':{'revenueCenterId':'0200'},'totalAmount':100}]},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparInforEnctrIndSw0800':'Y', 'medparIntensiveCareInd0481':'0'},stage=Stage.INTERMEDIATE,row=2)
     rules=validate_condition_switches(target,resolver,{'medpar_infor_enctr_ind_sw_0800':('04',)},source=source)
     assert rules[0].status==ValidationStatus.PASS
     rule=validate_revenue_indicator(target,resolver,field_name='medpar_intensive_care_ind_0481',rule_id='TEST',search_codes=['0200'],source=source)
@@ -413,3 +416,112 @@ def test_duplicate_archive_diagnostic_preserves_real_data_differences(tmp_path):
     selected,copies=select(paths)
     assert len(selected)==2 and copies==1
     assert len(paths)==3 and all(path.exists() for path in paths)
+
+
+def test_age_operands_and_mrn_are_not_raw_intermediate_direct_moves(resolver,make_record):
+    from medpar_qa.stages.intermediate.settings import IntermediateSettings
+    from medpar_qa.stages.intermediate.legacy_discrepancies import validate_source_to_actual_direct_moves
+    settings=IntermediateSettings()
+    source=make_record({'beneficiaryDateOfBirth':0,'medicareStatus':'10','medicalRecord':'MRN'},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparAge0030':-1,'medparMrn0670':'WRONG'},stage=Stage.INTERMEDIATE,row=2)
+    direct=validate_source_to_actual_direct_moves(source,target,resolver,settings.source_to_target_fields,decimal_fields=set(settings.decimal_fields),scale=settings.decimal_scale)
+    assert not direct
+    derived=validate_business_rules(source,target,resolver)
+    assert next(r for r in derived if r.rule_id=='INT-AGE-CALCULATION').status==ValidationStatus.BLOCKED
+    assert next(r for r in derived if r.rule_id=='INT-MRN-FALLBACK').status==ValidationStatus.FAIL
+
+
+@pytest.mark.parametrize('revenue,expected',[([], '0'),(['0500'],'1'),(['0499'],'2'),(['0490','0509'],'3')])
+def test_cms_outpatient_service_code_table(revenue,expected):
+    from medpar_qa.stages.intermediate.business_rules import outpatient_services_indicator
+    assert outpatient_services_indicator(revenue)==expected
+
+
+def test_cms_care_unit_uses_accumulated_charges_and_blocks_unresolved_tie():
+    from medpar_qa.stages.intermediate.business_rules import care_unit_indicator
+    lines=[{'code':'0200','charges':60},{'code':'0200','charges':60},{'code':'0201','charges':100}]
+    assert care_unit_indicator(lines,'020')=='0'
+    lines.append({'code':'0201','charges':20})
+    with pytest.raises(LookupError,match='tie'):
+        care_unit_indicator(lines,'020')
+    assert care_unit_indicator([{'code':'0300','charges':500}],'020')==''
+    assert care_unit_indicator([{'code':'0214','charges':50}],'021')=='4'
+    with pytest.raises(LookupError,match='total charge'):
+        care_unit_indicator([{'code':'0200'}],'020')
+
+
+def test_cms_surgical_switch_is_binary_and_rejects_yn(resolver,make_record):
+    from medpar_qa.stages.intermediate.structural import validate_procedure_structure
+    for value,status in [('1',ValidationStatus.PASS),('Y',ValidationStatus.FAIL),('0',ValidationStatus.FAIL)]:
+        target=make_record({'medparSurgCode0513':['0ABC'],'medparSurgInd0500':value},stage=Stage.INTERMEDIATE)
+        rule=next(r for r in validate_procedure_structure(target,resolver,date(2022,1,1),date(2026,5,14)) if r.rule_id=='INT-PROC-SURGICAL-INDICATOR')
+        assert rule.status==status
+
+
+def test_missing_dod_feed_is_not_a_confirmed_no_match(resolver,make_record):
+    source=make_record({'admissionDate':'20260101','stayThruDate':'20260103','patientStatus':1,'dateOfDeath':0},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparHimasterDod0230':0,'medparDeathAfterAdm0611':0},stage=Stage.INTERMEDIATE,row=2)
+    rules=validate_business_rules(source,target,resolver)
+    assert all(r.status==ValidationStatus.BLOCKED for r in rules if r.rule_id in {'INT-DOD-CALCULATION','INT-DEATH-DAYS-CALCULATION'})
+    source.data['dod_reference_available']=True
+    source.data['dod_reference_matched']=False
+    rule=next(r for r in validate_business_rules(source,target,resolver) if r.rule_id=='INT-DOD-CALCULATION')
+    assert rule.status==ValidationStatus.PASS
+
+
+def test_optional_span_zero_date_is_absent_not_wrong_calendar_date(resolver,make_record):
+    source=make_record({'occurrenceSpanLines':[]},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparHospHomeFromDt1630':0,'medparHospHomeThruDt1640':0},stage=Stage.INTERMEDIATE,row=2)
+    rules=[r for r in validate_business_rules(source,target,resolver) if r.rule_id=='INT-SPAN-DATE-DERIVATION' and r.field_name in {'medpar_hosp_home_from_dt_1630','medpar_hosp_home_thru_dt_1640'}]
+    assert len(rules)==2 and all(r.status==ValidationStatus.PASS for r in rules)
+    target.data['medparHospHomeFromDt1630']=2026001
+    assert next(r for r in validate_business_rules(source,target,resolver) if r.field_name=='medpar_hosp_home_from_dt_1630').status==ValidationStatus.FAIL
+
+
+def test_mismatched_snapshot_blocks_before_record_comparison(resolver,make_record,monkeypatch):
+    from medpar_qa.models import RunManifest,ManifestFile
+    from medpar_qa.enums import FileRole
+    from medpar_qa.orchestration.pipeline import Pipeline
+    source=make_record({'hicn':'H001'},stage=Stage.STAY)
+    actual=make_record({'hicn':'H001'},stage=Stage.STAY,row=2,role=FileRole.ACTUAL_OUTPUT)
+    from dataclasses import replace
+    source.source=replace(source.source,file_path='bills/yearQuarter=2025Q3/rundate=20260320/source.json')
+    actual.source=replace(actual.source,file_path='stay/yearQuarter=2026Q2/rundate=20260514/actual.json')
+    manifest=RunManifest(run_id='snapshots',run_date=date(2026,5,14),files=[ManifestFile(path='ignored.json',stage=Stage.STAY,role=FileRole.SOURCE)],settings={'stay':{'require_matching_snapshot':True}})
+    pipeline=Pipeline(manifest,resolver)
+    monkeypatch.setattr(pipeline,'load_with_diagnostics',lambda:({Stage.STAY:[source,actual]},{}))
+    class UnexpectedProcessor:
+        def validate(self,records):
+            raise AssertionError('Cross-snapshot records must not be compared')
+    monkeypatch.setattr(pipeline,'_processors',lambda:{Stage.STAY:UnexpectedProcessor()})
+    results=pipeline.run()
+    check=next(r for r in results[0].rule_results if r.rule_id=='INGEST-SNAPSHOT-MATCH')
+    assert check.status==ValidationStatus.BLOCKED
+    actual.source=replace(actual.source,file_path='stay/yearQuarter=2025Q3/rundate=20260320/actual.json')
+    assert pipeline._snapshot_check(Stage.STAY,[source,actual]).status==ValidationStatus.PASS
+
+
+def test_cms_ndc_width_occurrences_and_order(resolver,make_record):
+    from medpar_qa.stages.intermediate.business_rules import ndc_values_from_revenue
+    from medpar_qa.stages.intermediate.structural import validate_age_and_ndc
+    from medpar_qa.stages.intermediate.settings import IntermediateSettings
+    values=[f'{index:011}' for index in range(12)]
+    lines=[{'investigationalDeviceExemption':value} for value in values]
+    assert ndc_values_from_revenue(lines)==values[:10]
+    source=make_record({'revenueLines':lines},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparRevCntrNdcNum1550':values[:10],'medparAge0030':65},stage=Stage.INTERMEDIATE,row=2)
+    rule=next(r for r in validate_business_rules(source,target,resolver) if r.rule_id=='INT-NDC-SOURCE-DERIVATION')
+    assert rule.status==ValidationStatus.PASS
+    target.data['medparRevCntrNdcNum1550']=list(reversed(values[:10]))
+    assert next(r for r in validate_business_rules(source,target,resolver) if r.rule_id=='INT-NDC-SOURCE-DERIVATION').status==ValidationStatus.FAIL
+    for output in [values[:11],['1234567890']]:
+        target.data['medparRevCntrNdcNum1550']=output
+        assert next(r for r in validate_age_and_ndc(target,resolver,IntermediateSettings().ndc_length) if r.rule_id=='INT-NDC').status==ValidationStatus.FAIL
+
+
+def test_ndc_copy_match_does_not_hide_non_numeric_source_codes(resolver,make_record):
+    from medpar_qa.stages.intermediate.structural import validate_age_and_ndc
+    source=make_record({'revenueLines':[{'investigationalDeviceExemption':'NDC12345678'}]},stage=Stage.INTERMEDIATE)
+    target=make_record({'medparRevCntrNdcNum1550':['NDC12345678'],'medparAge0030':65},stage=Stage.INTERMEDIATE,row=2)
+    assert next(r for r in validate_business_rules(source,target,resolver) if r.rule_id=='INT-NDC-SOURCE-DERIVATION').status==ValidationStatus.PASS
+    assert next(r for r in validate_age_and_ndc(target,resolver,11) if r.rule_id=='INT-NDC').status==ValidationStatus.FAIL

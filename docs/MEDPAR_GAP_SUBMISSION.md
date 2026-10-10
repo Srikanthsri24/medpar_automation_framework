@@ -28,10 +28,10 @@ The accompanying workbook identifies the latest passing suite and HTML report. T
 
 ## External dependencies still open
 
-1. Complete approved MPRRECL/UTLIPSNL and current MPRPARL/related routines: field offsets, accumulator widths, flags, full trailer schemas, special-unit derivation, ICU/CCU charge selection, ESRD setting and40+revenue categories. Raw-length and prefix checks already work, but reconstructing bytes from Parquet cannot be certified without the layouts.
+1. Complete approved MPRRECL/UTLIPSNL and current MPRPARL/related routines: field offsets, accumulator widths, flags, full trailer schemas, special-unit derivation, ICU/CCU tie policy, ESRD setting and40+revenue categories. Raw-length and prefix checks already work, but reconstructing bytes from Parquet cannot be certified without the layouts.
 2. CMS golden fixtures and control totals, approved DRG grouper/version/outlier reference tables, EQ-BIC/cache contracts and IDR HICN feed.
 3. Approved14-file CY/FY routing architecture and final HICN merge policy. Distinct admissions are preserved until the merge rule is established.
-4. Clarification of warning03/06/07/08/10, secondary SSI0253, no-organ default, HAH limits and conflicting first-versus-sum fields. The old LD-1062 research also combines Q1/Q7/QB into one indexed slot; this conflicts with newer separately named payment fields and has not been introduced as an unapproved regression.
+4. Clarification of warning03/06/07/08/10, secondary SSI0253, HAH limits and conflicting first-versus-sum fields. The old LD-1062 research also combines Q1/Q7/QB into one indexed slot; this conflicts with newer separately named payment fields and has not been introduced as an unapproved regression.
 5. BayState scope, DB2 source/extract contract, corrected LOS/SSI formulas and3004-byte encoding. The supplied notes do not establish these sufficiently.
 6. A production-scale environment and agreed performance limits for600–700million-record history processing.
 

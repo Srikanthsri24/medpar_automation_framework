@@ -1809,8 +1809,8 @@
       ]
     }
   },
-  "testsPassed": 242,
-  "testReport": "reports/20261011_013550/pytest/pytest_complete_suite/report.html",
+  "testsPassed": 254,
+  "testReport": "reports/20261011_015557/pytest/pytest_complete_suite/report.html",
   "definitions": {
     "Implemented": "Documented check implemented with regression evidence; CMS production certification still separate.",
     "Existing": "Required behaviour already present and verified; original finding retained.",
@@ -1819,5 +1819,6 @@
     "Not required": "Removed or outside IP/SNF scope under supplied requirements."
   },
   "productionReview": "docs/PRODUCTION_VALIDATION_REVIEW.md",
-  "productionCertified": false
+  "productionCertified": false,
+  "productionRemediationHandoff": "docs/PRODUCTION_REMEDIATION_HANDOFF.md"
 }

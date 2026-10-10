@@ -8,7 +8,7 @@ settings:
   intermediate:
     window_years: 5
     decimal_scale: "0.001"
-    ndc_length: 10
+    ndc_length: 11
     require_actual_output: true
     require_expected_output: true
     # Replace this default list with the exact approved Legacy code list.

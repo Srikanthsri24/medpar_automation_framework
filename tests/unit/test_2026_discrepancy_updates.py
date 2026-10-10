@@ -111,8 +111,8 @@ def test_intensive_care_indicator_includes_0200_and_0201(
 ):
     record = make_record(
         {
-            "revenueLines": [{"revCntrCd": revenue_code}],
-            "MEDPAR-INTENSIVE-CARE-IND-0481": "Y",
+            "revenueLines": [{"revCntrCd": revenue_code, "totalAmount": 100}],
+            "MEDPAR-INTENSIVE-CARE-IND-0481": revenue_code[-1],
         },
         stage=Stage.INTERMEDIATE,
     )
@@ -134,7 +134,7 @@ def test_organ_indicator_uses_configured_legacy_revenue_codes(resolver, make_rec
     record = make_record(
         {
             "revenueLines": [{"REV-CNTR-CD": "0810"}],
-            "MEDPAR-ORGAN-IND-0487": "Y",
+            "MEDPAR-ORGAN-IND-0487": "K1",
         },
         stage=Stage.INTERMEDIATE,
     )

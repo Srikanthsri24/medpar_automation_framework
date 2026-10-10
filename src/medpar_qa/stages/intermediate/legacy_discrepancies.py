@@ -164,6 +164,21 @@ def validate_revenue_indicator(
         )
     matched = sorted(set(source_codes) & set(configured))
     expected = positive_value if matched else negative_value
+    try:
+        from .business_rules import care_unit_indicator, ORGAN_TYPES
+        if field_name == "medpar_intensive_care_ind_0481":
+            expected = care_unit_indicator(lines, "020")
+        elif field_name == "medpar_coronary_care_ind_0482":
+            expected = care_unit_indicator(lines, "021")
+        elif field_name == "medpar_organ_ind_0487":
+            organ_codes = sorted(set(source_codes) & ORGAN_TYPES.keys())
+            expected = ORGAN_TYPES[organ_codes[-1]] if organ_codes else ""
+    except (LookupError, ValueError) as exc:
+        return RuleResult(stage=Stage.INTERMEDIATE, rule_id=rule_id,
+                          status=ValidationStatus.BLOCKED if isinstance(exc, LookupError) else ValidationStatus.FAIL,
+                          message=str(exc), field_name=field_name, actual=actual,
+                          record_ids=[operand_record.record_id, record.record_id],
+                          source_files=[operand_record.source.file_path, record.source.file_path])
     normalized_actual = None if actual is None else str(actual).strip().upper()
     valid = normalized_actual == expected
     absent = actual in (None, "")

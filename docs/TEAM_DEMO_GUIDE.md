@@ -1,6 +1,6 @@
 # MedPAR team demonstration
 
-The framework fixes are verified by 242 passing tests and a passing five-stage synthetic example. Production reconciliation is failing on the supplied archive. Demonstrate both results; do not describe the Excel register as fully closed.
+The framework fixes are verified by 254 passing tests and a passing five-stage synthetic example. Production reconciliation is failing on the supplied archive. Demonstrate both results; do not describe the Excel register as fully closed.
 
 ## Demonstration
 
@@ -14,7 +14,7 @@ The framework fixes are verified by 242 passing tests and a passing five-stage s
 
 - Supply Split/bill inputs corresponding to the May 14 Stay output snapshot. The March Split snapshot does not match those Stay identities.
 - Resolve unsupported transaction/query codes and the policy for replayed identical Final Action rows. Supply unique Intermediate output extracts or approve how duplicate deliveries are handled.
-- Supply complete approved copybooks/current MPRPARL. Confirm physical indicator representations, NDC width and missing-date defaults. The archive and current templates disagree on some representations.
+- Supply complete approved copybooks/current MPRPARL. CMS indicator types and 11-character NDC width are now implemented. Complete current byte offsets, missing-date defaults and equal-charge ICU/CCU tie policy still require approval.
 - Supply DOB/DOD/SSI/reference fixtures, DRG/revenue mappings and CMS golden outputs/control totals. Resolve warning/default/routing/HICN merge requirements identified in the gap review.
 - Supply actual Final MEDPAR files and a performance environment. Confirm BayState scope.
 

@@ -4,7 +4,7 @@ Current authority: `MEDPAR_GAP_SUBMISSION.md` and `medpar_gap_completion.json`. 
 
 Resolved: admission exclusion applies to FA only; Stay retains admission; QC2 is unsupported; Rule6 uses action code; bypass belongs to Final for covered days > LOS; organ0818 is excluded; emergency condition91 is supported; Final preserves the first3000bytes of3050; LD-1410 specifies integer-rate rounding before days and a positive999999999cap.
 
-Still open: complete approved copybooks/current MPRPARL, EQ-BIC/cache/IDR contracts, DRG/outlier and revenue mappings, CY/FY routing, HICN merge policy, warning03/06/07/08/10, SSI0253, no-organ default, HAH limits, conflicting sum/date rules, optional samples, undischarged-stay policy, BayState scope/layout, CMS golden fixtures and production-scale performance acceptance.
+Still open: complete approved copybooks/current MPRPARL, EQ-BIC/cache/IDR contracts, DRG/outlier and revenue mappings, CY/FY routing, HICN merge policy, warning03/06/07/08/10, SSI0253, HAH limits, conflicting sum/date rules, optional samples, undischarged-stay policy, BayState scope/layout, CMS golden fixtures and production-scale performance acceptance.
 
 ## Historical v0.5.0 decisions (superseded where noted above)
 
@@ -29,5 +29,5 @@ The August 2026 update implements the rules that are explicitly supported by the
 6. **Final MEDPAR 3050-to-3000 transformation.** The official deletion/offset map was not supplied. The framework validates a real 3000-byte output and configurable byte fields, but does not invent the 3050 conversion.
 7. **HICN merge precedence.** The discrepancy report identifies a Legacy merge-by-HICN test, but no approved field-level merge precedence was supplied. Current behavior detects duplicate identities rather than guessing a merge.
 8. **Historical field derivations.** All listed missing fields are now registered, and fields with supplied logic are validated. Registry coverage alone does not prove a derivation for fields whose business formula was not supplied; those require golden expected data or a signed-off rule.
-9. **NDC normalization.** Confirm the configured numeric left-padding rule and final width.
+9. **NDC source quality.** CMS CR18 specifies 11-character entries, up to ten occurrences. Defaults now match this contract and do not add zeros. Supplied values contain alphabetic characters; obtain valid NDC values or an approved shared IDE/NDC/UPC classification rule.
 10. **Rounding mode.** The supplied requirement confirms three decimal places. v0.5.0 uses `ROUND_HALF_UP`; confirm if Legacy uses a different tie-breaking mode.

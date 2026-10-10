@@ -108,6 +108,61 @@ def codes(lines: Any, *keys: str) -> list[str]:
             if (value := line_value(line, "code", *keys)) is not None and str(value).strip()]
 
 
+def care_unit_indicator(lines: Any, family: str) -> str:
+    """CMS CR14 pp54–55,137,139 and supplied LD-1514 charge selection.
+
+    A tied maximum needs the current MPRPARL tie rule; never choose arbitrarily.
+    """
+    allowed = {"020": "012346789", "021": "01234"}[family]
+    totals: dict[str, Decimal] = {}
+    for line in normalize_collection(lines):
+        raw = line_value(line, "code", "revenueCode", "revCntrCd", "REV-CNTR-CD")
+        code = str(raw).strip().zfill(4)
+        if not code.startswith(family):
+            continue
+        if len(code) != 4 or code[-1] not in allowed:
+            raise LookupError(f"Unmapped {family} care-unit revenue code")
+        amount = line_value(line, "charges", "amount", "totalCharge", "charge",
+                            "revCntrTotChrgAmt", "REV-CNTR-TOT-CHRG-AMT", "totalAmount")
+        if amount is None:
+            raise LookupError("Care-unit derivation requires revenue total charge")
+        totals[code] = totals.get(code, Decimal(0)) + to_decimal(amount)
+    if not totals:
+        return ""
+    maximum = max(totals.values())
+    winners = [code for code, amount in totals.items() if amount == maximum]
+    if len(winners) != 1:
+        raise LookupError("Care-unit charge tie requires approved MPRPARL tie policy")
+    return winners[0][-1]
+
+
+def outpatient_services_indicator(revenue_codes: list[str]) -> str:
+    # CMS CR14 p139: outpatient=1, ambulatory surgery=2, both=3, neither=0.
+    outpatient = any("0500" <= code <= "0509" for code in revenue_codes)
+    ambulatory = any("0490" <= code <= "0499" for code in revenue_codes)
+    return str(int(outpatient) + 2 * int(ambulatory))
+
+
+def ndc_values_from_revenue(lines: Any) -> list[str]:
+    """CMS CR18 p125: first ten 11-character NDC occurrences in revenue order."""
+    values = []
+    for line in normalize_collection(lines):
+        value = line_value(line, "REV_CNTR_IDE_NDC_UPC_NUM", "revCntrIdeNdcUpcNum",
+                           "ndcNumber", "investigationalDeviceExemption")
+        if value is None or not str(value).strip():
+            continue
+        text = str(value).strip()
+        if len(text) != 11:
+            raise LookupError("Shared IDE/NDC/UPC source value does not have the CMS 11-character width")
+        # Preserve the raw CHAR value for source-copy verification. Numeric
+        # validity is an independent INT-NDC check, so a faithfully copied bad
+        # source code never makes the whole stage pass.
+        values.append(text)
+        if len(values) == 10:
+            break
+    return values
+
+
 ORGAN_TYPES = {"0810": "K1", "0811": "K2", "0812": "K3", "0813": "K4",
                "0814": "K5", "0815": "H1", "0816": "H2", "0817": "L1", "0819": "01"}
 VALUE_FIELDS = {"18": "medpar_disproportionate_0360", "19": "medpar_ime_amount_0370",
@@ -186,7 +241,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
             raise LookupError(f"Missing source date operand: {field}")
         return parse_date(value, allow_none=False)
 
-    def check(rule: str, field: str, calculate: Callable[[], Any], numeric: bool = False) -> None:
+    def check(rule: str, field: str, calculate: Callable[[], Any], numeric: bool = False, *, date_value: bool = False) -> None:
         observed = resolver.get(target.data, field)
         calculated=False
         try:
@@ -195,8 +250,8 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
             if observed in (None, ""):
                 status = ValidationStatus.PASS if expected is None else ValidationStatus.NOT_APPLICABLE
             else:
-                comparable = to_decimal(observed) if numeric else str(observed).strip()
-                expected_value = to_decimal(expected) if numeric and expected is not None else (str(expected).strip() if expected is not None else None)
+                comparable = parse_date(observed) if date_value else to_decimal(observed) if numeric else str(observed).strip()
+                expected_value = parse_date(expected) if date_value else to_decimal(expected) if numeric and expected is not None else (str(expected).strip() if expected is not None else None)
                 status = ValidationStatus.PASS if comparable == expected_value else ValidationStatus.FAIL
             message = "Derived value matches" if status == ValidationStatus.PASS else "Calculated expectation; output field absent" if status == ValidationStatus.NOT_APPLICABLE else "Derived value mismatch"
         except LookupError as exc:
@@ -229,15 +284,18 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     # DOD lookup requires the external EDB match. This explicitly provided source
     # field is the matched DOD, not the derived output DOD.
     def dod() -> date | None:
+        from medpar_qa.normalization.dates import is_missing_date
         death = get("matched_date_of_death") if get("dod_reference_available") else get("date_of_death")
-        if death is not None:
+        if not is_missing_date(death):
             return parse_date(death, allow_none=False)
         if str(status()).strip() in {"20","B"}:
             return thru()
-        return None
+        if get("dod_reference_available"):
+            return None
+        raise LookupError("DOD requires EDB reference; an absent source date is not a confirmed no-match")
 
     check("INT-DEATH-DAYS-CALCULATION", "medpar_death_after_adm_0611", lambda: death_after_admission(admission(), dod()), True)
-    check("INT-DOD-CALCULATION", "medpar_himaster_dod_0230", lambda: dod().strftime("%Y%j") if dod() else None)
+    check("INT-DOD-CALCULATION", "medpar_himaster_dod_0230", lambda: dod().strftime("%Y%j") if dod() else None, date_value=True)
     def death_verify() -> Any:
         if get("dod_reference_matched"):
             return required("matched_dod_verify_switch")
@@ -258,13 +316,30 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-SSI-MATCH-INDICATOR", "medpar_ssi_data_0252", lambda: "Y" if required("ssi_reference_matched") else "N")
     def revenue_codes() -> list[str]:
         return [code.zfill(4) for code in codes(required("revenue_lines"), "revenueCode", "revCntrCd", "REV-CNTR-CD")]
+    ndc_observed = resolver.get(target.data, "medpar_rev_cntr_ndc_num_1550")
+    try:
+        ndc_expected = ndc_values_from_revenue(required("revenue_lines"))
+        ndc_actual = [str(value).strip() for value in normalize_collection(ndc_observed)]
+        ndc_status = ValidationStatus.NOT_APPLICABLE if ndc_observed is None else ValidationStatus.PASS if ndc_actual == ndc_expected else ValidationStatus.FAIL
+        ndc_message = "First ten NDC occurrences match source revenue order"
+    except LookupError as exc:
+        ndc_expected, ndc_message = str(exc), str(exc)
+        ndc_actual = ndc_observed
+        ndc_status = ValidationStatus.NOT_APPLICABLE if ndc_observed is None else ValidationStatus.BLOCKED
+    results.append(RuleResult(stage=Stage.INTERMEDIATE, rule_id="INT-NDC-SOURCE-DERIVATION",
+                              status=ndc_status, field_name="medpar_rev_cntr_ndc_num_1550",
+                              message=ndc_message, expected=ndc_expected, actual=ndc_actual,
+                              record_ids=[source.record_id, target.record_id],
+                              evidence={"specification": "CMS MedPAR CR18 p125, field241"}))
     def organ_type() -> str:
         matched=set(revenue_codes()) & ORGAN_TYPES.keys()
         if not matched:
-            raise LookupError("No organ code matched; approved blank/zero default is not supplied")
+            return ""  # CMS CR14 p140: no organ acquisition is blank.
         return ORGAN_TYPES[max(matched)]
     check("INT-ORGAN-TYPE-CALCULATION", "medpar_organ_ind_0487", organ_type)
-    check("INT-OUTPATIENT-SERVICES", "medpar_outpatient_srv_ind_0486", lambda: "Y" if any("0490" <= c <= "0509" for c in revenue_codes()) else "N")
+    check("INT-OUTPATIENT-SERVICES", "medpar_outpatient_srv_ind_0486", lambda: outpatient_services_indicator(revenue_codes()))
+    check("INT-INTENSIVE-CARE-IND-0481", "medpar_intensive_care_ind_0481", lambda: care_unit_indicator(required("revenue_lines"), "020"))
+    check("INT-CORONARY-CARE-IND-0482", "medpar_coronary_care_ind_0482", lambda: care_unit_indicator(required("revenue_lines"), "021"))
     check("INT-RADIOLOGY-INDICATORS", "medpar_radiology_ind_0485", lambda: "".join("1" if any(lo <= int(c) <= hi for c in revenue_codes()) else "0" for lo, hi in ((280,289),(320,329),(330,339),(340,349),(350,359),(400,409))))
     def condition_codes() -> list[str]:
         return codes(required("condition_codes"), "conditionCode", "CLM-RLT-COND-CD")
@@ -344,7 +419,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     for input_field, output_field in (("admission_date","medpar_adm_date_0200"),
             ("accrete_date","medpar_accretion_date_0160"), ("benefits_exhausted_date","medpar_date_benfex_0170"),
             ("stay_thru_date","medpar_dischg_date_0210")):
-        check("INT-JULIAN-CONVERSION",output_field,lambda input_field=input_field: parse_date(required(input_field),allow_none=False).strftime("%Y%j"))
+        check("INT-JULIAN-CONVERSION",output_field,lambda input_field=input_field: parse_date(required(input_field),allow_none=False).strftime("%Y%j"),date_value=True)
     def spans() -> list[Any]:
         return normalize_collection(required("occurrence_span_lines"))
     def span_date(code: str, direction: str, highest: bool = False) -> str | None:
@@ -355,8 +430,8 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         return (max(values) if highest else values[0]).strftime("%Y%j") if values else None
     for code, direction, field in (("70","from","medpar_snf_qual_from_date_0180"), ("70","thru","medpar_snf_qual_thru_date_0190"),
             ("82","from","medpar_hosp_home_from_dt_1630"), ("82","thru","medpar_hosp_home_thru_dt_1640")):
-        check("INT-SPAN-DATE-DERIVATION",field,lambda code=code,direction=direction:span_date(code,direction))
-    check("INT-COVERED-CARE-END", "medpar_dte_cr_ended_0220",lambda:span_date("22","thru",True) if str(required("transaction_code")) in {"0","4"} else None)
+        check("INT-SPAN-DATE-DERIVATION",field,lambda code=code,direction=direction:span_date(code,direction),date_value=True)
+    check("INT-COVERED-CARE-END", "medpar_dte_cr_ended_0220",lambda:span_date("22","thru",True) if str(required("transaction_code")) in {"0","4"} else None,date_value=True)
     check("INT-TWO-MIDNIGHT", "medpar_2_midnight_stay_ind_1280",lambda:"Y" if "72" in codes(spans(),"spanCode","occurrenceSpanCode") else "N")
     check("INT-WARNING-04-CALCULATION", "warning_indicator_04", lambda: "0" if to_decimal(required("utilization_days")) == length_of_stay(admission(), thru(), status()) else "1" if to_decimal(required("utilization_days")) < length_of_stay(admission(), thru(), status()) else "2")
     check("INT-WARNING-09-CALCULATION", "warning_indicator_09", lambda: "1" if to_decimal(required("pass_thru_per_diem")) != 0 else "0")
