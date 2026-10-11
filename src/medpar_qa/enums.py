@@ -32,6 +32,7 @@ class ValidationStatus(StrEnum):
     FAIL = "FAIL"
     NOT_APPLICABLE = "NOT_APPLICABLE"
     BLOCKED = "BLOCKED"
+    KNOWN_DIFFERENCE = "KNOWN_DIFFERENCE"
 
 
 class RecordDecision(StrEnum):

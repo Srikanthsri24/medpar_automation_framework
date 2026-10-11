@@ -16,13 +16,18 @@ def _record_sort_key(
     record: SourceRecord,
     date_paths: tuple[str, ...],
     resolver: FieldResolver | None = None,
-) -> tuple[date, ...]:
+) -> tuple[Any, ...]:
     """Build precedence for the newest source bill contributing code objects."""
-    values: list[date] = []
-    for path in date_paths:
-        raw = resolver.get(record.data, path) if resolver else nested_get(record.data, path)
-        values.append(parse_date(raw, allow_none=True) or date.min)
-    return tuple(values)
+    def read(field):
+        return resolver.get(record.data, field) if resolver else nested_get(record.data, field)
+    # Latest bill: later service dates, then newer processing/accretion,
+    # higher query code, finally ascending ICN for deterministic equal-date ties.
+    dates = [parse_date(read(field), allow_none=True) or date.min
+             for field in ("stay_from_date", "stay_thru_date", *date_paths)]
+    query = int(read("query_code") or read("queryCode") or 0)
+    icn = str(read("icn") or read("internalControlNumber") or "")
+    return (*[-value.toordinal() for value in dates], -query, icn)
+
 
 
 def latest_values_by_code(
@@ -37,7 +42,7 @@ def latest_values_by_code(
     ordered = sorted(
         records,
         key=lambda item: _record_sort_key(item, date_paths, resolver),
-        reverse=True,
+        reverse=False,
     )
     selected: dict[str, dict[str, Any]] = {}
     order: list[str] = []

@@ -23,6 +23,7 @@ class FinalMedparSettings:
         "medpar_ss_ls_snf_ind_0140",
     )
     expected_bytes: int = 3000
+    split_indicator_in_output: bool = True
     encoding: str = "ascii"
     require_actual_output: bool = False
     require_expected_output: bool = False
@@ -87,6 +88,7 @@ class FinalMedparSettings:
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),
             sort_fields=tuple(raw.get("sort_fields") or cls.sort_fields),
             expected_bytes=int(raw.get("expected_bytes", 3000)),
+            split_indicator_in_output=bool(raw.get("split_indicator_in_output", True)),
             encoding=str(raw.get("encoding", "ascii")),
             require_actual_output=bool(raw.get("require_actual_output", False)),
             require_expected_output=bool(raw.get("require_expected_output", False)),

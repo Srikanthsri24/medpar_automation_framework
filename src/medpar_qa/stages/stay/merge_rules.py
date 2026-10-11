@@ -130,6 +130,17 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
     snf = str(get(first,"transaction_code")) in {"0","4"}
     discharge = get(last,"discharge_status") or get(last,"patientStatus")
     check("warning_indicator_05", "0" if len(records)==1 else "2" if snf and str(discharge)=="30" else "1", "ST-WARNING-05", True)
+    from .warnings import warning06, warning08
+    for number, calculation in ((6, warning06), (8, warning08)):
+        field = f"warning_indicator_{number:02}"
+        try:
+            check(field, calculation(records, resolver), f"ST-WARNING-{number:02}", True)
+        except LookupError as exc:
+            observed = get(actual, field) if actual else None
+            results.append(RuleResult(stage=Stage.STAY, rule_id=f"ST-WARNING-{number:02}",
+                status=ValidationStatus.BLOCKED if observed is not None else ValidationStatus.NOT_APPLICABLE,
+                message=str(exc), expected="Complete source operands for V3 p24", actual=observed,
+                field_name=field, record_ids=[r.record_id for r in records]))
     return results
 
 

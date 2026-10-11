@@ -49,13 +49,15 @@ class FinalMedparProcessor(BaseStageProcessor):
             split_indicator
             and re.fullmatch(r"Y(?:\d(?:0109|1012)|99999)", str(split_indicator).strip())
         )
+        if not self.settings.split_indicator_in_output:
+            split_valid = split_indicator in (None, "")
         results.append(
             RuleResult(
                 stage=self.stage,
                 rule_id="FM-SPLIT-YEAR-INDICATOR",
                 status=ValidationStatus.PASS if split_valid else ValidationStatus.FAIL,
-                message="Split-year indicator is valid" if split_valid else "Split-year indicator is invalid",
-                expected="Y#0109, Y#1012, or Y99999",
+                message=("Final extract correctly omits the Intermediate routing indicator" if split_valid else "Final extract must omit the Intermediate routing indicator") if not self.settings.split_indicator_in_output else ("Split-year indicator is valid" if split_valid else "Split-year indicator is invalid"),
+                expected="Absent from delivered Final extract; routing verified against Intermediate lineage" if not self.settings.split_indicator_in_output else "Y#0109, Y#1012, or Y99999",
                 actual=split_indicator,
                 field_name="split_year_indicator",
                 record_ids=[record.record_id],

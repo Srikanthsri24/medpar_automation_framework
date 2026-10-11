@@ -115,6 +115,7 @@ def test_stage_status_counts_are_available_for_html_summary():
         "FAIL": 1,
         "NOT_APPLICABLE": 1,
         "BLOCKED": 0,
+        "KNOWN_DIFFERENCE": 0,
     }
 
 @pytest.mark.unit

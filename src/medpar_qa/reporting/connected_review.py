@@ -16,7 +16,7 @@ def _value(value):
 def write_connected_review(journeys, index, *, synthetic=False):
     """Separate stage outcomes, executed checks and unassessed coverage without masking errors."""
     sections = []
-    totals = {key: 0 for key in ('PASS', 'FAIL', 'BLOCKED', 'NOT_APPLICABLE')}
+    totals = {key: 0 for key in ('PASS', 'FAIL', 'BLOCKED', 'NOT_APPLICABLE', 'KNOWN_DIFFERENCE')}
     for journey, directory in journeys:
         stages = []
         for step in journey['steps']:
@@ -46,7 +46,7 @@ def write_connected_review(journeys, index, *, synthetic=False):
             table = lambda items: '<div class="scroll"><table>' + headings + ''.join(items) + '</table></div>'
             stages.append(f'<section><h3>{_esc(name)} — {_esc(step["status"])}</h3>'
                 f'<p>{step["input_records"]} input record(s) · {step["retained"]} retained · {step["dropped"]} dropped. '
-                f'{counts["PASS"]} pass · {counts["FAIL"]} fail · {counts["BLOCKED"]} blocked · {counts["NOT_APPLICABLE"]} not assessed.</p>'
+                f'{counts["PASS"]} pass · {counts["FAIL"]} fail · {counts["BLOCKED"]} blocked · {counts["NOT_APPLICABLE"]} not assessed · {counts["KNOWN_DIFFERENCE"]} known differences.</p>'
                 f'<p><b>Conclusion:</b> {_esc(step["reason"])}</p>'
                 f'<details><summary>Executed checks and proof ({len(rows)})</summary>{table(rows)}</details>'
                 f'<details><summary>Not assessed / not applicable ({len(unassessed)}) — reasons</summary>'
@@ -69,7 +69,7 @@ def write_connected_review(journeys, index, *, synthetic=False):
         'pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto}a{color:#1958a0}</style></head>'
         f'<body><header><h1>MEDPAR — {_esc(label)}</h1><p>Generated {_esc(datetime.now().astimezone().strftime("%d %B %Y, %I:%M:%S %p %Z (%z)"))}</p></header><main>'
         f'<div class="summary"><b>{len(journeys)} starting file(s) · {completed} completed · {len(journeys)-completed} stopped</b>'
-        f'<p>{totals["PASS"]} passed checks · {totals["FAIL"]} failed · {totals["BLOCKED"]} blocked · {totals["NOT_APPLICABLE"]} not assessed.</p>'
+        f'<p>{totals["PASS"]} passed checks · {totals["FAIL"]} failed · {totals["BLOCKED"]} blocked · {totals["NOT_APPLICABLE"]} not assessed · {totals["KNOWN_DIFFERENCE"]} known differences.</p>'
         f'<p>{_esc(scope)}</p></div><details><summary>How to read this report</summary>'
         '<p>KEEP: retained records continue. DROP: business rules excluded records. FAIL: observed data differs from the requirement. '
         'BLOCKED: a required input or prerequisite prevents a decision. NOT REACHED: an earlier stage stopped the file, so this stage did not run. '

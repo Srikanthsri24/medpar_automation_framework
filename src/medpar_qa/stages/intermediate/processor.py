@@ -133,6 +133,11 @@ class IntermediateProcessor(BaseStageProcessor):
         sources = by_role.get(FileRole.SOURCE, [])
         actuals = by_role.get(FileRole.ACTUAL_OUTPUT, [])
         expecteds = by_role.get(FileRole.EXPECTED_OUTPUT, [])
+        if self.settings.deduplicate_filename_exports:
+            from .export_duplicates import deduplicate_exports
+            actuals, proof = deduplicate_exports(actuals)
+            if proof is not None:
+                result.rule_results.append(proof)
 
         result.rule_results.append(
             presence_result(

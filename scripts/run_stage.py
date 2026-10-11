@@ -49,6 +49,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--aliases", default="config/field_aliases.yaml")
     parser.add_argument("--reports", default="reports", help="Relative root used when no report session is supplied")
     parser.add_argument("--report-session", default=None, help="Relative timestamped report-session directory shared by commands")
+    parser.add_argument("--final-extract", action="store_true", help="Final delivered JSON omits Intermediate Split-Year Indicator")
+    parser.add_argument("--split-current-year", type=int, help="Explicit Split Y0 business year")
     parser.add_argument("--per-file", action="store_true", help="Independent source-only checks; do not group identities across files")
     parser.add_argument("--show-pass", action="store_true", help="PASS validations are printed by default; retained for compatibility")
     parser.add_argument("--failures-only", action="store_true", help="Terminal only: hide PASS and N/A checks")
@@ -127,6 +129,17 @@ def main() -> int:
     run_id = args.run_id or f"{stage.value}_{run_date.isoformat()}"
     command_id = args.command_id or slugify(run_id)
     settings = _stage_settings(stage, args.mode)
+    if stage == Stage.INTERMEDIATE:
+        settings[stage.value]["deduplicate_filename_exports"] = True
+    if args.final_extract:
+        if stage != Stage.FINAL_MEDPAR:
+            raise ValueError("--final-extract is for Final MEDPAR only")
+        settings[stage.value]["split_indicator_in_output"] = False
+        settings[stage.value]["identity_fields"] = ["hicn", "provider_id", "admission_date"]
+    if args.split_current_year is not None:
+        if stage != Stage.SPLIT:
+            raise ValueError("--split-current-year is for Split only")
+        settings[stage.value]["current_year"] = args.split_current_year
     settings[stage.value]["require_matching_snapshot"] = args.require_matching_snapshot
     manifest = RunManifest(
         run_id=run_id,

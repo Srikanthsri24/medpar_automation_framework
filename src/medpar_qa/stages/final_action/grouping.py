@@ -39,10 +39,14 @@ def build_group_key(
     """Build the Final Action record-type/HICN/provider/from/thru identity; admission date does not
     split this claim group.
     """
-    rec_type = derive_record_type(
-        resolver.get(record.data, "transaction_code"),
-        validate_transaction_codes=validate_transaction_codes,
-    )
+    # While TC validation is deferred, TC cannot define different bill cohorts.
+    # DEV RICID identifies IP/SNF independently. With no RICID, omit the type
+    # discriminator rather than split a cancellation pair using an invalid TC.
+    if not validate_transaction_codes:
+        ricid = resolver.get(record.data, "ricid")
+        rec_type = {"1": "I", "2": "S"}.get(str(ricid).strip(), "TYPE_NOT_USED")
+    else:
+        rec_type = derive_record_type(resolver.get(record.data, "transaction_code"))
     hicn = str(resolver.get(record.data, "hicn", "")).strip()
     provider_id = str(resolver.get(record.data, "provider_id", "")).strip()
     stay_from = parse_date(resolver.get(record.data, "stay_from_date"))

@@ -41,7 +41,7 @@ requirements:
     stage: final_action
     status: IMPLEMENTED
     rule_id: FA-RULE-06
-    logic: Matching control numbers plus QC0 Action/Transaction code 4 or 6 drop both; otherwise keep QC5.
+    logic: Matching control numbers plus QC0 action code 4 or 6 drop both; otherwise keep QC5.
   - id: LD-3137
     stage: [final_action, split, stay, final_medpar]
     status: IMPLEMENTED

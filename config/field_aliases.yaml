@@ -334,6 +334,7 @@ pass_thru_per_diem:
 - passThruPerDiemAmount
 - MEDPAR-PASS-THRU-PER-DIEM
 utilization_days:
+- medparCovDays0280
 - utilizationDays
 - utilizationDayCount
 - coveredDays
@@ -902,3 +903,16 @@ medpar_vbp_prtcpnt_ind_cd_0750:
 - MEDPAR-VBP-PRTCPNT-IND-CD-0750
 medpar_warning_ind_0640:
 - MEDPAR-WARNING-IND-0640
+
+ricid:
+- ricid
+- RICID
+- recordTypeId
+cancel_reason_code:
+- cancelReasonCode
+- claimCancelReasonCode
+- intermediaryRequestedClaimCancelReasonCode
+edit_codes:
+- editCodes
+- editCodeTable
+- nchEditCodes

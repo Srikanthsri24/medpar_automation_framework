@@ -95,10 +95,10 @@ def render_results_text(
                 "",
                 "#" * 118,
                 f"STAGE: {stage_result.stage.value.replace('_', ' ').upper()}",
-                f"STAGE STATUS: {'PASS' if stage_result.passed else 'FAIL / BLOCKED'}",
+                f"STAGE STATUS: {'WITH KNOWN DIFFERENCES' if stage_result.passed and counts['KNOWN_DIFFERENCE'] else 'PASS' if stage_result.passed else 'FAIL / BLOCKED'}",
                 (
                     f"VALIDATION COUNTS: PASS={counts['PASS']} | FAIL={counts['FAIL']} | "
-                    f"BLOCKED={counts['BLOCKED']} | NOT_APPLICABLE={counts['NOT_APPLICABLE']}"
+                    f"BLOCKED={counts['BLOCKED']} | NOT_APPLICABLE={counts['NOT_APPLICABLE']} | KNOWN_DIFFERENCE={counts['KNOWN_DIFFERENCE']}"
                 ),
                 "#" * 118,
             ]

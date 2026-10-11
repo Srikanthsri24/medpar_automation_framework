@@ -1,0 +1,187 @@
+{
+  "reviewed_on": "2026-10-12",
+  "review_baseline": "main7712d8c (older than medpar-v3-demo)",
+  "target_branch": "medpar-v3-demo",
+  "source_reports": [
+    "Rule6_Verification.pdf",
+    "Repo_vs_Requirements_Gap_Report_v2.pdf"
+  ],
+  "scope": "Code corrections and supplied-file validation; no fabricated CMS approval or data repair",
+  "findings": [
+    {
+      "id": "N1",
+      "status": "PARTIAL_APPROVAL_PENDING",
+      "remarks": "Transaction validation remains deferred as explicitly requested. KNOWN_DIFFERENCE and register added; no CMS approval or expiry was supplied. Split remains strict.",
+      "evidence": "FA-TC-DEFERRED",
+      "remaining_action": "Provide approved mapping, formal waiver and expiry; no fabricated approval."
+    },
+    {
+      "id": "N2",
+      "status": "CODE_FIXED",
+      "remarks": "Unvalidated transaction codes no longer create separate bill groups. RICID identifies IP/SNF where supplied; otherwise type is omitted while TC checking is deferred.",
+      "evidence": "test_rule6_mixed_valid_invalid_transaction_cancels_pair",
+      "remaining_action": "Validate the production RICID mapping with the team."
+    },
+    {
+      "id": "N3",
+      "status": "CODE_FIXED_WITH_SCOPE_LIMIT",
+      "remarks": "LD-3188 accepted only for an ambiguous latest QC5 selected by Rule 10B; other differing ties remain blocked. Identical payload ties already pass.",
+      "evidence": "test_ld3188_scope_accepts_only_rule10b_qc5_tie",
+      "remaining_action": "Approval cannot be extended to unrelated rule ties."
+    },
+    {
+      "id": "G1",
+      "status": "CONFIGURATION_FIXED",
+      "remarks": "Split.current_year is explicit. Q61 March 2026 profile uses Y0=2025; R65 Q2 2025 routing audit uses Y0=2024. Generic fallback retained for compatibility.",
+      "evidence": "test_explicit_split_y0_last_complete_year",
+      "remaining_action": "Supply the business-year parameter for each future dataset."
+    },
+    {
+      "id": "G2",
+      "status": "CONFIGURABLE_DECISION_PENDING",
+      "remarks": "Rule10A latest-QC0 guard configurable; existing MM-FINAC requirements behavior remains default. Tree policy is regression-tested.",
+      "evidence": "test_tree_rule10a_policy_is_explicit",
+      "remaining_action": "CMS/PO must choose the authoritative conflicting specification."
+    },
+    {
+      "id": "G3",
+      "status": "CODE_FIXED",
+      "remarks": "Known differences register and enum status implemented, separate counts and explanation in JSON/HTML/connected reports.",
+      "evidence": "config/known_differences.yaml",
+      "remaining_action": "Formal approval fields remain explicit when not supplied."
+    },
+    {
+      "id": "G4",
+      "status": "CODE_FIXED_WITH_SCOPE_LIMIT",
+      "remarks": "LD-3188 handled within its Rule10B/QC5 scope; no blanket acceptance of differing records under other rules.",
+      "evidence": "test_ld3188_scope_accepts_only_rule10b_qc5_tie",
+      "remaining_action": "Any other ambiguity needs an approved ordering rule."
+    },
+    {
+      "id": "G5",
+      "status": "SOURCE_DATA_DEFECT",
+      "remarks": "QC2/4/6 remain outside the documented allowed QC set. Action codes4/6 are separate. Do not relabel invalid query codes without source mapping.",
+      "evidence": "FA-PRE-SCHEMA",
+      "remaining_action": "Upstream owner must correct QC mapping or supply an approved domain change."
+    },
+    {
+      "id": "G6",
+      "status": "SPECIFICATION_DECISION_PENDING",
+      "remarks": "Admission grouping and sort identities are separately configurable. Requirements, V3 and LD3137 conflict; existing grouping is retained.",
+      "evidence": "STAY-IDENTITY",
+      "remaining_action": "PO must confirm Stay grouping and sort, separately from FA."
+    },
+    {
+      "id": "G7",
+      "status": "CODE_FIXED",
+      "remarks": "Q61 has83 identities each exported twice; only filename differs. Intermediate profile collapses identical cross-file business payloads and preserves proof. Different fields or same-file duplicates are never silently deduplicated.",
+      "evidence": "test_export_dedup_preserves_differing_business_data",
+      "remaining_action": "Both original job folders remain preserved."
+    },
+    {
+      "id": "G8",
+      "status": "ALREADY_FIXED_VERIFIED",
+      "remarks": "HICN reconstructs account0021 plus BIC0022 when direct HICN absent; case/separator-insensitive resolver supports supplied camel names.",
+      "evidence": "test_hicn_from_final_account_and_bic",
+      "remaining_action": "No new input needed for this alias fix."
+    },
+    {
+      "id": "G10",
+      "status": "CHECKS_IMPLEMENTED_REFERENCE_MAPPING_PENDING",
+      "remarks": "Warnings06/08 derive from Stay sources;02/03/07 checked in Intermediate;01/05/06/08 carried forward. WI02 requires an explicit boolean edit-error mapping; WI07 requires approved state/county validity results. Undefined WI03 mixed-zero cases are blocked.",
+      "evidence": "tests/unit/test_review_v2_regressions.py",
+      "remaining_action": "Supply edit-code semantics and approved state/county range mapping to evaluate those flags in production."
+    },
+    {
+      "id": "G11",
+      "status": "CODE_FIXED",
+      "remarks": "Latest code precedence includes service dates, process/accretion dates, QC and ICN; source evidence retains chosen bill. Value code amounts still sum.",
+      "evidence": "test_latest_duplicate_code_uses_query_then_icn",
+      "remaining_action": "Complete equal-identity tie policy remains subject to approved source definitions."
+    },
+    {
+      "id": "G12",
+      "status": "MODERN_RUN_PROFILE_FIXED",
+      "remarks": "Connected modern profile disables single-service-year and legacy900/875 table limits. Library compatibility defaults remain available for legacy tests.",
+      "evidence": "CONNECTED_SETTINGS.final_action",
+      "remaining_action": "Choose modernization profile deliberately for independent legacy runs."
+    },
+    {
+      "id": "G13",
+      "status": "CONFIGURABLE_DECISION_PENDING",
+      "remarks": "Outside-window indicator configurable. Admission-date Stay grouping has a documented V3 basis. No undefined DEV Y9 suffix is invented.",
+      "evidence": "SplitSettings.outside_window_indicator",
+      "remaining_action": "Confirm DEV outside-window encoding and Split stay-key policy."
+    },
+    {
+      "id": "G14",
+      "status": "VALIDATION_IMPLEMENTED_ACCEPTANCE_PENDING",
+      "remarks": "R65 Final extracts imported. Per-file format and archive lineage/routing checks added; no full production writers or approved physical bytes provided.",
+      "evidence": "scripts/run_r65_audit.py",
+      "remaining_action": "Provide approved golden outputs and copybook for physical certification."
+    },
+    {
+      "id": "M1",
+      "status": "CHECK_IMPLEMENTED_SOURCE_PASSES",
+      "remarks": "All914 Final files match exact Intermediate lineage and CY/FY folder-year formulas.",
+      "evidence": "FM-ARCHIVE-PERIOD-ROUTE",
+      "remaining_action": "The audit business-year anchor is explicit."
+    },
+    {
+      "id": "M2",
+      "status": "CHECK_IMPLEMENTED_POLICY_PENDING",
+      "remarks": "FY correctly omitsY30109;5 records belong to newest partial FY2025 and are KNOWN_DIFFERENCE, not certified acceptance.",
+      "evidence": "FM-ARCHIVE-PARTIAL-FY",
+      "remaining_action": "PO must confirm partial newest FY inclusion."
+    },
+    {
+      "id": "M3",
+      "status": "CHECK_IMPLEMENTED_SOURCE_PASSES",
+      "remarks": "Final S/L records route to SS;N records to SNF. All914 folder checks pass.",
+      "evidence": "FM-ARCHIVE-CLASSIFICATION-ROUTE",
+      "remaining_action": "No source issue found in supplied files."
+    },
+    {
+      "id": "M4",
+      "status": "CHECK_IMPLEMENTED_SOURCE_DEFECT_AND_POLICY_PENDING",
+      "remarks": "Retained and Intermediate dropped records checked. One dropped record does not satisfy covered_days>LOS. Bypass stage ownership is not silently changed.",
+      "evidence": "FM-ARCHIVE-BYPASS-LOCATION",
+      "remaining_action": "Upstream must explain drop reason; PO confirms whether bypass belongs at Intermediate or Final."
+    },
+    {
+      "id": "M5",
+      "status": "CODE_AND_CHECK_FIXED_SOURCE_PASSES",
+      "remarks": "All914 Final payloads equal exactly one Intermediate payload after deleting only Split-Year Indicator. Final-extract profile validates its intentional removal.",
+      "evidence": "FM-ARCHIVE-EXACT-LINEAGE",
+      "remaining_action": "This is JSON field equality, not physical byte certification."
+    },
+    {
+      "id": "M6",
+      "status": "CHECK_IMPLEMENTED_SOURCE_DEFECT",
+      "remarks": "Per-folder reconciliation counts checked against extracted files. Split1121 input minus653 output minus224 dropped leaves244 unaccounted claims.",
+      "evidence": "FM-ARCHIVE-RECONCILIATION-BALANCE",
+      "remaining_action": "Upstream must reconcile missing error/other dispositions; framework cannot invent244 outputs."
+    },
+    {
+      "id": "M7",
+      "status": "CHECK_IMPLEMENTED_SOURCE_DEFECT_REFERENCE_PENDING",
+      "remarks": "R65:546 invalid/blank SSI0251 day counts,14 invalid SSI0252 indicators,552 CCN1650 mismatches. Existing source-driven derivation code and new archive checks detect them.",
+      "evidence": "FM-ARCHIVE-SSI-DAYS-DOMAIN / SSI-INDICATOR-DOMAIN / BASE-FACILITY-CCN",
+      "remaining_action": "Upstream must correct field assignment and CCN generation; SSI feed needed to verify exact day derivation."
+    }
+  ],
+  "validation": {
+    "automated_tests": "371 passed; includes intentional rejection tests",
+    "r65_final_format_files": 914,
+    "r65_exact_lineage_matches": 914,
+    "r65_source_defects": {
+      "SSI_0251": 546,
+      "SSI_0252": 14,
+      "CCN_1650": 552,
+      "bypass_drop_mismatch": 1,
+      "split_unaccounted_claims": 244
+    },
+    "production_acceptance": "Not established",
+    "q61_connected": "14FAKEEP/4SplitKEEP/4StayBLOCKED/0completed after explicitY0=2025; supplied candidate identities must reconcile with corrected business-year anchor"
+  }
+}

@@ -16,6 +16,9 @@ class Rule10BQC5Fallback(FinalActionRule):
     """
     rule_id = "FA-RULE-10B"
 
+    def __init__(self, settings=None):
+        self.requires_latest_qc0 = bool(settings and settings.rule10a_requires_latest_qc0)
+
     def applies(self, context: FinalActionGroupContext) -> bool:
         """Test this route prerequisite: QC5 exists, the group is not the simple Rule-6 pair and
         Rule-10A count condition is false. Earlier router matches take precedence.
@@ -23,6 +26,7 @@ class Rule10BQC5Fallback(FinalActionRule):
         simple_rule6_group = context.count == 2 and set(context.query_codes) == {0, 5}
         rule10a_condition = (
             context.qc_count(0) > context.qc_count(5)
+            and (not self.requires_latest_qc0 or context.latest_qc == 0)
         )
         return context.has_qc5 and not simple_rule6_group and not rule10a_condition
 

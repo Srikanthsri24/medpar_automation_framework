@@ -42,6 +42,7 @@ def write_json_report(
             "fail": counts["FAIL"],
             "blocked": counts["BLOCKED"],
             "not_applicable": counts["NOT_APPLICABLE"],
+            "known_difference": counts["KNOWN_DIFFERENCE"],
             "record_decisions": sum(len(item.decisions) for item in stage_results),
         },
         "stages": [result.to_dict() for result in stage_results],

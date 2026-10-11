@@ -74,9 +74,9 @@ class SplitProcessor(BaseStageProcessor):
         if stay_from > stay_thru:
             raise ValueError("stayFromDate must be on or before stayThruDate")
 
-        # Oct 9 clarification: four whole calendar years, Y0 is the run year.
+        # Y0 is an explicit business-year parameter when configured; otherwise retain the prior run-year default.
         reference = (admission or stay_from) if self._transaction_code(record) in (0, 4) else (last_thru or stay_thru)
-        years_back = self.run_date.year - reference.year
+        years_back = (self.settings.current_year if self.settings.current_year is not None else self.run_date.year) - reference.year
         if not 0 <= years_back < self.settings.window_years:
             return self.settings.outside_window_indicator
         suffix = "0109" if reference.month <= 9 else "1012"

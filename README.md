@@ -2,7 +2,7 @@
 
 Validate Final Action, Four-Year Split, Stay, Intermediate and Final MEDPAR using JSON or Parquet inputs. The framework compares production outputs with source rules and approved expected outputs, and produces reports explaining every recorded result.
 
-**Current verification:** 330 automated tests passed on 12 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
+**Current verification:** 371 automated tests passed on 12 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
 
 For your team demo, start with [how one run works](#how-one-run-works), [stage logic](#stage-logic-to-explain-first), [common questions](#questions-your-team-is-likely-to-ask) and [Python concepts](#python-concepts-used-here). Use the expandable [file/function reference](#every-python-file-class-and-function) for coding questions and the [rule reference](#rule-explanation-reference) for validation questions. Search the exact function or file name to jump to its detailed explanation.
 
@@ -4614,7 +4614,7 @@ Initialize this FinalActionRuleRouter with the supplied dependencies/configurati
 
 Inputs are the signature above. Return contract: `None`. This method/helper also has access to its enclosing object or local closure.
 
-Calls/dependencies: `AllQC0Rule`, `Rule01SingleClaim`, `Rule02ThreeClaimSequence`, `Rule06TwoClaimsQC0QC5`, `Rule05ThreeClaimsOneQC0NoQC5`, `Rule03SameQueryCode`, `Rule10AQC5QC0Dominates`, `Rule10BQC5Fallback`, `Rule07NoQC5QC0Dominates`, `Rule08NoQC5LatestQC0`, `Rule09NoQC5LatestNonQC0`, `DefaultFinalActionRule`.
+Calls/dependencies: `AllQC0Rule`, `Rule01SingleClaim`, `Rule02ThreeClaimSequence`, `Rule06TwoClaimsQC0QC5`, `Rule05ThreeClaimsOneQC0NoQC5`, `Rule03SameQueryCode`, `Rule10AQC5QC0Dominates`, `Rule 10BQC5Fallback`, `Rule07NoQC5QC0Dominates`, `Rule08NoQC5LatestQC0`, `Rule09NoQC5LatestNonQC0`, `DefaultFinalActionRule`.
 
 **`FinalActionRuleRouter.select(self, context: FinalActionGroupContext)`**
 
@@ -4648,10 +4648,10 @@ No Python function/class is declared here. The responsibility is in module-level
 Module-level execution/configuration (runs when this script is imported/executed):
 
 ```python
-__all__ = ['AllQC0Rule', 'DefaultFinalActionRule', 'Rule01SingleClaim', 'Rule02ThreeClaimSequence', 'Rule03SameQueryCode', 'Rule05ThreeClaimsOneQC0NoQC5', 'Rule06TwoClaimsQC0QC5', 'Rule07NoQC5QC0Dominates', 'Rule08NoQC5LatestQC0', 'Rule09NoQC5LatestNonQC0', 'Rule10AQC5QC0Dominates', 'Rule10BQC5Fallback']
+__all__ = ['AllQC0Rule', 'DefaultFinalActionRule', 'Rule01SingleClaim', 'Rule02ThreeClaimSequence', 'Rule03SameQueryCode', 'Rule05ThreeClaimsOneQC0NoQC5', 'Rule06TwoClaimsQC0QC5', 'Rule07NoQC5QC0Dominates', 'Rule08NoQC5LatestQC0', 'Rule09NoQC5LatestNonQC0', 'Rule10AQC5QC0Dominates', 'Rule 10BQC5Fallback']
 ```
 
-Module data `__all__`: `['AllQC0Rule', 'DefaultFinalActionRule', 'Rule01SingleClaim', 'Rule02ThreeClaimSequence', 'Rule03SameQueryCode', 'Rule05ThreeClaimsOneQC0NoQC5', 'Rule06TwoClaimsQC0QC5', 'Rule07NoQC5QC0Dominates', 'Rule08NoQC5LatestQC0', 'Rule09NoQC5LatestNonQC0', 'Rule10AQC5QC0Dominates', 'Rule10BQC5Fallback']`
+Module data `__all__`: `['AllQC0Rule', 'DefaultFinalActionRule', 'Rule01SingleClaim', 'Rule02ThreeClaimSequence', 'Rule03SameQueryCode', 'Rule05ThreeClaimsOneQC0NoQC5', 'Rule06TwoClaimsQC0QC5', 'Rule07NoQC5QC0Dominates', 'Rule08NoQC5LatestQC0', 'Rule09NoQC5LatestNonQC0', 'Rule10AQC5QC0Dominates', 'Rule 10BQC5Fallback']`
 
 </details>
 
@@ -5337,13 +5337,13 @@ Implement the Final Action rule 10b applicability predicate and resulting record
 
 [Open source](src/medpar_qa/stages/final_action/rules/rule_10b.py)
 
-**Class `Rule10BQC5Fallback`** — QC5 exists, the group is not the simple Rule-6 pair and Rule-10A count condition is false. Keep the newest non-QC0 only and drop the rest, without comparing ICNs.
+**Class `Rule 10BQC5Fallback`** — QC5 exists, the group is not the simple Rule-6 pair and Rule-10A count condition is false. Keep the newest non-QC0 only and drop the rest, without comparing ICNs.
 
 Class constants/policies:
 
 - `rule_id = 'FA-RULE-10B'`
 
-**`Rule10BQC5Fallback.applies(self, context: FinalActionGroupContext)`**
+**`Rule 10BQC5Fallback.applies(self, context: FinalActionGroupContext)`**
 
 Test this route prerequisite: QC5 exists, the group is not the simple Rule-6 pair and Rule-10A count condition is false. Earlier router matches take precedence.
 
@@ -5357,7 +5357,7 @@ Calculations/returned values and field-check mapping:
 
 Calls/dependencies: `set`, `context.qc_count`.
 
-**`Rule10BQC5Fallback.evaluate(self, context: FinalActionGroupContext)`**
+**`Rule 10BQC5Fallback.evaluate(self, context: FinalActionGroupContext)`**
 
 Keep the newest non-QC0 only and drop the rest, without comparing ICNs. Return RuleEvaluation with its outcome and any explicit record decisions.
 
@@ -13138,4 +13138,18 @@ Connected evidence reports open with file and stage conclusions. Expand “Execu
 
 `R65.txt` is a ZIP archive. Import it with `python scripts/extract_r65.py --source /path/to/R65.txt`. It preserves all stage folders under `data/production/r65`, records SHA-256 checksums in `archive_inventory.json`, and refuses unsafe paths or conflicting overwrites. The supplied archive contains 4,474 files, including 914 Final JSON extracts: 609 in `6-final-processing/MEDPAR_FINAL_SS_FILES` and 305 in `MEDPAR_FINAL_SNF_FILES`. Q61 files remain separate.
 
-`python run_commands.py --stage final_medpar` runs the two Final output-check configurations independently and generates file-wise evidence reports. Each file is validated independently, preventing repeated identities across FY/CY partitions from collapsing the reviewed records. The default connected run also discovers these Final candidates; earlier stages must succeed and identities must match before they can be used. R65 outputs are supplied actual candidates, not approved golden outputs. All 914 Final extracts lack the split-year indicator; no indicator is invented from FY/CY directory names. JSON checks do not certify the original 3000-byte physical records. Production data and local reports remain ignored by Git.
+`python run_commands.py --stage final_medpar` runs the two Final output-check configurations independently and generates file-wise evidence reports. Each file is validated independently, preventing repeated identities across FY/CY partitions from collapsing the reviewed records. The default connected run also discovers these Final candidates; earlier stages must succeed and identities must match before they can be used. R65 outputs are supplied actual candidates, not approved golden outputs. All 914 Final extracts intentionally omit the Intermediate split-year indicator. The Final-extract profile checks its removal; an archive audit verifies exact field preservation and folder routing against matched Intermediate records, rather than inventing an indicator from folder names. JSON checks do not certify the original 3000-byte physical records. Production data and local reports remain ignored by Git.
+
+## Review Update 2 corrections and evidence
+
+[Readable review summary](reviews/review_v2_status.html) and [finding-by-finding status data](reviews/review_v2_status.json) covers every finding listed in the two October 11 review PDFs. Their baseline is older `main` commit7712d8c; this work targets `medpar-v3-demo`. [Known differences](config/known_differences.yaml) records the team-requested transaction check suspension, LD-3188 scope, and outstanding policy decisions. KNOWN_DIFFERENCE is separate from PASS and N/A and does not constitute CMS approval.
+
+Rule 6 now nets the same bill despite mixed valid/invalid transaction codes while TC validation is deferred: RICID 1/2 identifies IP/SNF where supplied; without RICID, transaction type is omitted from the group key. Regression tests cover both QC orders, cancellation and non-cancellation actions. LD-3188 accepts only a tied latest QC5 under Rule 10B; other differing ties remain blocked. `rule10a_requires_latest_qc0=True` selects the alternative Tree routing; default remains the existing requirements implementation until the product owner resolves the conflicting sources.
+
+Split has an explicit `current_year` business parameter. The configured Q61 March 2026 run uses 2025. `--split-current-year` sets it for independent runs. The connected modernization profile disables legacy single-service-year and 900/875 table caps; library defaults remain available for legacy comparisons.
+
+Stay warnings 06/08 are calculated from cancellation and duplicate/death evidence. Intermediate checks warnings 02/03/07 and carries forward 01/05/06/08. Warning 02 requires a mapped edit-error boolean; warning 07 requires approved state/county validation booleans; undefined/missing operands are reported rather than guessed. Latest code precedence includes service dates, process/accretion, query code and ICN. Intermediate duplicate-export handling ignores only filename metadata, requires identical business payloads in different files, preserves originals and reports proof; differing payloads are not discarded.
+
+Run `python scripts/run_r65_audit.py` for Final JSON lineage, SS/SNF and CY/FY routing, route completeness, Intermediate bypass sets, SSI/CCN domains and reconciliation balancing. `python run_commands.py --stage final_medpar` includes this audit after the two per-file output checks. R65 audit uses explicit Y0=2024 for its Q2 2025 dataset. All 914 Final record has exactly one Intermediate match after deleting only Split-Year Indicator. FY 2025 partial output is disclosed as an unconfirmed policy difference.
+
+The source reconciliation leaves 244 Split claims unaccounted for (1121−653−224). One Intermediate drop fails the covered-days>LOS criterion. R65 has 546 invalid/blank 0251 day counts, 14 invalid 0252 indicators and 552 base-CCN mismatches. These are detected source/output defects; supplied data is not rewritten to fabricate passes. Full 3000-byte certification still requires the approved copybook/golden outputs. Stay identity, partial FY and bypass ownership need product-owner decisions, and edit/state/county/SSI feeds need approved mappings.

@@ -13,6 +13,7 @@ class SplitSettings:
     explicit manifest overrides.
     """
     window_years: int = 4
+    current_year: int | None = None
     allowed_transaction_codes: tuple[int, ...] = (0, 1, 2, 3, 4)
     maximum_bills_per_stay: int = 75
     identity_fields: tuple[str, ...] = (
@@ -38,6 +39,7 @@ class SplitSettings:
         raw = raw or {}
         return cls(
             window_years=int(raw.get("window_years", 4)),
+            current_year=int(raw["current_year"]) if raw.get("current_year") is not None else None,
             allowed_transaction_codes=tuple(int(v) for v in raw.get("allowed_transaction_codes", (0, 1, 2, 3, 4))),
             maximum_bills_per_stay=int(raw.get("maximum_bills_per_stay", 75)),
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),

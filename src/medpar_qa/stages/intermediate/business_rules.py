@@ -500,6 +500,31 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
     check("INT-TWO-MIDNIGHT", "medpar_2_midnight_stay_ind_1280",lambda:"Y" if "72" in codes(spans(),"spanCode","occurrenceSpanCode") else "N")
     check("INT-WARNING-04-CALCULATION", "warning_indicator_04", lambda: "0" if to_decimal(required("utilization_days")) == length_of_stay(admission(), thru(), status()) else "1" if to_decimal(required("utilization_days")) < length_of_stay(admission(), thru(), status()) else "2")
     check("INT-WARNING-09-CALCULATION", "warning_indicator_09", lambda: "1" if to_decimal(required("pass_thru_per_diem")) != 0 else "0")
+    def warning02():
+        flag = required("edit_error_present")
+        if not isinstance(flag, bool):
+            raise LookupError("Warning 02 requires a mapped boolean edit_error_present from the edit-code table")
+        return "1" if flag else "0"
+    check("INT-WARNING-02-CALCULATION", "warning_indicator_02", warning02)
+    def warning03():
+        payment = to_decimal(required("medicare_payment_amount", "medicarePaymentAmount", "claimPaymentAmount"))
+        charges = to_decimal(required("medpar_tot_chrg_0400", "total_charges"))
+        if payment < 0 and charges < 0: return "1"
+        if payment < 0: return "2"
+        if charges < 0: return "3"
+        if payment > 0 and charges > 0: return "0"
+        if payment == charges == to_decimal(required("primary_payment_amount")) == to_decimal(required("utilization_days")) == 0: return "4"
+        raise LookupError("V3 p32 does not define this mixed zero/nonzero warning 03 case")
+    check("INT-WARNING-03-CALCULATION", "warning_indicator_03", warning03)
+    def warning07():
+        state = required("state_code_valid")
+        county = required("county_code_valid")
+        if not isinstance(state, bool) or not isinstance(county, bool):
+            raise LookupError("Warning 07 needs boolean state/county validation from approved ranges")
+        return "0" if state and county else "1" if not state and not county else "2" if not state else "3"
+    check("INT-WARNING-07-CALCULATION", "warning_indicator_07", warning07)
+    for number in (1, 5, 6, 8):
+        check("INT-WARNING-CARRY-FORWARD", f"warning_indicator_{number:02}", lambda number=number: required(f"warning_indicator_{number:02}"))
     for number in range(11,18):
         check("INT-WARNING-ZERO", f"warning_indicator_{number:02}", lambda: "0")
     return results

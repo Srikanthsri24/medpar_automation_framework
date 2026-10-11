@@ -127,14 +127,14 @@ def test_transaction_validation_disabled_routes_by_query_code(resolver, make_rec
     result = processor.validate([record])
     assert not any(x.rule_id in {"FA-PRE-SCHEMA", "FA-PRE-GROUPING"} for x in result.rule_results)
     assert result.decisions[0].decision == RecordDecision.KEEP
-    assert processor.group_key(record)[0].startswith("UNCLASSIFIED:")
+    assert processor.group_key(record)[0] == "TYPE_NOT_USED"
 
 
-def test_disabled_transaction_check_preserves_distinct_claim_types(resolver, make_record):
+def test_disabled_transaction_check_does_not_split_bill_by_transaction_code(resolver, make_record):
     processor = FinalActionProcessor(resolver)
     keys = [processor.group_key(make_record(base_claim(transactionCode=code)))
             for code in [0, 1, 5, 6, "C", "H"]]
-    assert len(set(keys)) == len(keys)
+    assert len(set(keys)) == 1
 
 
 def test_transaction_check_setting_can_be_reenabled():

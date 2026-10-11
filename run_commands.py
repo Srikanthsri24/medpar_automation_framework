@@ -44,7 +44,11 @@ from medpar_qa.reporting.session_index import refresh_session_indexes  # noqa: E
 
 PYTHON = sys.executable
 CONNECTED_PIPELINE_ENABLED = True  # False restores independent STAGE_RUNS validation.
-CONNECTED_SETTINGS: dict[str, Any] = {}  # Optional stage settings; no code-domain overrides by default.
+CONNECTED_SETTINGS: dict[str, Any] = {
+    "split": {"current_year": 2025},
+    "intermediate": {"deduplicate_filename_exports": True},
+    "final_action": {"enforce_single_service_year": False, "enforce_legacy_table_limits": False},
+}  # Optional stage settings; no code-domain overrides by default.
 STOP_ON_FAILURE = False
 REPORTS_ROOT = "reports"  # Relative path only.
 
@@ -233,7 +237,9 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
         "--show-pass",
     ]
     if stage == "final_medpar" and item.get("mode", "calculate") == "calculate":
-        args.append("--per-file")
+        args.extend(["--per-file", "--final-extract"])
+    if stage == "split":
+        args.extend(["--split-current-year", "2025"])
     _append_paths(args, "--source", list(item.get("source") or []))
     _append_paths(args, "--actual", list(item.get("actual") or []))
     _append_paths(args, "--expected", list(item.get("expected") or []))
@@ -466,6 +472,16 @@ def main() -> int:
         if unexpected_failures and STOP_ON_FAILURE:
             break
 
+    if selected_stage == "final_medpar" and (PROJECT_ROOT / "data/production/r65").is_dir():
+        from scripts.run_r65_audit import run_audit
+        audit = run_audit(session)
+        audit_code = 0 if audit.passed else 1
+        unexpected_failures += int(not audit.passed)
+        executions.append({"name": "R65 Final lineage, routing and reconciliation audit", "stage": "final_medpar",
+            "returncode": audit_code, "expected_exit_codes": (0,), "expected": audit.passed,
+            "outcome": "COMPLETED AS EXPECTED" if audit.passed else "BUSINESS FAIL / BLOCKED",
+            "output": f"Archive validation counts: {audit.status_counts}",
+            "report_files": [relative_display(session.root / "final_medpar/r65_lineage_routing_reconciliation/report.html", project_root=PROJECT_ROOT)]})
     master = refresh_session_indexes(session.root, executions=executions)
     write_quality_summary(session.root, executions)
     print("\n" + "=" * 118)

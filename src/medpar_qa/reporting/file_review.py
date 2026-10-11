@@ -42,6 +42,8 @@ def file_review(stage, validations, anchor_prefix):
             outcome = 'FAIL — one or more linked checks found a discrepancy. Review the failed rules below.'
         elif counts['BLOCKED']:
             outcome = 'BLOCKED — missing inputs or prerequisites prevent a complete decision.'
+        elif counts['KNOWN_DIFFERENCE']:
+            outcome = 'Checks include a known difference; review the deviation and approval requirements before acceptance.'
         elif counts['PASS']:
             outcome = 'Recorded checks passed. This does not certify rules without file-level evidence or unresolved stage-wide checks.'
         else:
@@ -70,8 +72,9 @@ def stage_conclusion(stage, validations):
     read = {p for c in validations if c.get('rule_id') == 'INGEST-READ-FILE' and c.get('status') == 'PASS' for p in c.get('source_files', [])}
     failed_files = {p for c in validations if c.get('status') == 'FAIL' for p in c.get('source_files', [])}
     blocked_files = {p for c in validations if c.get('status') == 'BLOCKED' for p in c.get('source_files', [])}
-    status = 'FAIL' if counts['FAIL'] else 'BLOCKED' if counts['BLOCKED'] else 'PASS' if counts['PASS'] else 'NOT ESTABLISHED'
+    status = 'FAIL' if counts['FAIL'] else 'BLOCKED' if counts['BLOCKED'] else 'WITH KNOWN DIFFERENCES' if counts['KNOWN_DIFFERENCE'] else 'PASS' if counts['PASS'] else 'NOT ESTABLISHED'
     explanation = {
+        'WITH KNOWN DIFFERENCES': 'Disclosed deviations remain. Applicable checks may continue, but these deviations are not passing validations or production approval.',
         'FAIL': 'This stage is not accepted because recorded checks found discrepancies. Correct the failed checks and resolve any blocked checks before acceptance.',
         'BLOCKED': 'This stage cannot be accepted yet because required inputs or prerequisites are missing. Supply them and rerun the blocked checks.',
         'PASS': 'All recorded applicable checks passed and no failures or blocks were recorded. This conclusion covers this run and its recorded checks; unexecuted rules and missing production certification remain outside this result.',
@@ -88,7 +91,7 @@ def stage_conclusion(stage, validations):
         examples = '<ul>' + ''.join(f'<li>{esc(m)}</li>' for m in messages[:3]) + '</ul>'
         rows.append(f'<tr><td>{esc(outcome)} · {esc(rule)}<br>{esc(meta.title)}</td><td>{len(checks)}</td><td>{examples}</td><td>{esc(meta.remediation)}</td></tr>')
     issues = f"<details><summary>Why this stage failed or was blocked — all {len(groups)} finding categories</summary><table><tr><th>Outcome / rule</th><th>Check count</th><th>Explanation (representative messages)</th><th>Required action</th></tr>{''.join(rows)}</table><p>Open the corresponding file and full rule evidence for every affected record.</p></details>" if groups else '<p>No failed or blocked checks were recorded.</p>'
-    return f"<section class='stage-conclusion'><h3>Final conclusion — {esc(stage.replace('_', ' ').title())}: {status}</h3><p><strong>{len(files)} unique evidence files; {len(read)} successfully read; {len(validations)} checks.</strong> PASS {counts['PASS']} · FAIL {counts['FAIL']} · BLOCKED {counts['BLOCKED']} · N/A {counts['NOT_APPLICABLE']}.</p><p>{esc(explanation)}</p><p>Files linked to failed checks: {len(failed_files)}. Files linked to blocked checks: {len(blocked_files)}. These sets may overlap. Stage-wide findings also affect acceptance even when no individual file is named. N/A and unexecuted rules are not passes.</p>{issues}</section>"
+    return f"<section class='stage-conclusion'><h3>Final conclusion — {esc(stage.replace('_', ' ').title())}: {status}</h3><p><strong>{len(files)} unique evidence files; {len(read)} successfully read; {len(validations)} checks.</strong> PASS {counts['PASS']} · FAIL {counts['FAIL']} · BLOCKED {counts['BLOCKED']} · N/A {counts['NOT_APPLICABLE']} · KNOWN DIFFERENCE {counts['KNOWN_DIFFERENCE']}.</p><p>{esc(explanation)}</p><p>Files linked to failed checks: {len(failed_files)}. Files linked to blocked checks: {len(blocked_files)}. These sets may overlap. Stage-wide findings also affect acceptance even when no individual file is named. N/A and unexecuted rules are not passes.</p>{issues}</section>"
 
 
 FILE_FILTER_SCRIPT = """<script>

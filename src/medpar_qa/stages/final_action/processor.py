@@ -151,7 +151,7 @@ class FinalActionProcessor(BaseStageProcessor):
             ("continuation", continuation_count, self.settings.max_continuation_records),
             ("hold", hold_count, self.settings.max_hold_records),
         ):
-            if actual > limit:
+            if self.settings.enforce_legacy_table_limits and actual > limit:
                 result.rule_results.append(RuleResult(
                     stage=self.stage, rule_id="FA-PRE-TABLE-LIMIT",
                     status=ValidationStatus.FAIL,
@@ -212,7 +212,19 @@ class FinalActionProcessor(BaseStageProcessor):
                 source_files=sorted({record.source.file_path for record in group}),
                 evidence={"policy": "Stable source order; no differing claim payload is accepted as equivalent"},
             ))
-        if self.settings.block_ambiguous_ordering and ordering.is_ambiguous:
+        context = self._context(ordering.ordered_records, group_key)
+        selected = self.router.select(context)
+        accepted_ld3188 = ordering.is_ambiguous and selected.rule_id == "FA-RULE-10B" and context.latest_qc == 5 and ordering.ordered_records[0].record_id in ordering.ambiguous_record_ids
+        if accepted_ld3188:
+            result.rule_results.append(RuleResult(stage=self.stage, rule_id="FA-ORDERING-LD3188",
+                status=ValidationStatus.KNOWN_DIFFERENCE,
+                message="LD-3188 accepts the Rule 10B QC5 ordering difference; stable incoming order is retained",
+                expected="ACCEPT_BOTH within SORT_TIE_FINAL_ACTION_10B_QC5 scope",
+                actual=list(ordering.ambiguous_record_ids),
+                record_ids=list(ordering.ambiguous_record_ids),
+                source_files=sorted({r.source.file_path for r in group}),
+                evidence={"known_difference_id": "LD-3188", "register": "config/known_differences.yaml"}))
+        if self.settings.block_ambiguous_ordering and ordering.is_ambiguous and not accepted_ld3188:
             result.rule_results.append(
                 RuleResult(
                     stage=self.stage,
@@ -275,10 +287,11 @@ class FinalActionProcessor(BaseStageProcessor):
         if not self.settings.validate_transaction_codes:
             overall.rule_results.append(RuleResult(
                 stage=self.stage, rule_id="FA-TRANSACTION-CHECK-DISABLED",
-                status=ValidationStatus.NOT_APPLICABLE,
+                status=ValidationStatus.KNOWN_DIFFERENCE,
                 message="Final Action transaction-code validation temporarily disabled at team request; Split validation remains active",
                 expected="Transaction-code validation disabled by configuration",
                 actual={"validate_transaction_codes": False},
+                evidence={"known_difference_id": "FA-TC-DEFERRED", "register": "config/known_differences.yaml", "cms_approval": "Not supplied", "expiry": "Not supplied"},
                 field_name="transaction_code",
                 source_files=sorted({r.source.file_path for r in records if r.source.role == FileRole.SOURCE}),
             ))
