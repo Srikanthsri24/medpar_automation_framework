@@ -158,6 +158,30 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
 }
 
 
+def r65_stage_runs() -> dict[str, dict[str, Any]]:
+    """Review every supplied R65 stage independently using its actual stage boundary."""
+    root = Path("data/production/r65")
+    boundaries = {
+        "final_action": ("1-quarterly-claims", "2-final-action-rules"),
+        "split": ("2-final-action-rules", "3-4yr-window"),
+        "stay": ("3-4yr-window", "4-stay-processing"),
+        "intermediate": ("4-stay-processing", "5-intermediate-processing"),
+    }
+    profile = {}
+    for stage, (source, actual) in boundaries.items():
+        item = _production_run(f"R65 {stage.replace('_', ' ').title()} - input/output reconciliation", (source,), actual_folders=(actual,), data_root=root)
+        # R65 is a development export with no shared snapshot manifest. Check the
+        # supplied records; disclose archive completeness independently in the audit.
+        item["require_matching_snapshot"] = False
+        item["split_current_year"] = 2024
+        profile[stage] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [item]}
+    profile["final_medpar"] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [
+        _production_run("R65 Final MEDPAR short-stay output checks", ("6-final-processing/MEDPAR_FINAL_SS_FILES",), suffixes=(".json",), data_root=root),
+        _production_run("R65 Final MEDPAR SNF output checks", ("6-final-processing/MEDPAR_FINAL_SNF_FILES",), suffixes=(".json",), data_root=root),
+    ]}
+    return profile
+
+
 
 # =============================================================================
 # 2. ALL-STAGE MANIFEST RUNS
@@ -239,7 +263,7 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
     if stage == "final_medpar" and item.get("mode", "calculate") == "calculate":
         args.extend(["--per-file", "--final-extract"])
     if stage == "split":
-        args.extend(["--split-current-year", "2025"])
+        args.extend(["--split-current-year", str(item.get("split_current_year", 2025))])
     _append_paths(args, "--source", list(item.get("source") or []))
     _append_paths(args, "--actual", list(item.get("actual") or []))
     _append_paths(args, "--expected", list(item.get("expected") or []))
@@ -250,13 +274,13 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
     return Command(name, stage, command_id, args, bool(item.get("enabled", True)), tuple(item.get("expected_exit_codes", (0,))))
 
 
-def build_commands(report_session: str = "reports/_configured_preview") -> list[Command]:
+def build_commands(report_session: str = "reports/_configured_preview", stage_runs=None) -> list[Command]:
     """Expand enabled STAGE_RUNS entries into business command definitions and append requested
     pytest commands.
     """
     ensure_relative_user_path(report_session, "report_session")
     commands: list[Command] = []
-    for stage, stage_config in STAGE_RUNS.items():
+    for stage, stage_config in (STAGE_RUNS if stage_runs is None else stage_runs).items():
         if not stage_config.get("enabled", True):
             continue
         run_date = str(stage_config["run_date"])
@@ -376,10 +400,15 @@ def main() -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Run connected MEDPAR validation or one configured stage")
     parser.add_argument('--stage', choices=tuple(STAGE_RUNS), help="Validate only this configured stage independently")
-    selected_stage = parser.parse_args().stage
+    parser.add_argument("--dataset", choices=("q61", "r65"), default="q61", help="R65 runs all supplied stage boundaries independently")
+    options = parser.parse_args()
+    selected_stage = options.stage
+    configured_stages = r65_stage_runs() if options.dataset == "r65" else STAGE_RUNS
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
-    if CONNECTED_PIPELINE_ENABLED and selected_stage is None:
+    if options.dataset == "r65":
+        (session.root / "review_scope.json").write_text(json.dumps({"dataset": "R65", "description": "All five supplied stage boundaries reviewed independently. Later supplied outputs are checked even when earlier stages fail. This is not a completed connected journey. Business processing date: 18 March 2025; Split Y0: 2024. No shared snapshot manifest or approved golden physical-byte outputs supplied."}, indent=2), encoding="utf-8")
+    if CONNECTED_PIPELINE_ENABLED and selected_stage is None and options.dataset != "r65":
         from medpar_qa.orchestration.connected import run_configured
         journeys, index = run_configured(PROJECT_ROOT, session, STAGE_RUNS, CONNECTED_SETTINGS)
         print(f"Connected pipeline report: {relative_display(index, project_root=PROJECT_ROOT)}")
@@ -387,7 +416,7 @@ def main() -> int:
             print(f"{payload['source_file']}: {payload['conclusion']}")
         return 1 if any(any(step['status'] in ('FAIL', 'BLOCKED') for step in payload['steps'])
                         for payload, _ in journeys) else 0
-    commands = [command for command in build_commands(session_relative) if command.enabled and (selected_stage is None or command.stage == selected_stage)]
+    commands = [command for command in build_commands(session_relative, configured_stages) if command.enabled and (selected_stage is None or command.stage == selected_stage)]
     if not commands:
         print("No commands are enabled. Set enabled=True for at least one stage/file/folder/pytest item.")
         return 0
@@ -472,7 +501,7 @@ def main() -> int:
         if unexpected_failures and STOP_ON_FAILURE:
             break
 
-    if selected_stage == "final_medpar" and (PROJECT_ROOT / "data/production/r65").is_dir():
+    if (selected_stage == "final_medpar" or options.dataset == "r65" and selected_stage is None) and (PROJECT_ROOT / "data/production/r65").is_dir():
         from scripts.run_r65_audit import run_audit
         audit = run_audit(session)
         audit_code = 0 if audit.passed else 1

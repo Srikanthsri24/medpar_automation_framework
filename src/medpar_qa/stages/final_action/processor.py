@@ -337,7 +337,10 @@ class FinalActionProcessor(BaseStageProcessor):
             from medpar_qa.normalization.dates import parse_date
             for record in source_records:
                 try:
-                    year = parse_date(self.resolver.get(record.data, "stay_thru_date")).year
+                    service_date = parse_date(self.resolver.get(record.data, "stay_thru_date"))
+                    if service_date is None:
+                        continue  # Required-field validation reports a missing date.
+                    year = service_date.year
                 except (TypeError, ValueError):
                     continue  # Schema reports malformed dates below.
                 per_file_years.setdefault(record.source.file_path, set()).add(year)

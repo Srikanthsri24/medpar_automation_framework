@@ -172,3 +172,11 @@ def test_export_dedup_preserves_differing_business_data(make_record):
 
 def test_hicn_from_final_account_and_bic(resolver):
     assert resolver.get({'medparSSANo0021':'DEMO00001','medparBicCode0022':'A'},'hicn') == 'DEMO00001A'
+
+
+def test_final_action_missing_stay_through_date_is_reported_without_crash(resolver, make_record):
+    from medpar_qa.stages.final_action.settings import FinalActionSettings
+    claim = base_claim(stayThruDate=None)
+    result = FinalActionProcessor(resolver, FinalActionSettings(enforce_single_service_year=True)).validate([make_record(claim)])
+    assert not result.passed
+    assert any(check.status == ValidationStatus.FAIL for check in result.rule_results)

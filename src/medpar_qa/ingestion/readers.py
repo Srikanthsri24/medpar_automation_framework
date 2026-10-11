@@ -132,6 +132,26 @@ def read_parquet_records(
             {key: _nested_to_python(value) for key, value in row.items()}
             for row in frame.to_dict(orient="records")
         ]
+    # Hive partition columns can live only in directory names. Reading a single
+    # parquet file does not load them, so preserve their literal values and lineage.
+    from urllib.parse import unquote
+    partitions = {}
+    for part in path.parent.parts:
+        if "=" in part:
+            key, value = part.split("=", 1)
+            if key and value != "__HIVE_DEFAULT_PARTITION__":
+                partitions[unquote(key)] = unquote(value)
+    for item in raw_records:
+        for key, value in partitions.items():
+            matches = [name for name in item if "".join(c.lower() for c in name if c.isalnum()) == "".join(c.lower() for c in key if c.isalnum())]
+            if matches:
+                existing = item[matches[0]]
+                if existing is not None and str(existing).strip() != value.strip():
+                    raise InputReadError(f"Parquet partition {key} conflicts with row value in {_display_path(path, display_base)}")
+                if existing is None:
+                    item[matches[0]] = value
+            else:
+                item[key] = value
     return [
         SourceRecord(
             data=dict(item),

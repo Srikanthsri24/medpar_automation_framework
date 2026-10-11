@@ -64,3 +64,15 @@ def test_non_stage_commands_keep_their_arguments(tmp_path):
     import run_commands as runner
     command = runner.Command("Tests", "pytest", "tests", [runner.PYTHON, "-m", "pytest"])
     assert runner.execution_args(command, SimpleNamespace(root=tmp_path)) == command.args
+
+
+def test_r65_profile_uses_own_stage_boundaries_and_business_year():
+    import run_commands as runner
+    profile = runner.r65_stage_runs()
+    commands = [c for c in runner.build_commands('reports/test', profile) if c.enabled]
+    assert {c.stage for c in commands} == set(profile)
+    assert all('q61' not in ' '.join(c.args) for c in commands)
+    split = next(c for c in commands if c.stage == 'split')
+    assert split.args[split.args.index('--split-current-year') + 1] == '2024'
+    assert all(item['run_date'] == '2025-03-18' for item in profile.values())
+    assert all(not item['require_matching_snapshot'] for config in profile.values() for item in config['folder_paths'] if item['mode'] == 'reconcile')
