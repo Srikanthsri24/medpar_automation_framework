@@ -43,6 +43,7 @@ from medpar_qa.reporting.run_layout import ReportSession  # noqa: E402
 from medpar_qa.reporting.session_index import refresh_session_indexes  # noqa: E402
 
 PYTHON = sys.executable
+DEFAULT_DATASET = "r65"  # Team demonstration: all supplied R65 stages.
 CONNECTED_PIPELINE_ENABLED = True  # False restores independent STAGE_RUNS validation.
 CONNECTED_SETTINGS: dict[str, Any] = {
     "split": {"current_year": 2025},
@@ -400,10 +401,12 @@ def main() -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Run connected MEDPAR validation or one configured stage")
     parser.add_argument('--stage', choices=tuple(STAGE_RUNS), help="Validate only this configured stage independently")
-    parser.add_argument("--dataset", choices=("q61", "r65"), default="q61", help="R65 runs all supplied stage boundaries independently")
+    parser.add_argument("--dataset", choices=("q61", "r65"), default=DEFAULT_DATASET, help="Dataset profile (default: R65 all-stage review; Q61 explicitly selects connected mode)")
     options = parser.parse_args()
     selected_stage = options.stage
     configured_stages = r65_stage_runs() if options.dataset == "r65" else STAGE_RUNS
+    print(f"Selected dataset: {options.dataset.upper()}", flush=True)
+    print("Run mode: independent review of all supplied R65 stage boundaries" if options.dataset == "r65" else "Run mode: configured Q61 validation", flush=True)
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
     if options.dataset == "r65":
@@ -440,6 +443,7 @@ def main() -> int:
         print(f"RELATIVE COMMAND: {text}")
         print("#" * 118)
 
+        print("Executing stage validation. Results will appear when this stage finishes; large folders may take time.", flush=True)
         before = {path for path in session.root.rglob("*") if path.is_file()}
         completed = subprocess.run(
             launch_args,
