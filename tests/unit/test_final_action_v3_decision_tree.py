@@ -6,6 +6,7 @@ from __future__ import annotations
 import pytest
 from medpar_qa.enums import RecordDecision, ValidationStatus
 from medpar_qa.stages.final_action.processor import FinalActionProcessor
+from medpar_qa.stages.final_action.settings import FinalActionSettings
 from test_final_action import base_claim
 
 
@@ -88,7 +89,9 @@ def test_invalid_transaction_six_rejected(resolver, make_record):
     """Verify invalid transaction six rejected. The assertions below state exactly what this test
     proves for its fixtures.
     """
-    result = FinalActionProcessor(resolver).validate_group([make_record(base_claim(transactionCode=6))])
+    result = FinalActionProcessor(
+        resolver, FinalActionSettings(validate_transaction_codes=True)
+    ).validate_group([make_record(base_claim(transactionCode=6))])
     assert not result.passed
     assert any(x.rule_id == "FA-PRE-SCHEMA" for x in result.rule_results)
 
@@ -115,3 +118,25 @@ def test_rule2_missing_accretion_must_not_fall_through_to_rule10b(resolver, make
     assert any(x.rule_id == "FA-RULE-02-PRECONDITION" and x.status == ValidationStatus.BLOCKED
                for x in result.rule_results)
     assert not result.decisions
+
+
+@pytest.mark.parametrize("code", [5, 6, "C", "H", None, ""])
+def test_transaction_validation_disabled_routes_by_query_code(resolver, make_record, code):
+    processor = FinalActionProcessor(resolver)
+    record = make_record(base_claim(transactionCode=code, queryCode=5))
+    result = processor.validate([record])
+    assert not any(x.rule_id in {"FA-PRE-SCHEMA", "FA-PRE-GROUPING"} for x in result.rule_results)
+    assert result.decisions[0].decision == RecordDecision.KEEP
+    assert processor.group_key(record)[0].startswith("UNCLASSIFIED:")
+
+
+def test_disabled_transaction_check_preserves_distinct_claim_types(resolver, make_record):
+    processor = FinalActionProcessor(resolver)
+    keys = [processor.group_key(make_record(base_claim(transactionCode=code)))
+            for code in [0, 1, 5, 6, "C", "H"]]
+    assert len(set(keys)) == len(keys)
+
+
+def test_transaction_check_setting_can_be_reenabled():
+    assert not FinalActionSettings.from_mapping({}).validate_transaction_codes
+    assert FinalActionSettings.from_mapping({"validate_transaction_codes": True}).validate_transaction_codes

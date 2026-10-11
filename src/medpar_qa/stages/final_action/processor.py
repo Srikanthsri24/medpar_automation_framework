@@ -39,16 +39,19 @@ class FinalActionProcessor(BaseStageProcessor):
         self.settings = settings or FinalActionSettings()
         self.router = FinalActionRuleRouter(self.settings)
 
-    @staticmethod
-    def derive_record_type(transaction_code: Any) -> str:
+    def derive_record_type(self, transaction_code: Any) -> str:
         """Map the transaction code to the approved IP/SNF type for Final Action grouping."""
         from .grouping import derive_record_type
 
-        return derive_record_type(transaction_code)
+        return derive_record_type(
+            transaction_code, validate_transaction_codes=self.settings.validate_transaction_codes
+        )
 
     def group_key(self, record: SourceRecord) -> tuple[Any, ...]:
         """Expose the Final Action business grouping key for one source record."""
-        return build_group_key(record, self.resolver)
+        return build_group_key(
+            record, self.resolver, validate_transaction_codes=self.settings.validate_transaction_codes
+        )
 
     def order_group(self, group: list[SourceRecord]) -> list[SourceRecord]:
         """Return the group records in approved newest-first order."""
@@ -189,7 +192,7 @@ class FinalActionProcessor(BaseStageProcessor):
             if any(x.status == ValidationStatus.BLOCKED for x in result.rule_results):
                 return result
 
-        key = build_group_key(group[0], self.resolver)
+        key = self.group_key(group[0])
         group_key = group_key_to_dict(key)
         ordering = order_newest_first(group, self.resolver)
         if self.settings.block_ambiguous_ordering and ordering.is_ambiguous:
@@ -252,6 +255,16 @@ class FinalActionProcessor(BaseStageProcessor):
         source records remain distinct from actual/expected roles.
         """
         overall = StageResult(stage=self.stage)
+        if not self.settings.validate_transaction_codes:
+            overall.rule_results.append(RuleResult(
+                stage=self.stage, rule_id="FA-TRANSACTION-CHECK-DISABLED",
+                status=ValidationStatus.NOT_APPLICABLE,
+                message="Final Action transaction-code validation temporarily disabled at team request; Split validation remains active",
+                expected="Transaction-code validation disabled by configuration",
+                actual={"validate_transaction_codes": False},
+                field_name="transaction_code",
+                source_files=sorted({r.source.file_path for r in records if r.source.role == FileRole.SOURCE}),
+            ))
         overall.rule_results.append(
             ld3137_sort_order_result(
                 stage=self.stage,
@@ -334,7 +347,7 @@ class FinalActionProcessor(BaseStageProcessor):
         grouped: dict[tuple[Any, ...], list[SourceRecord]] = {}
         for record in valid_source_records:
             try:
-                key = build_group_key(record, self.resolver)
+                key = self.group_key(record)
                 grouped.setdefault(key, []).append(record)
             except (TypeError, ValueError) as exc:
                 overall.rule_results.append(
@@ -366,7 +379,7 @@ class FinalActionProcessor(BaseStageProcessor):
         overall.rule_results.append(RuleResult(
             stage=self.stage, rule_id="FA-NETTING-STATISTICS",
             status=ValidationStatus.PASS,
-            message="Separate inpatient and SNF netting totals",
+            message="Netting totals by inpatient, SNF and unclassified transaction-code groups",
             actual=dict(stats),
         ))
 

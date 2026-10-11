@@ -15,25 +15,34 @@ from medpar_qa.normalization.fields import FieldResolver
 GroupKey = tuple[str, str, str, date, date]
 
 
-def derive_record_type(transaction_code: Any) -> str:
+def derive_record_type(transaction_code: Any, *, validate_transaction_codes: bool = True) -> str:
     """Map the transaction code to the approved IP/SNF type for Final Action grouping."""
     try:
         code = int(transaction_code)
     except (TypeError, ValueError) as exc:
+        if not validate_transaction_codes:
+            return f"UNCLASSIFIED:{str(transaction_code).strip()}"
         raise ValueError(f"Invalid transaction code: {transaction_code!r}") from exc
 
     if code in {1, 2, 3}:
         return "I"
     if code in {0, 4}:
         return "S"
+    if not validate_transaction_codes:
+        return f"UNCLASSIFIED:{code}"
     raise ValueError(f"Unsupported transaction code: {code}")
 
 
-def build_group_key(record: SourceRecord, resolver: FieldResolver) -> GroupKey:
+def build_group_key(
+    record: SourceRecord, resolver: FieldResolver, *, validate_transaction_codes: bool = True
+) -> GroupKey:
     """Build the Final Action record-type/HICN/provider/from/thru identity; admission date does not
     split this claim group.
     """
-    rec_type = derive_record_type(resolver.get(record.data, "transaction_code"))
+    rec_type = derive_record_type(
+        resolver.get(record.data, "transaction_code"),
+        validate_transaction_codes=validate_transaction_codes,
+    )
     hicn = str(resolver.get(record.data, "hicn", "")).strip()
     provider_id = str(resolver.get(record.data, "provider_id", "")).strip()
     stay_from = parse_date(resolver.get(record.data, "stay_from_date"))

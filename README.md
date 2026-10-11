@@ -13066,3 +13066,8 @@ When changing a function, update its docstring and matching explanation/branch d
 Documentation coverage for this review: **126 tracked Python files, 53 classes and 524 functions/methods/nested helpers**. This includes test fixtures and test functions. Every listed callable has an inline explanation. Business code was verified against its prior executable AST with docstrings excluded; catalog differences are limited to report-description text. No business algorithm, branch, return, setting or test assertion was changed.
 
 <!-- CODE WALKTHROUGH END -->
+
+
+### Temporary Final Action transaction-code policy
+
+At the team's request, Final Action transaction-code validation is temporarily disabled by default (`validate_transaction_codes: false`). This skips transaction-code presence, numeric-format and allowed-value checks in Final Action only. Query-code validation and Final Action selection rules remain active. Known transaction codes retain their IP/SNF grouping; other values use separate `UNCLASSIFIED:<value>` groups and netting totals, without assigning an unapproved claim type. Split retains its independent transaction-code validation. Set `validate_transaction_codes: true` in Final Action settings to restore the check. Existing reports retain their original results; regenerate reports to see this change.

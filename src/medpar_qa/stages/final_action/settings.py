@@ -13,6 +13,8 @@ class FinalActionSettings:
 
     rule1_keep_qcs: tuple[int, ...] = (1, 3, 5)
     allowed_query_codes: tuple[int, ...] = (0, 1, 3, 5)
+    # Temporarily disabled at business request; Split retains its own code check.
+    validate_transaction_codes: bool = False
     allowed_transaction_codes: tuple[int, ...] = (0, 1, 2, 3, 4)
     require_accrete_date: bool = False
     block_ambiguous_ordering: bool = True
@@ -52,6 +54,7 @@ class FinalActionSettings:
             allowed_query_codes=tuple(
                 int(value) for value in values.get("allowed_query_codes", cls.allowed_query_codes)
             ),
+            validate_transaction_codes=bool(values.get("validate_transaction_codes", False)),
             allowed_transaction_codes=tuple(
                 int(value) for value in values.get("allowed_transaction_codes", cls.allowed_transaction_codes)
             ),

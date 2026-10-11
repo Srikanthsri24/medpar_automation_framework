@@ -53,6 +53,8 @@ def validate_source_record(
     errors: list[RecordValidationError] = []
 
     for field_name in _REQUIRED_FIELDS:
+        if field_name == "transaction_code" and not settings.validate_transaction_codes:
+            continue
         value = resolver.get(record.data, field_name)
         if _is_blank(value):
             errors.append(
@@ -67,21 +69,22 @@ def validate_source_record(
     if errors:
         return errors
 
-    transaction_code = resolver.get(record.data, "transaction_code")
-    try:
-        numeric_transaction_code = int(transaction_code)
-        if numeric_transaction_code not in settings.allowed_transaction_codes:
-            raise ValueError
-        derive_record_type(numeric_transaction_code)
-    except (TypeError, ValueError):
-        errors.append(
-            RecordValidationError(
-                record,
-                "transaction_code",
-                "Unsupported Final Action transaction code",
-                transaction_code,
+    if settings.validate_transaction_codes:
+        transaction_code = resolver.get(record.data, "transaction_code")
+        try:
+            numeric_transaction_code = int(transaction_code)
+            if numeric_transaction_code not in settings.allowed_transaction_codes:
+                raise ValueError
+            derive_record_type(numeric_transaction_code)
+        except (TypeError, ValueError):
+            errors.append(
+                RecordValidationError(
+                    record,
+                    "transaction_code",
+                    "Unsupported Final Action transaction code",
+                    transaction_code,
+                )
             )
-        )
 
     query_code = resolver.get(record.data, "query_code")
     try:
