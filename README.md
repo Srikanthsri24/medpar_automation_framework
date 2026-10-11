@@ -28,6 +28,8 @@ python -m pip install -e ".[test]"
 
 ## Demo
 
+Team presentation: [MedPAR demonstration PowerPoint](presentations/MedPAR_Team_Demonstration_20261011_v2.pptx) — 37 slides with stage rules, architecture, report explanations, production findings and presenter notes.
+
 Run the complete synthetic five-stage example:
 
 ```sh
