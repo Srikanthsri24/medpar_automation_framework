@@ -507,10 +507,11 @@ def main() -> int:
         audit_code = 0 if audit.passed else 1
         unexpected_failures += int(not audit.passed)
         executions.append({"name": "R65 Final lineage, routing and reconciliation audit", "stage": "final_medpar",
+            "command": "python scripts/run_r65_audit.py",
             "returncode": audit_code, "expected_exit_codes": (0,), "expected": audit.passed,
             "outcome": "COMPLETED AS EXPECTED" if audit.passed else "BUSINESS FAIL / BLOCKED",
             "output": f"Archive validation counts: {audit.status_counts}",
-            "report_files": [relative_display(session.root / "final_medpar/r65_lineage_routing_reconciliation/report.html", project_root=PROJECT_ROOT)]})
+            "report_files": [relative_display(session.root / "final_medpar/r65_lineage_routing_reconciliation" / name, project_root=PROJECT_ROOT) for name in ("report.html", "report.json")]})
     master = refresh_session_indexes(session.root, executions=executions)
     write_quality_summary(session.root, executions)
     print("\n" + "=" * 118)
