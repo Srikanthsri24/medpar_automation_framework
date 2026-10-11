@@ -28,7 +28,7 @@ python -m pip install -e ".[test]"
 
 ## Demo
 
-Team presentation: [MedPAR demonstration PowerPoint](presentations/MedPAR_Team_Demonstration_20261011_v2.pptx) — 37 slides with stage rules, architecture, report explanations, production findings and presenter notes.
+Team presentation: [MedPAR visual demonstration](presentations/MedPAR_Visual_Demonstration.pptx) — plain explanations, editable stage diagrams, worked examples, report evidence and a detailed rule reference.
 
 Run the complete synthetic five-stage example:
 
