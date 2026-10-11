@@ -100,6 +100,9 @@ class RuleResult:
             # Reporting must never alter business-rule execution.
             pass
 
+        from .orchestration.execution_control import observe
+        observe(self)
+
     def to_dict(self) -> dict[str, Any]:
         """Convert this evidence model into JSON-ready data with enum values represented as
         strings.
@@ -138,6 +141,9 @@ class ClaimDecision:
             )
         except Exception:
             pass
+
+        from .orchestration.execution_control import observe
+        observe(self)
 
 
 @dataclass

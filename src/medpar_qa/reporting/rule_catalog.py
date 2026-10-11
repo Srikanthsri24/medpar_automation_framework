@@ -228,6 +228,8 @@ def conclusion_text(
     metadata: RuleMetadata,
 ) -> str:
     """Explain the recorded PASS/FAIL/BLOCKED/N/A result without changing its status."""
+    if isinstance(actual, str) and actual == "NOT_REACHED":
+        return f"NOT REACHED — {message}. No validation was performed for this rule or stage."
     if status == "PASS":
         return (
             f"PASS — {message}. Observed result {actual!r} satisfied the expected "

@@ -43,6 +43,8 @@ from medpar_qa.reporting.run_layout import ReportSession  # noqa: E402
 from medpar_qa.reporting.session_index import refresh_session_indexes  # noqa: E402
 
 PYTHON = sys.executable
+CONNECTED_PIPELINE_ENABLED = True  # False restores independent STAGE_RUNS validation.
+CONNECTED_SETTINGS: dict[str, Any] = {}  # Optional stage settings; no code-domain overrides by default.
 STOP_ON_FAILURE = False
 REPORTS_ROOT = "reports"  # Relative path only.
 
@@ -353,6 +355,14 @@ def main() -> int:
     """
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
+    if CONNECTED_PIPELINE_ENABLED:
+        from medpar_qa.orchestration.connected import run_configured
+        journeys, index = run_configured(PROJECT_ROOT, session, STAGE_RUNS, CONNECTED_SETTINGS)
+        print(f"Connected pipeline report: {relative_display(index, project_root=PROJECT_ROOT)}")
+        for payload, directory in journeys:
+            print(f"{payload['source_file']}: {payload['conclusion']}")
+        return 1 if any(any(step['status'] in ('FAIL', 'BLOCKED') for step in payload['steps'])
+                        for payload, _ in journeys) else 0
     commands = [command for command in build_commands(session_relative) if command.enabled]
     if not commands:
         print("No commands are enabled. Set enabled=True for at least one stage/file/folder/pytest item.")
