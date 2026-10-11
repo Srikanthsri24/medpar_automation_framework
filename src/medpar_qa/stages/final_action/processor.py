@@ -202,6 +202,16 @@ class FinalActionProcessor(BaseStageProcessor):
         key = self.group_key(group[0])
         group_key = group_key_to_dict(key)
         ordering = order_newest_first(group, self.resolver)
+        if ordering.equivalent_tie_record_ids:
+            result.rule_results.append(RuleResult(
+                stage=self.stage, rule_id="FA-EQUIVALENT-ORDERING-TIE", status=ValidationStatus.PASS,
+                message="Equal ordering keys contain identical claim payloads; selecting the first copy does not change business content",
+                expected="All payloads in the tied ordering bucket are identical",
+                actual={"equivalent_record_count": len(ordering.equivalent_tie_record_ids)},
+                record_ids=list(ordering.equivalent_tie_record_ids),
+                source_files=sorted({record.source.file_path for record in group}),
+                evidence={"policy": "Stable source order; no differing claim payload is accepted as equivalent"},
+            ))
         if self.settings.block_ambiguous_ordering and ordering.is_ambiguous:
             result.rule_results.append(
                 RuleResult(

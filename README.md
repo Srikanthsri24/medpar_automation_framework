@@ -13114,3 +13114,12 @@ Every journey writes `reports/<session>/connected/<file-id>/index.html`, `journe
 ### Current connected starting folder
 
 At the team's request, the enabled Final Action starting inputs are now `data/production/q61/2-final-action-rules-parquet/`. Quarterly inputs are kept as a disabled configuration entry. The retained files are re-evaluated as Final Action inputs and only newly retained records proceed to Split. This checks the supplied retained records; it does not prove that the earlier quarterly-to-retained selection was correct. A retained-folder name does not bypass schema, ordering or Split checks.
+
+
+### Retained-input corrections
+
+Final Action distinguishes exact duplicate claim payloads from conflicting ordering ties. Identical payloads with equal complete sort keys can use stable source order because selected content is equivalent; differing payloads remain blocked. This audit does not define new query-code meanings. Query codes 2/4/6 remain outside the documented 0/1/3/5 list. Split rejects unsupported transaction codes before attempting candidate generation and reports the allowed values explicitly.
+
+The retained starting entry now supplies the available Stay and Intermediate JSON output folders. Connected runs select candidates by the stage's complete configured identity and keep matching duplicates for validation. Unrelated stays are excluded from that file's handoff; an output folder with no matching identity is BLOCKED with matching-field/count evidence. A matching candidate still must satisfy every reached validation before forwarding.
+
+Stay date comparisons, including beneficiary date of birth, compare parsed calendar dates so JSON strings, ISO dates and Parquet integer YYYYMMDD values are equivalent. Different dates still fail. After these corrections, the retained-input run has 14 Final Action passes and 51 query-code failures, followed by 4 Split passes and 10 transaction-code failures. The four reached Stay journeys expose three warning-01 mismatches and one unmatched candidate identity. These are retained as findings rather than forced passes.

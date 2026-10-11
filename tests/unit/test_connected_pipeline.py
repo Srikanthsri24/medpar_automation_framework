@@ -99,7 +99,8 @@ def test_all_five_stage_handoffs_with_validated_candidates(tmp_path, resolver, m
             if self.stage in (Stage.FINAL_ACTION,Stage.SPLIT):
                 for r in sources: ClaimDecision(r.record_id,RecordDecision.KEEP,'TEST-CHECK','keep')
         def calculate_indicator(self, record, last_thru=None): return 'Y00109'
-        settings=SimpleNamespace(outside_window_indicator='Y99999')
+        def _transaction_code(self, record): return 1
+        settings=SimpleNamespace(outside_window_indicator='Y99999',identity_fields=('icn',),allowed_transaction_codes=(0,1,2,3,4))
     monkeypatch.setattr(Pipeline,'_processors',lambda self:{s:Processor(s) for s in Stage})
     outputs={}
     for stage,marker in [(Stage.STAY,'stay'),(Stage.INTERMEDIATE,'intermediate'),(Stage.FINAL_MEDPAR,'final')]:
@@ -121,6 +122,7 @@ def test_blocked_candidate_is_never_forwarded(tmp_path, resolver, monkeypatch):
     visited=[]
     class Stay:
         stage=Stage.STAY
+        settings=SimpleNamespace(identity_fields=('icn',))
         def validate(self, records):
             RuleResult(self.stage,'ST-CANDIDATE',ValidationStatus.BLOCKED,'cannot establish derivation')
             visited.append('later check')
@@ -134,3 +136,30 @@ def test_blocked_candidate_is_never_forwarded(tmp_path, resolver, monkeypatch):
     assert journey['steps'][3]['status']=='NOT_REACHED'
     assert not (directory/'stay/retained.json').exists()
     assert not visited
+
+
+def test_invalid_split_code_has_business_evidence_before_generation(tmp_path,resolver):
+    pipeline,source=setup_pipeline(tmp_path,resolver,[base_claim(transactionCode='C')])
+    journey,directory=pipeline.run_file(source,DATES)
+    assert journey['steps'][0]['status']=='KEEP'
+    assert journey['steps'][1]['status']=='FAIL'
+    report=json.loads((directory/'split/report.json').read_text())['stages'][0]
+    failed=next(r for r in report['rule_results'] if r['status']=='FAIL')
+    assert failed['rule_id']=='SP-INVALID-TRANSACTION-CODE'
+    assert failed['expected']==[0,1,2,3,4]
+    assert failed['actual']=='C'
+
+
+def test_stay_birth_date_compares_calendar_value(resolver,make_record):
+    from decimal import Decimal
+    from medpar_qa.stages.stay.merge_rules import validate_merge_rules
+    from medpar_qa.enums import FileRole
+    source=make_record(base_claim(beneficiary_date_of_birth='19400102'),stage=Stage.STAY)
+    actual=make_record(base_claim(beneficiary_date_of_birth=19400102),stage=Stage.STAY,role=FileRole.ACTUAL_OUTPUT)
+    checks=validate_merge_rules([source],actual,resolver,Decimal('0.001'))
+    dob=next(r for r in checks if r.field_name=='beneficiary_date_of_birth')
+    assert dob.status==ValidationStatus.PASS
+    actual.data['beneficiary_date_of_birth']=19400103
+    checks=validate_merge_rules([source],actual,resolver,Decimal('0.001'))
+    dob=next(r for r in checks if r.field_name=='beneficiary_date_of_birth')
+    assert dob.status==ValidationStatus.FAIL

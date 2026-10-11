@@ -81,11 +81,29 @@ def _read(paths, stage, role, root):
     return records
 
 
+class CandidateInputRejected(Exception):
+    """A source prerequisite prevented output calculation; carry the exact rule evidence."""
+    def __init__(self, validation):
+        self.validation = validation
+        super().__init__(validation.message)
+
+
 def _candidate_split(records, processor):
     """Preserve claim fields and append the calculated indicator using stay-wide last thru."""
     from medpar_qa.normalization.dates import parse_date
     groups = {}
     for record in records:
+        raw_code = processor.resolver.get(record.data, 'transaction_code')
+        try:
+            code = processor._transaction_code(record)
+        except (TypeError, ValueError):
+            code = None
+        if code not in processor.settings.allowed_transaction_codes:
+            raise CandidateInputRejected(RuleResult(
+                stage=Stage.SPLIT, rule_id='SP-INVALID-TRANSACTION-CODE', status=ValidationStatus.FAIL,
+                message='Split input transaction code is outside the documented IP/SNF domain; output cannot be calculated',
+                expected=list(processor.settings.allowed_transaction_codes), actual=raw_code,
+                field_name='transaction_code', record_ids=[record.record_id], source_files=[record.source.file_path]))
         key = tuple(processor.resolver.get(record.data, f) for f in ('hicn', 'provider_id', 'admission_date'))
         thru = parse_date(processor.resolver.get(record.data, 'stay_thru_date'))
         groups[key] = max(groups.get(key, thru), thru)
@@ -155,15 +173,25 @@ class ConnectedPipeline:
                         _dump(candidate_path, _candidate_split(source_records, processor))
                         candidate = _read([relative_display(candidate_path, project_root=self.root)], stage, FileRole.ACTUAL_OUTPUT, self.root)
                     elif stage in (Stage.STAY, Stage.INTERMEDIATE, Stage.FINAL_MEDPAR):
-                        candidate = _read(outputs.get(stage.value, []), stage, FileRole.ACTUAL_OUTPUT, self.root)
+                        available = _read(outputs.get(stage.value, []), stage, FileRole.ACTUAL_OUTPUT, self.root)
+                        from medpar_qa.stages.common import record_identity
+                        fields = processor.settings.identity_fields
+                        keys = {record_identity(r, self.resolver, fields) for r in source_records}
+                        # A shared stage folder can contain other files' stays. Validate only this
+                        # journey's identities, retaining duplicate candidates so they are checked.
+                        candidate = [r for r in available if record_identity(r, self.resolver, fields) in keys]
                         if not candidate:
                             result.rule_results.append(RuleResult(
                                 stage=stage, rule_id='PIPELINE-OUTPUT-REQUIRED', status=ValidationStatus.BLOCKED,
-                                message=f'{stage.value} needs an explicitly supplied candidate output; a complete production writer is unavailable',
+                                message=(f'{stage.value}: supplied candidate output has no matching input identities; supply the matching extraction'
+                                         if available else f'{stage.value} needs candidate output; a complete production writer is unavailable'),
                                 expected='Candidate output validated against the previous stage output',
-                                actual='No candidate output configured', source_files=[current]))
+                                actual={'candidate_records_read': len(available), 'matching_records': 0,
+                                        'matching_fields': list(fields)}, source_files=[current]))
                     if not _terminal(result):
                         result = _failfast(processor, source_records + candidate)
+                except CandidateInputRejected as exc:
+                    result.rule_results.append(exc.validation)
                 except Exception as exc:
                     result.rule_results.append(RuleResult(stage=stage, rule_id='PIPELINE-INPUT',
                         status=ValidationStatus.FAIL, message=f'Cannot prepare stage input: {exc}',

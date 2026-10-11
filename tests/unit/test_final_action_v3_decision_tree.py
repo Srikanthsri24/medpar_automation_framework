@@ -208,3 +208,21 @@ def test_rule6_coverage_records_execution(resolver, make_record):
     coverage = next(x for x in result.rule_results if x.rule_id == "FA-RULE-06-COVERAGE")
     assert coverage.actual["evaluated_episodes"] == 1
     assert coverage.actual["eligible_valid_source_episodes"] == 1
+
+
+def test_identical_ordering_ties_do_not_block_same_qc_selection(resolver, make_record):
+    records=[make_record(base_claim(queryCode=3),row=i) for i in (1,2)]
+    result=FinalActionProcessor(resolver).validate_group(records)
+    assert result.passed
+    assert rule(result).rule_id == "FA-RULE-03"
+    assert sum(x.decision == RecordDecision.KEEP for x in result.decisions) == 1
+    assert any(x.rule_id == "FA-EQUIVALENT-ORDERING-TIE" for x in result.rule_results)
+
+
+def test_different_payload_ordering_ties_remain_blocked(resolver, make_record):
+    records=[make_record(base_claim(queryCode=3, amount=amount),row=i)
+             for i,amount in [(1,10),(2,20)]]
+    result=FinalActionProcessor(resolver).validate_group(records)
+    assert not result.passed
+    assert any(x.rule_id == "FA-PRE-ORDERING" for x in result.rule_results)
+    assert not result.decisions

@@ -3,6 +3,7 @@ flag identical complete ordering keys.
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
@@ -30,6 +31,7 @@ class OrderingResult:
     """
     ordered_records: tuple[SourceRecord, ...]
     ambiguous_record_ids: tuple[str, ...] = ()
+    equivalent_tie_record_ids: tuple[str, ...] = ()
 
     @property
     def is_ambiguous(self) -> bool:
@@ -70,17 +72,18 @@ def order_newest_first(
     decorated = [(business_order_key(record, resolver), record) for record in records]
     decorated.sort(key=lambda item: item[0], reverse=True)
 
-    duplicate_keys: dict[BusinessOrderKey, list[str]] = {}
+    duplicate_keys: dict[BusinessOrderKey, list[SourceRecord]] = {}
     for key, record in decorated:
-        duplicate_keys.setdefault(key, []).append(record.record_id)
-
-    ambiguous = tuple(
-        record_id
-        for ids in duplicate_keys.values()
-        if len(ids) > 1
-        for record_id in ids
-    )
+        duplicate_keys.setdefault(key, []).append(record)
+    ambiguous, equivalent = [], []
+    for records_with_key in duplicate_keys.values():
+        if len(records_with_key) < 2:
+            continue
+        payloads = {json.dumps(record.data, sort_keys=True, default=str) for record in records_with_key}
+        target = equivalent if len(payloads) == 1 else ambiguous
+        target.extend(record.record_id for record in records_with_key)
     return OrderingResult(
         ordered_records=tuple(record for _, record in decorated),
-        ambiguous_record_ids=ambiguous,
+        ambiguous_record_ids=tuple(ambiguous),
+        equivalent_tie_record_ids=tuple(equivalent),
     )

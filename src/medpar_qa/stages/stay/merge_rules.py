@@ -77,7 +77,10 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
             status = ValidationStatus.NOT_APPLICABLE
         else:
             try:
-                left, right = (quantize_decimal(expected, scale), quantize_decimal(observed, scale)) if numeric else (expected, observed)
+                if field == "beneficiary_date_of_birth" or field.endswith("_date") or field in HIGH_DATES or field in LOW_DATES:
+                    left, right = parse_date(expected), parse_date(observed)
+                else:
+                    left, right = (quantize_decimal(expected, scale), quantize_decimal(observed, scale)) if numeric else (expected, observed)
                 status = ValidationStatus.PASS if left == right else ValidationStatus.FAIL
             except (TypeError, ValueError):
                 status = ValidationStatus.FAIL
@@ -85,7 +88,7 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
             message="Stay merge rule matches" if status == ValidationStatus.PASS else "Calculated Stay expectation; output absent" if observed is None else "Stay merge mismatch",
             field_name=field, expected=str(expected) if isinstance(expected, Decimal) else expected, actual=observed,
             record_ids=[r.record_id for r in records], source_files=sorted({r.source.file_path for r in records}),
-            evidence={"first_bill": first.record_id, "last_bill": last.record_id, "specification": "MM-Stay-10..21"}))
+            evidence={"first_bill": first.record_id, "last_bill": last.record_id, "specification": "MM-Stay-10..21", "comparison": "calendar_date" if field == "beneficiary_date_of_birth" or field.endswith("_date") or field in HIGH_DATES or field in LOW_DATES else "value"}))
     for fields, record, rule in ((FIRST_FIELDS, first, "ST-FIRST-BILL"), (LAST_FIELDS,last,"ST-LAST-BILL")):
         for field in fields:
             value = get(record,field)
