@@ -15,7 +15,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from medpar_qa.enums import FileRole, Stage  # noqa: E402
-from medpar_qa.models import ManifestFile, RunManifest  # noqa: E402
+from medpar_qa.models import ManifestFile, RunManifest, StageResult  # noqa: E402
 from medpar_qa.normalization.fields import FieldResolver  # noqa: E402
 from medpar_qa.orchestration.pipeline import Pipeline  # noqa: E402
 from medpar_qa.reporting.console_reporter import render_results_text  # noqa: E402
@@ -49,6 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--aliases", default="config/field_aliases.yaml")
     parser.add_argument("--reports", default="reports", help="Relative root used when no report session is supplied")
     parser.add_argument("--report-session", default=None, help="Relative timestamped report-session directory shared by commands")
+    parser.add_argument("--per-file", action="store_true", help="Independent source-only checks; do not group identities across files")
     parser.add_argument("--show-pass", action="store_true", help="PASS validations are printed by default; retained for compatibility")
     parser.add_argument("--failures-only", action="store_true", help="Terminal only: hide PASS and N/A checks")
     return parser
@@ -144,7 +145,24 @@ def main() -> int:
     parent_link = relative_link(output_directory, session.master_directory / "index.html")
 
     resolver = FieldResolver.from_yaml(PROJECT_ROOT / args.aliases)
-    results = Pipeline(manifest, resolver).run()
+    if args.per_file:
+        if args.mode != "calculate" or args.actual or args.expected:
+            raise ValueError("--per-file supports source-only calculate checks")
+        from medpar_qa.ingestion.discovery import discover_files
+        results_by_stage = {}
+        for source in files:
+            paths = discover_files(source.path, PROJECT_ROOT)
+            for path in paths or [PROJECT_ROOT / source.path]:
+                single = RunManifest(run_id=run_id, run_date=run_date,
+                    files=[ManifestFile(path=relative_display(path, project_root=PROJECT_ROOT), stage=stage, role=FileRole.SOURCE)],
+                    settings=settings, base_directory=PROJECT_ROOT)
+                for result in Pipeline(single, resolver).run():
+                    combined = results_by_stage.setdefault(result.stage, StageResult(result.stage))
+                    combined.rule_results.extend(result.rule_results)
+                    combined.decisions.extend(result.decisions)
+        results = list(results_by_stage.values())
+    else:
+        results = Pipeline(manifest, resolver).run()
     bundle = write_report_bundle(
         run_id=run_id,
         results=results,

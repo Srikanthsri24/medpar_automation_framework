@@ -62,11 +62,11 @@ REPORTS_ROOT = "reports"  # Relative path only.
 PRODUCTION_ROOT = Path("data/production/q61")
 
 
-def _production_paths(*folders: str, suffixes: tuple[str, ...] = (".json", ".parquet")) -> list[str]:
+def _production_paths(*folders: str, suffixes: tuple[str, ...] = (".json", ".parquet"), data_root: Path = PRODUCTION_ROOT) -> list[str]:
     """Discover all nested stage files; deterministic and project-relative."""
     result: list[str] = []
     for folder in folders:
-        directory = PROJECT_ROOT / PRODUCTION_ROOT / folder
+        directory = PROJECT_ROOT / data_root / folder
         if directory.is_dir():
             result.extend(
                 path.relative_to(PROJECT_ROOT).as_posix()
@@ -78,12 +78,12 @@ def _production_paths(*folders: str, suffixes: tuple[str, ...] = (".json", ".par
 
 def _production_run(name: str, folders: tuple[str, ...], *, enabled: bool = True,
                     suffixes: tuple[str, ...] = (".json", ".parquet"),
-                    actual_folders: tuple[str, ...] = ()) -> dict[str, Any]:
+                    actual_folders: tuple[str, ...] = (), data_root: Path = PRODUCTION_ROOT) -> dict[str, Any]:
     """Create the configuration entry for a named production run, with its source/output paths and
     enabled flag.
     """
-    paths = _production_paths(*folders, suffixes=suffixes)
-    actual_paths = _production_paths(*actual_folders, suffixes=suffixes)
+    paths = _production_paths(*folders, suffixes=suffixes, data_root=data_root)
+    actual_paths = _production_paths(*actual_folders, suffixes=suffixes, data_root=data_root)
     return {
         "name": f"{name} ({len(paths)} files)",
         "enabled": enabled and bool(paths),
@@ -108,6 +108,7 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
                 "pipeline_outputs": {
                     "stay": _production_paths("4-stay-processing", suffixes=(".json",)),
                     "intermediate": _production_paths("5-intermediate-processing", suffixes=(".json",)),
+                    "final_medpar": _production_paths("6-final-processing", suffixes=(".json",), data_root=Path("data/production/r65")),
                 },
             },
             _production_run("Final Action - dropped output structural checks", ("2-final-action-rules-dropped",), enabled=False),
@@ -142,10 +143,13 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
         ],
     },
     "final_medpar": {
-        "enabled": False,  # No identifiable Final MEDPAR data in q61 archive.
+        "enabled": True,  # R65 contains extracted Final MEDPAR SS/SNF JSON outputs.
         "run_date": "2026-05-14",
         "single_files": [],
-        "folder_paths": [],
+        "folder_paths": [
+            _production_run("Final MEDPAR - R65 short-stay extracted output checks", ("6-final-processing/MEDPAR_FINAL_SS_FILES",), suffixes=(".json",), data_root=Path("data/production/r65")),
+            _production_run("Final MEDPAR - R65 SNF extracted output checks", ("6-final-processing/MEDPAR_FINAL_SNF_FILES",), suffixes=(".json",), data_root=Path("data/production/r65")),
+        ],
     },
 }
 
@@ -228,9 +232,13 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
         report_session,
         "--show-pass",
     ]
+    if stage == "final_medpar" and item.get("mode", "calculate") == "calculate":
+        args.append("--per-file")
     _append_paths(args, "--source", list(item.get("source") or []))
     _append_paths(args, "--actual", list(item.get("actual") or []))
     _append_paths(args, "--expected", list(item.get("expected") or []))
+    if item.get("per_file"):
+        args.append("--per-file")
     if item.get("require_matching_snapshot"):
         args.append("--require-matching-snapshot")
     return Command(name, stage, command_id, args, bool(item.get("enabled", True)), tuple(item.get("expected_exit_codes", (0,))))
@@ -359,9 +367,13 @@ def main() -> int:
     point. STAGE_RUNS selects enabled business runs, paths, dates and validation options;
     commands run sequentially and their reports are combined into a session.
     """
+    import argparse
+    parser = argparse.ArgumentParser(description="Run connected MEDPAR validation or one configured stage")
+    parser.add_argument('--stage', choices=tuple(STAGE_RUNS), help="Validate only this configured stage independently")
+    selected_stage = parser.parse_args().stage
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
-    if CONNECTED_PIPELINE_ENABLED:
+    if CONNECTED_PIPELINE_ENABLED and selected_stage is None:
         from medpar_qa.orchestration.connected import run_configured
         journeys, index = run_configured(PROJECT_ROOT, session, STAGE_RUNS, CONNECTED_SETTINGS)
         print(f"Connected pipeline report: {relative_display(index, project_root=PROJECT_ROOT)}")
@@ -369,7 +381,7 @@ def main() -> int:
             print(f"{payload['source_file']}: {payload['conclusion']}")
         return 1 if any(any(step['status'] in ('FAIL', 'BLOCKED') for step in payload['steps'])
                         for payload, _ in journeys) else 0
-    commands = [command for command in build_commands(session_relative) if command.enabled]
+    commands = [command for command in build_commands(session_relative) if command.enabled and (selected_stage is None or command.stage == selected_stage)]
     if not commands:
         print("No commands are enabled. Set enabled=True for at least one stage/file/folder/pytest item.")
         return 0
