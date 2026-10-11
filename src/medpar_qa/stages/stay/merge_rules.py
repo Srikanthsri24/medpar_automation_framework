@@ -80,7 +80,7 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
                 if field == "beneficiary_date_of_birth" or field.endswith("_date") or field in HIGH_DATES or field in LOW_DATES:
                     left, right = parse_date(expected), parse_date(observed)
                 else:
-                    left, right = (quantize_decimal(expected, scale), quantize_decimal(observed, scale)) if numeric else (expected, observed)
+                    left, right = (quantize_decimal(expected, scale=scale), quantize_decimal(observed, scale=scale)) if numeric else (expected, observed)
                 status = ValidationStatus.PASS if left == right else ValidationStatus.FAIL
             except (TypeError, ValueError):
                 status = ValidationStatus.FAIL

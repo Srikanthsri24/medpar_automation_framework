@@ -1,0 +1,30 @@
+[
+  {
+    "claimCan": "DEMO-CAN",
+    "claimCanNchEquatable": "DEMO-HICN",
+    "provider": {
+      "providerId": "999999"
+    },
+    "admissionDate": "20260101",
+    "stayFromDate": "20260101",
+    "stayThruDate": "20260105",
+    "transactionCode": 1,
+    "queryCode": 1,
+    "internalControlNumber": "DEMO-ICN",
+    "nchWeeklyProcessingDate": "20260110",
+    "accreteDate": "20260111",
+    "sourceSequence": 1,
+    "actionCode": "A",
+    "conditionCodes": [],
+    "occurrenceCodes": [],
+    "occurrenceSpanLines": [],
+    "valueLines": [],
+    "revenueLines": [
+      {
+        "revenueCode": "0250",
+        "ndcNumber": "00000000001"
+      }
+    ],
+    "beneficiary_date_of_birth": "19500101"
+  }
+]

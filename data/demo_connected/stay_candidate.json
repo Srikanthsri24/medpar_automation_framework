@@ -1,0 +1,37 @@
+[
+  {
+    "claimCan": "DEMO-CAN",
+    "claimCanNchEquatable": "DEMO-HICN",
+    "provider": {
+      "providerId": "999999"
+    },
+    "admissionDate": "20260101",
+    "stayFromDate": "20260101",
+    "stayThruDate": "20260105",
+    "transactionCode": 1,
+    "queryCode": 1,
+    "internalControlNumber": "DEMO-ICN",
+    "nchWeeklyProcessingDate": "20260110",
+    "accreteDate": "20260111",
+    "sourceSequence": 1,
+    "actionCode": "A",
+    "split_year_indicator": "Y00109",
+    "warning_indicator_01": "0",
+    "warning_indicator_05": "0",
+    "medpar_ss_ls_snf_ind_0140": "S",
+    "conditionCodes": [],
+    "occurrenceCodes": [],
+    "occurrenceSpanLines": [],
+    "valueLines": [],
+    "revenueLines": [
+      {
+        "revenueCode": "0250",
+        "ndcNumber": "00000000001"
+      }
+    ],
+    "medpar_infor_enctr_ind_sw_0800": "N",
+    "medpar_ma_teach_ind_sw_0810": "N",
+    "medpar_sqstrtn_rdctn_amt_1130": "0",
+    "beneficiary_date_of_birth": "19500101"
+  }
+]

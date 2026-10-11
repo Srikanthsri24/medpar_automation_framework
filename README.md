@@ -2,7 +2,7 @@
 
 Validate Final Action, Four-Year Split, Stay, Intermediate and Final MEDPAR using JSON or Parquet inputs. The framework compares production outputs with source rules and approved expected outputs, and produces reports explaining every recorded result.
 
-**Current verification:** 257 automated tests passed on 11 October 2026. All five synthetic demo stages pass (`reports/20261011_023400/master/index.html`). Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
+**Current verification:** 330 automated tests passed on 12 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
 
 For your team demo, start with [how one run works](#how-one-run-works), [stage logic](#stage-logic-to-explain-first), [common questions](#questions-your-team-is-likely-to-ask) and [Python concepts](#python-concepts-used-here). Use the expandable [file/function reference](#every-python-file-class-and-function) for coding questions and the [rule reference](#rule-explanation-reference) for validation questions. Search the exact function or file name to jump to its detailed explanation.
 
@@ -13123,3 +13123,11 @@ Final Action distinguishes exact duplicate claim payloads from conflicting order
 The retained starting entry now supplies the available Stay and Intermediate JSON output folders. Connected runs select candidates by the stage's complete configured identity and keep matching duplicates for validation. Unrelated stays are excluded from that file's handoff; an output folder with no matching identity is BLOCKED with matching-field/count evidence. A matching candidate still must satisfy every reached validation before forwarding.
 
 Stay date comparisons, including beneficiary date of birth, compare parsed calendar dates so JSON strings, ISO dates and Parquet integer YYYYMMDD values are equivalent. Different dates still fail. After these corrections, the retained-input run has 14 Final Action passes and 51 query-code failures, followed by 4 Split passes and 10 transaction-code failures. The four reached Stay journeys expose three warning-01 mismatches and one unmatched candidate identity. These are retained as findings rather than forced passes.
+
+## Repeatable connected five-stage demonstration
+
+Run `python scripts/run_connected_demo.py` after installing the requirements. It prints the timestamped report location. The report shows one starting file, one completed journey, zero stopped journeys, and individual stage validation counts and evidence.
+
+The fictitious input is `data/demo_connected/claims.json`; its handoffs use real Final Action and Split calculated outputs and supplied Stay, Intermediate and Final candidate JSON files. The source has QC1, TC1, January 2026 dates, a synthetic six-character provider, one fictitious NDC revenue line, and no surgeries or diagnoses. Candidate outputs declare the documented warning values, zero counts, age and switches. The candidates are checked by the real processors; a regression test deliberately changes warning 01 and verifies that execution stops at Stay.
+
+This demonstrates supported JSON validation and connected handoffs. Optional and unavailable reference/physical-layout checks remain visible as N/A. It does not demonstrate a complete production writer, all rule branches, approved CMS golden equality, or certification of the 3000-byte layout. Production failures retain their separate reports.
