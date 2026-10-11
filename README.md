@@ -44,13 +44,13 @@ python run_commands.py
 
 Edit `STAGE_RUNS` in `run_commands.py` to select stage dates, individual files and folders. Enable only the required runs. Input paths must be relative to the repository. Production inputs are local under `data/production/q61/` and are excluded from Git. Missing files, mismatched snapshots and business failures remain visible in reports.
 
-The current production demo is `reports/20261011_020107/master/index.html`. Reports are generated locally and are not uploaded to GitHub. To view them in a browser:
+The current production review overview is `reports/20261012_023159/master/index.html`. Reports are generated locally and are not uploaded to GitHub. To view them in a browser:
 
 ```sh
 python -m http.server 8765 --bind 127.0.0.1
 ```
 
-Open `http://127.0.0.1:8765/reports/20261011_020107/master/index.html`. Stop the server with Ctrl+C when finished.
+Open `http://127.0.0.1:8765/reports/20261012_023159/master/index.html`. Stop the server with Ctrl+C when finished.
 
 ## Reading the report
 
@@ -13153,3 +13153,11 @@ Stay warnings 06/08 are calculated from cancellation and duplicate/death evidenc
 Run `python scripts/run_r65_audit.py` for Final JSON lineage, SS/SNF and CY/FY routing, route completeness, Intermediate bypass sets, SSI/CCN domains and reconciliation balancing. `python run_commands.py --stage final_medpar` includes this audit after the two per-file output checks. R65 audit uses explicit Y0=2024 for its Q2 2025 dataset. All 914 Final record has exactly one Intermediate match after deleting only Split-Year Indicator. FY 2025 partial output is disclosed as an unconfirmed policy difference.
 
 The source reconciliation leaves 244 Split claims unaccounted for (1121−653−224). One Intermediate drop fails the covered-days>LOS criterion. R65 has 546 invalid/blank 0251 day counts, 14 invalid 0252 indicators and 552 base-CCN mismatches. These are detected source/output defects; supplied data is not rewritten to fabricate passes. Full 3000-byte certification still requires the approved copybook/golden outputs. Stay identity, partial FY and bypass ownership need product-owner decisions, and edit/state/county/SSI feeds need approved mappings.
+
+## Review report navigation
+
+Independent runs open with a concise overview at `reports/<session>/master/index.html`: overall conclusion, stage results, searchable findings grouped by rule, and detailed evidence links. The complete stage/file review and software test index remain at `master/details.html`. Repeated checks are not unique defect counts; linked evidence paths include outputs and references.
+
+Connected runs use `connected/index.html`: starting files, stage progression (reached/keep/drop/fail/blocked/not run), record volumes, and a filename search. Expand an input file to read every executed stage conclusion and its expected/observed proof. An earlier stop makes later stages not run; it does not create another independent failure. Search filters do not change whole-run totals.
+
+The overview is regenerated automatically by normal runs. Presentation changes do not change validation outcomes. N/A, known differences, missing references and stages not run do not establish production acceptance.

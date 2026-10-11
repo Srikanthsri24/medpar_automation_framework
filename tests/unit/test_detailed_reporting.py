@@ -179,7 +179,8 @@ def test_timestamped_session_writes_stage_and_master_indexes(tmp_path: Path):
     assert (session.root / "stay" / "index.html").exists()
     assert master == session.root / "master" / "index.html"
     assert master.exists()
-    assert "ST-TOTAL-CHARGE" in master.read_text(encoding="utf-8")
+    assert "Stage results" in master.read_text(encoding="utf-8")
+    assert "ST-TOTAL-CHARGE" in (master.parent / "details.html").read_text(encoding="utf-8")
 
 @pytest.mark.unit
 def test_file_review_preserves_shared_checks_and_unattributed_failures():
@@ -211,6 +212,9 @@ def test_master_report_defines_metrics_and_file_navigation(tmp_path):
     folder.mkdir(parents=True)
     (folder / 'report.json').write_text(json.dumps({'stages': [{'stage': 'stay', 'passed': False, 'rule_results': [{'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read file', 'source_files': ['example.json']}, {'rule_id': 'ST-TOTAL-CHARGE', 'status': 'FAIL', 'message': 'Mismatch', 'source_files': ['example.json']}]}]}))
     page = write_master_index(tmp_path).read_text()
+    assert 'Action required' in page
+    assert 'details.html' in page
+    page = (tmp_path / 'master' / 'details.html').read_text()
     assert 'What these numbers mean' in page
     assert 'Validations = Pass + Fail + Blocked + N/A' in page
     assert "id='stay-1-2'" in page

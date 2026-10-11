@@ -255,8 +255,9 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
 <section class='overall-conclusion'><h2>Overall conclusion — all stages: {overall_state}</h2><p>{len(by_stage)} stages have recorded results. Acceptance requires every required stage to pass its applicable checks. Stages absent from this session have no acceptance result. File filters do not change the full-run conclusions or dashboard totals.</p>{overall_conclusions}{missing_stage_notes}</section><h2>Pytest report index</h2><table><thead><tr><th>Pytest selection</th><th>Passed</th><th>Failed</th><th>Skipped</th></tr></thead><tbody>{pytest_rows or '<tr><td colspan="4">No pytest reports found.</td></tr>'}</tbody></table>
 </main><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script>{FILE_FILTER_SCRIPT}</body></html>"""
     output = master / "index.html"
-    output.write_text(document, encoding="utf-8")
-    return output
+    (master / "details.html").write_text(document, encoding="utf-8")
+    from .executive_review import write_executive_review
+    return write_executive_review(business_entries, output)
 
 
 def refresh_session_indexes(session_root: str | Path, executions: list[dict[str, Any]] | None = None) -> Path:
