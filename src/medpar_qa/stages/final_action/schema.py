@@ -23,6 +23,7 @@ class RecordValidationError:
     field_name: str
     message: str
     actual: Any = None
+    expected: Any = "A valid value for this field"
 
 
 _REQUIRED_FIELDS = (
@@ -63,6 +64,7 @@ def validate_source_record(
                     field_name,
                     f"Required Final Action field '{field_name}' is missing or blank",
                     value,
+                    expected="Present and non-blank",
                 )
             )
 
@@ -83,6 +85,7 @@ def validate_source_record(
                     "transaction_code",
                     "Unsupported Final Action transaction code",
                     transaction_code,
+                    expected=list(settings.allowed_transaction_codes),
                 )
             )
 
@@ -96,8 +99,11 @@ def validate_source_record(
             RecordValidationError(
                 record,
                 "query_code",
-                "Unsupported Final Action query code",
+                "Unsupported Final Action query code. Query code is converted to an integer "
+                f"and checked against {list(settings.allowed_query_codes)}; "
+                "action codes 4/6 are separate fields and do not extend this list",
                 query_code,
+                expected=list(settings.allowed_query_codes),
             )
         )
 
@@ -113,6 +119,7 @@ def validate_source_record(
                     field_name,
                     f"Invalid date in '{field_name}'",
                     value,
+                    expected="A valid calendar date in a supported format",
                 )
             )
 
@@ -124,6 +131,7 @@ def validate_source_record(
                 "accrete_date",
                 "Accrete date is required by Final Action settings",
                 accrete_value,
+                expected="Present and non-blank accretion date",
             )
         )
     elif not _is_blank(accrete_value):
@@ -136,6 +144,7 @@ def validate_source_record(
                     "accrete_date",
                     "Invalid date in 'accrete_date'",
                     accrete_value,
+                    expected="A valid calendar date in a supported format",
                 )
             )
 
@@ -151,6 +160,7 @@ def validate_source_record(
                     "stay_from_date": stay_from.isoformat(),
                     "stay_thru_date": stay_thru.isoformat(),
                 },
+                expected="stay_from_date <= stay_thru_date",
             )
         )
 

@@ -140,3 +140,35 @@ def test_disabled_transaction_check_preserves_distinct_claim_types(resolver, mak
 def test_transaction_check_setting_can_be_reenabled():
     assert not FinalActionSettings.from_mapping({}).validate_transaction_codes
     assert FinalActionSettings.from_mapping({"validate_transaction_codes": True}).validate_transaction_codes
+
+
+@pytest.mark.parametrize("query", [2, "2", 6, "6"])
+@pytest.mark.parametrize("entrypoint", ["validate", "validate_group"])
+def test_query_code_failure_reports_allowed_values(resolver, make_record, query, entrypoint):
+    from medpar_qa.reporting.rule_catalog import conclusion_text, get_rule_metadata
+    processor = FinalActionProcessor(resolver)
+    result = getattr(processor, entrypoint)([make_record(base_claim(queryCode=query, actionCode=6))])
+    failure = next(x for x in result.rule_results if x.rule_id == "FA-PRE-SCHEMA")
+    assert failure.field_name == "query_code"
+    assert failure.expected == [0, 1, 3, 5]
+    assert failure.actual == query
+    text = conclusion_text(status="FAIL", message=failure.message, expected=failure.expected,
+                           actual=failure.actual, metadata=get_rule_metadata("final_action", failure.rule_id))
+    assert "Expected None" not in text
+    assert "[0, 1, 3, 5]" in text
+
+
+@pytest.mark.parametrize("action", [4, "4", 6, "6"])
+def test_action_codes_do_not_fail_query_code_validation(resolver, make_record, action):
+    records = make_group(make_record, [5, 0], ["A", "A"], actions=[1, action])
+    result = FinalActionProcessor(resolver).validate_group(records)
+    assert result.passed
+    assert rule(result).rule_id == "FA-RULE-06"
+    assert all(x.decision == RecordDecision.DROP for x in result.decisions)
+
+
+@pytest.mark.parametrize("query", [0, "0", 1, "1", 3, "3", 5, "5"])
+def test_numeric_and_string_query_codes_are_equivalent(resolver, make_record, query):
+    result = FinalActionProcessor(resolver).validate_group([make_record(base_claim(queryCode=query))])
+    assert result.passed
+    assert result.decisions[0].decision == (RecordDecision.DROP if int(query) == 0 else RecordDecision.KEEP)
