@@ -102,8 +102,8 @@ STAGE_RUNS: dict[str, dict[str, Any]] = {
         "run_date": "2026-03-20",
         "single_files": [],
         "folder_paths": [
-            _production_run("Final Action - quarterly claims to retained output", ("1-quarterly-claims-parquet",), actual_folders=("2-final-action-rules-parquet",)),
-            _production_run("Final Action - retained output structural checks", ("2-final-action-rules-parquet",), enabled=False),
+            _production_run("Final Action - quarterly claims to retained output", ("1-quarterly-claims-parquet",), actual_folders=("2-final-action-rules-parquet",), enabled=False),
+            _production_run("Final Action - retained files as connected starting input", ("2-final-action-rules-parquet",)),
             _production_run("Final Action - dropped output structural checks", ("2-final-action-rules-dropped",), enabled=False),
         ],
     },

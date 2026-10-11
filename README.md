@@ -13109,3 +13109,8 @@ Add candidate paths to the starting Final Action entry only when available:
 ```
 
 Every journey writes `reports/<session>/connected/<file-id>/index.html`, `journey.json`, stage rule reports, handoff metadata and retained/dropped output JSON. Open `reports/<session>/connected/index.html` to review all original filenames and final conclusions. The production input folder and generated reports must not be committed. Regression tests demonstrate real Final Action/Split handoffs and stops; a separate controlled processor test verifies five-stage routing, without claiming CMS acceptance.
+
+
+### Current connected starting folder
+
+At the team's request, the enabled Final Action starting inputs are now `data/production/q61/2-final-action-rules-parquet/`. Quarterly inputs are kept as a disabled configuration entry. The retained files are re-evaluated as Final Action inputs and only newly retained records proceed to Split. This checks the supplied retained records; it does not prove that the earlier quarterly-to-retained selection was correct. A retained-folder name does not bypass schema, ordering or Split checks.
