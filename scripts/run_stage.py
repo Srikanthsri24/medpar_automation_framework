@@ -4,6 +4,7 @@ evidence.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import date
 from pathlib import Path
@@ -53,6 +54,19 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def parse_stage_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Load UTF-8 JSON arguments when the runner uses a compact Windows-safe command."""
+    values = list(sys.argv[1:] if argv is None else argv)
+    if values and values[0] == "--arguments-file":
+        if len(values) != 2:
+            raise SystemExit("--arguments-file requires exactly one file path")
+        ensure_relative_user_path(values[1], "arguments-file")
+        values = json.loads((PROJECT_ROOT / values[1]).read_text(encoding="utf-8"))
+        if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+            raise SystemExit("Arguments file must contain a JSON list of strings")
+    return build_parser().parse_args(values)
+
+
 def _manifest_files(stage: Stage, role: FileRole, paths: list[str]) -> list[ManifestFile]:
     """Convert stage CLI source/actual/expected arguments into typed manifest file entries."""
     return [ManifestFile(path=path, stage=stage, role=role) for path in paths]
@@ -95,7 +109,7 @@ def main() -> int:
     """Run this script command-line workflow and return its process exit status. Run one stage from
     relative file/folder paths, construct its manifest/settings and publish stage evidence.
     """
-    args = build_parser().parse_args()
+    args = parse_stage_args()
     _validate_relative_paths(args)
     stage = Stage(args.stage)
     run_date = date.fromisoformat(args.run_date)

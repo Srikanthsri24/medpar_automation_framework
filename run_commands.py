@@ -334,6 +334,18 @@ def write_quality_summary(session_root: Path, executions: list[dict[str, Any]]) 
     (session_root / "quality_summary.html").write_text(page, encoding="utf-8")
 
 
+def execution_args(command: Command, session: ReportSession) -> list[str]:
+    """Keep stage process launches short even with hundreds of long production paths."""
+    if command.args[1:2] != ["scripts/run_stage.py"]:
+        return command.args
+    directory = session.root / "command_arguments"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{command.command_id}.json"
+    path.write_text(json.dumps(command.args[2:], ensure_ascii=False, indent=2), encoding="utf-8")
+    return [command.args[0], command.args[1], "--arguments-file",
+            relative_display(path, project_root=PROJECT_ROOT)]
+
+
 def main() -> int:
     """Run this script command-line workflow and return its process exit status. The team entry
     point. STAGE_RUNS selects enabled business runs, paths, dates and validation options;
@@ -360,13 +372,14 @@ def main() -> int:
         print(f"COMMAND {index}/{len(commands)}: {command.name}")
         print(f"CATEGORY/STAGE: {command.stage}")
         print(f"EXPECTED EXIT CODE(S): {command.expected_exit_codes}")
-        text = _command_text(command.args)
+        launch_args = execution_args(command, session)
+        text = _command_text(launch_args)
         print(f"RELATIVE COMMAND: {text}")
         print("#" * 118)
 
         before = {path for path in session.root.rglob("*") if path.is_file()}
         completed = subprocess.run(
-            command.args,
+            launch_args,
             cwd=PROJECT_ROOT,
             check=False,
             stdout=subprocess.PIPE,

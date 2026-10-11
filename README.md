@@ -13071,3 +13071,8 @@ Documentation coverage for this review: **126 tracked Python files, 53 classes a
 ### Temporary Final Action transaction-code policy
 
 At the team's request, Final Action transaction-code validation is temporarily disabled by default (`validate_transaction_codes: false`). This skips transaction-code presence, numeric-format and allowed-value checks in Final Action only. Query-code validation and Final Action selection rules remain active. Known transaction codes retain their IP/SNF grouping; other values use separate `UNCLASSIFIED:<value>` groups and netting totals, without assigning an unapproved claim type. Split retains its independent transaction-code validation. Set `validate_transaction_codes: true` in Final Action settings to restore the check. Existing reports retain their original results; regenerate reports to see this change.
+
+
+### Windows command-length support
+
+Run `python run_commands.py` as usual. Stage arguments are saved under `reports/<session>/command_arguments/` as UTF-8 JSON and loaded by `scripts/run_stage.py --arguments-file <relative-path>`. This avoids Windows WinError 206 when a production run includes hundreds of file paths. Every configured input path and validation option is preserved. Use the updated `run_commands.py` and `scripts/run_stage.py` together.

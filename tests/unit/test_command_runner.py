@@ -29,3 +29,38 @@ def test_run_commands_file_loads_and_has_all_five_stages():
     configured = namespace["STAGE_RUNS"]
     assert set(configured) == {"final_action", "split", "stay", "intermediate", "final_medpar"}
     assert stages == {stage for stage,item in configured.items() if item.get("enabled", True)}
+
+
+def test_long_stage_command_round_trips_through_arguments_file(tmp_path, monkeypatch):
+    import json
+    import subprocess
+    from types import SimpleNamespace
+    import run_commands as runner
+    stage = runpy.run_path("scripts/run_stage.py", run_name="run_stage_args_test")
+    parser = stage["parse_stage_args"]
+    monkeypatch.setattr(runner, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setitem(parser.__globals__, "PROJECT_ROOT", tmp_path)
+    paths = [f"data/production/folder with spaces/claim_{i}_" + "x" * 180 + ".parquet"
+             for i in range(400)]
+    command = runner._stage_command("final_action", "2026-03-20", {
+        "name": "Long production run", "source": paths,
+        "actual": ["data/actual/éxtract.json"], "mode": "reconcile",
+        "require_matching_snapshot": True,
+    }, "reports/session")
+    assert len(subprocess.list2cmdline(command.args)) > 32767
+    launch = runner.execution_args(command, SimpleNamespace(root=tmp_path / "reports/session"))
+    assert len(subprocess.list2cmdline(launch)) < 1000
+    assert json.loads((tmp_path / launch[-1]).read_text(encoding="utf-8")) == command.args[2:]
+    parsed = parser(launch[2:])
+    assert parsed.source == paths
+    assert parsed.actual == ["data/actual/éxtract.json"]
+    assert parsed.require_matching_snapshot
+    assert parsed.mode == "reconcile"
+    assert parsed.report_session == "reports/session"
+
+
+def test_non_stage_commands_keep_their_arguments(tmp_path):
+    from types import SimpleNamespace
+    import run_commands as runner
+    command = runner.Command("Tests", "pytest", "tests", [runner.PYTHON, "-m", "pytest"])
+    assert runner.execution_args(command, SimpleNamespace(root=tmp_path)) == command.args
