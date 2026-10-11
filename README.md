@@ -13076,3 +13076,10 @@ At the team's request, Final Action transaction-code validation is temporarily d
 ### Windows command-length support
 
 Run `python run_commands.py` as usual. Stage arguments are saved under `reports/<session>/command_arguments/` as UTF-8 JSON and loaded by `scripts/run_stage.py --arguments-file <relative-path>`. This avoids Windows WinError 206 when a production run includes hundreds of file paths. Every configured input path and validation option is preserved. Use the updated `run_commands.py` and `scripts/run_stage.py` together.
+
+
+### Rule 6 evidence and execution coverage
+
+Rule 6 follows Modernization Requirements MM-FINAC-08 through MM-FINAC-11 and Functionality Notes V3 page 20. It requires exactly two claims in the episode: one QC0 and one QC5. Matching ICNs and QC0 action code 4 or 6 drop both; otherwise QC5 is kept and QC0 dropped. Matching ICNs with a missing/blank QC0 action code are blocked. Action codes are separate from transaction codes. Integral numeric action values such as `6.0` are normalized to `6`.
+
+The `FA-RULE-06-COVERAGE` report entry shows eligible episode counts, actual evaluations, schema rejections, ordering blocks and group sizes. No eligible episode is reported as N/A, not a successful Rule 6 test. Inspection of the 15 configured quarterly source files on 12 October 2026 found no raw two-record QC0/QC5 episodes; episode sizes were multiples of three. The existing input is not automatically deduplicated or converted into two-record episodes. Regression tests separately demonstrate both cancellation codes, equal/different ICNs, both QC orders and missing action codes.

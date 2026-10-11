@@ -172,3 +172,39 @@ def test_numeric_and_string_query_codes_are_equivalent(resolver, make_record, qu
     result = FinalActionProcessor(resolver).validate_group([make_record(base_claim(queryCode=query))])
     assert result.passed
     assert result.decisions[0].decision == (RecordDecision.DROP if int(query) == 0 else RecordDecision.KEEP)
+
+
+@pytest.mark.parametrize("qcs", [[0, 5], [5, 0]])
+@pytest.mark.parametrize("matching", [True, False])
+@pytest.mark.parametrize("action", [4, 6, "4", "6", 4.0, 6.0, "1", None, "", "  "])
+def test_rule6_documented_icn_action_matrix(resolver, make_record, qcs, matching, action):
+    icns = ["A", "A"] if matching else ["A", "B"]
+    actions = [action if qc == 0 else "6" for qc in qcs]
+    result = FinalActionProcessor(resolver).validate_group(make_group(make_record, qcs, icns, actions=actions))
+    selected = rule(result)
+    assert selected.rule_id == "FA-RULE-06"
+    if matching and (action is None or str(action).strip() == ""):
+        assert selected.status == ValidationStatus.BLOCKED
+        assert not result.decisions
+    elif matching and action in [4, 6, "4", "6", 4.0, 6.0]:
+        assert [x.decision for x in result.decisions] == [RecordDecision.DROP, RecordDecision.DROP]
+    else:
+        assert {x.record_id: x.decision for x in result.decisions} == {
+            f"record-{qcs.index(5) + 1}": RecordDecision.KEEP,
+            f"record-{qcs.index(0) + 1}": RecordDecision.DROP,
+        }
+
+
+def test_rule6_coverage_explains_extra_records(resolver, make_record):
+    result = FinalActionProcessor(resolver).validate(make_group(make_record, [0, 0, 0, 5, 5, 5], ["A"] * 6))
+    coverage = next(x for x in result.rule_results if x.rule_id == "FA-RULE-06-COVERAGE")
+    assert coverage.status == ValidationStatus.NOT_APPLICABLE
+    assert coverage.actual["eligible_valid_source_episodes"] == 0
+    assert coverage.actual["group_sizes"] == {6: 1}
+
+
+def test_rule6_coverage_records_execution(resolver, make_record):
+    result = FinalActionProcessor(resolver).validate(make_group(make_record, [0, 5], ["A", "A"], actions=[6, 1]))
+    coverage = next(x for x in result.rule_results if x.rule_id == "FA-RULE-06-COVERAGE")
+    assert coverage.actual["evaluated_episodes"] == 1
+    assert coverage.actual["eligible_valid_source_episodes"] == 1

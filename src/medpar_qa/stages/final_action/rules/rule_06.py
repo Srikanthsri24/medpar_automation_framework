@@ -61,6 +61,8 @@ class Rule06TwoClaimsQC0QC5(FinalActionRule):
             return RuleEvaluation(self._result(
                 context, status=ValidationStatus.BLOCKED,
                 message="Rule 6 requires QC0 action code when ICNs match; transaction code is not a substitute",
+                expected="QC0 action code must be supplied when ICNs match; 4 or 6 cancels both",
+                actual={"same_control_number": True, "qc0_action_code": None},
                 evidence={"icns": list(context.icns)},
             ))
         approved_drop_codes = set(self.settings.rule6_drop_codes)

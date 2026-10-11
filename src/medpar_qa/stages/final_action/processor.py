@@ -68,7 +68,13 @@ class FinalActionProcessor(BaseStageProcessor):
     def _action_code(self, record: SourceRecord) -> str | None:
         """Resolve the cancellation action code without replacing it with the transaction code."""
         value = self.resolver.get(record.data, "action_code")
-        return None if value is None else str(value).strip()
+        if value is None or not str(value).strip():
+            return None
+        text = str(value).strip()
+        # Parquet numeric columns may expose integral action codes as floats.
+        if isinstance(value, float) and value.is_integer():
+            return str(int(value))
+        return text
 
     def _transaction_code(self, record: SourceRecord) -> str | None:
         """Resolve the transaction code and normalize it using this stage implementation."""
@@ -437,5 +443,30 @@ class FinalActionProcessor(BaseStageProcessor):
                     message="Actual Final Action output was not supplied; expected decisions only",
                 )
             )
+
+        # Explain absent Rule 6 coverage without inventing or collapsing input claims.
+        candidates = 0
+        for rows in grouped.values():
+            codes = [self._qc(row) for row in rows]
+            if len(rows) == 2 and set(codes) == {0, 5}:
+                candidates += 1
+        evaluations = [r for r in overall.rule_results if r.rule_id == "FA-RULE-06"]
+        overall.rule_results.append(RuleResult(
+            stage=self.stage, rule_id="FA-RULE-06-COVERAGE",
+            status=ValidationStatus.PASS if evaluations else ValidationStatus.NOT_APPLICABLE,
+            message=(f"Rule 6 evaluated for {len(evaluations)} episode(s)" if evaluations else
+                     "Rule 6 is implemented but was not evaluated: no eligible episode reached the rule; see candidate and prerequisite counts"),
+            expected={"records_per_episode": 2, "query_codes": [0, 5],
+                      "matching_icns_and_qc0_action_4_or_6": "DROP BOTH",
+                      "otherwise": "KEEP QC5 / DROP QC0",
+                      "source": "Requirements MM-FINAC-08..11; V3 page 20"},
+            actual={"rule6_enabled": self.settings.rule6_enabled,
+                    "eligible_valid_source_episodes": candidates,
+                    "evaluated_episodes": len(evaluations),
+                    "schema_rejected_records": len({rid for r in overall.rule_results if r.rule_id == "FA-PRE-SCHEMA" for rid in r.record_ids}),
+                    "ordering_blocked_groups": sum(r.rule_id == "FA-PRE-ORDERING" for r in overall.rule_results),
+                    "group_sizes": dict(Counter(len(rows) for rows in grouped.values()))},
+            source_files=sorted({r.source.file_path for r in source_records}),
+        ))
 
         return overall
