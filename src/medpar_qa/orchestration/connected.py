@@ -319,4 +319,6 @@ def run_configured(root, session, stage_runs, settings=None):
     target = html.escape(relative_link(master.parent, index), quote=True)
     master.write_text(f'<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url={target}">'
                       f'<a href="{target}">Open the connected pipeline report</a>', encoding='utf-8')
+    from medpar_qa.reporting.connected_review import write_connected_review
+    write_connected_review(journeys, index)
     return journeys, index

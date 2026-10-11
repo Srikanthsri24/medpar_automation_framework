@@ -158,8 +158,9 @@ def _render_test(entry: dict[str, Any], index: int) -> str:
       <div class="test-head"><span>#{index}</span><span class="badge {outcome}">{outcome.upper()}</span><strong>{_esc(entry['nodeid'])}</strong><span class="duration">{entry['duration']:.3f}s</span></div>
       <p><strong>Markers:</strong> {_esc(markers)}</p>
       {f'<p><strong>Test purpose:</strong> {_esc(entry["description"])}</p>' if entry['description'] else ''}
-      <h3>Business validation evidence emitted by this test</h3>
-      {event_html or '<p class="notice">This test did not emit RuleResult evidence. Review the test assertion and captured output below.</p>'}
+      <p class="notice">This is software test evidence. A PASSED test can deliberately produce FAIL, BLOCKED or NOT REACHED business events to verify rejection and stopping behavior. Read the test purpose; these events are not the production or demonstration outcome.</p>
+      <details><summary>Validation events from this test ({len(events)})</summary>
+      {event_html or '<p class="notice">This test did not emit RuleResult evidence. Review the test assertion and captured output below.</p>'}</details>
       <details><summary>Captured terminal/print output</summary><pre>{_esc(captured or 'No captured output.')}</pre></details>
       {f'<details open><summary>Pytest failure reason and traceback</summary><pre class="error">{_esc(error)}</pre></details>' if error else ''}
     </article>"""

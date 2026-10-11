@@ -16,6 +16,7 @@ def fixture_root(tmp_path):
 
 
 def test_real_five_stage_demo_completes_with_visible_coverage(tmp_path):
+    """Valid synthetic input completes all five real validators without a failure or blocker."""
     root = fixture_root(tmp_path)
     journeys, index = run_demo(root, ReportSession.create(project_root=root))
     journey, directory = journeys[0]
@@ -28,17 +29,22 @@ def test_real_five_stage_demo_completes_with_visible_coverage(tmp_path):
         checks = report['stages'][0]['rule_results']
         assert any(check['status'] == 'PASS' for check in checks)
         assert not any(check['status'] in ('FAIL', 'BLOCKED') for check in checks)
-    assert 'SYNTHETIC DEMONSTRATION' in index.read_text()
+    assert 'Synthetic demonstration' in index.read_text()
     assert 'not certified' in index.read_text()
+    assert 'data/demo_connected/claims.json' in index.read_text()
+    assert 'Executed checks and proof (43)' in index.read_text()
+    assert 'Not assessed / not applicable' in index.read_text()
+    assert 'Source proof' in index.read_text()
 
 
 def test_wrong_stay_warning_fails_and_stops_downstream(tmp_path):
+    """Intentional invalid input: warning 01=2 must fail at Stay and prevent later stages from running."""
     root = fixture_root(tmp_path)
     path = root / 'data/demo_connected/stay_candidate.json'
     data = json.loads(path.read_text())
     data[0]['warning_indicator_01'] = '2'
     path.write_text(json.dumps(data))
-    journeys, _ = run_demo(root, ReportSession.create(project_root=root))
+    journeys, index = run_demo(root, ReportSession.create(project_root=root))
     journey, directory = journeys[0]
     assert not journey['completed']
     assert [step['status'] for step in journey['steps']] == ['KEEP', 'KEEP', 'FAIL', 'NOT_REACHED', 'NOT_REACHED']
@@ -47,3 +53,6 @@ def test_wrong_stay_warning_fails_and_stops_downstream(tmp_path):
     assert failure['rule_id'] == 'ST-WARNING-01'
     assert failure['expected'] == '0'
     assert failure['actual'] == '2'
+    assert 'Intermediate — Not run' in index.read_text()
+    assert 'Final Medpar — Not run' in index.read_text()
+    assert 'failed · 0 blocked' in index.read_text()
