@@ -212,8 +212,14 @@ def test_master_report_defines_metrics_and_file_navigation(tmp_path):
     folder.mkdir(parents=True)
     (folder / 'report.json').write_text(json.dumps({'stages': [{'stage': 'stay', 'passed': False, 'rule_results': [{'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read file', 'source_files': ['example.json']}, {'rule_id': 'ST-TOTAL-CHARGE', 'status': 'FAIL', 'message': 'Mismatch', 'source_files': ['example.json']}]}]}))
     page = write_master_index(tmp_path).read_text()
-    assert 'Action required' in page
-    assert 'details.html' in page
+    assert 'Stage results' in page
+    assert 'stay_pass_files.html' in page
+    assert 'stay_fail_files.html' in page
+    selected = (tmp_path / 'master' / 'stay_fail_files.html').read_text()
+    assert 'example.json' in selected
+    assert 'Mismatch' in selected
+    assert 'Read file' not in selected
+    assert (tmp_path / 'master' / 'overview.html').exists()
     page = (tmp_path / 'master' / 'details.html').read_text()
     assert 'What these numbers mean' in page
     assert 'Validations = Pass + Fail + Blocked + N/A' in page
