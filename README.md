@@ -2,7 +2,7 @@
 
 Validate Final Action, Four-Year Split, Stay, Intermediate and Final MEDPAR using JSON or Parquet inputs. The framework compares production outputs with source rules and approved expected outputs, and produces reports explaining every recorded result.
 
-**Current verification:** 371 automated tests passed on 12 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
+**Current verification:** 401 automated tests passed on 13 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
 
 For your team demo, start with [how one run works](#how-one-run-works), [stage logic](#stage-logic-to-explain-first), [common questions](#questions-your-team-is-likely-to-ask) and [Python concepts](#python-concepts-used-here). Use the expandable [file/function reference](#every-python-file-class-and-function) for coding questions and the [rule reference](#rule-explanation-reference) for validation questions. Search the exact function or file name to jump to its detailed explanation.
 
@@ -13181,3 +13181,7 @@ The report follows the four-page Report format reference: no master dashboard wi
 R65 independent Final Action runs use `--modern-final-action` to disable legacy service-year and 900/875 table limits; the compatibility library defaults remain available for deliberate legacy checks. Deferred transaction validation is still a disclosed known difference, following the team instruction. The source QC domain, missing-action policy and external approval requirements are preserved. Office lock files are ignored; the gap workbook remains tracked.
 
 Large full reports keep a searchable file index and link to complete per-file proof instead of repeating all rule cards and catalogues in one document. Stage-wide findings remain visible in the stage conclusion. SSI/CCN defects are linked to both the Intermediate source and the exact matching Final files that carry the same values. Report timestamps display IST (UTC+05:30).
+
+### Stage transfer evidence
+
+Reports include a searchable “Moved to next stage” table. Connected journeys mark movement only when a retained output matches the next executed stage’s input; expand the status for both stage reports and transferred records. Dropped, stopped, not reached and final completion have separate explanations. Independent archive reviews link every input file’s full evidence and the next stage’s supplied-input report, but explicitly report transfer as unverified because those runs did not perform a connected handoff.
