@@ -18,11 +18,24 @@ def test_output_must_match_next_input(tmp_path):
     assert 'Completed final stage' in text
 
 
-def test_independent_pass_does_not_claim_movement(tmp_path):
-    check = dict(rule_id='INGEST-READ-FILE', status='PASS', actual=dict(role='source', record_count=1, file='a.json'), source_files=['a.json'], record_ids=['1'])
-    text = independent_transfers(tmp_path, {'final_action': [dict(stage=dict(rule_results=[check]))]})
-    assert 'transfer not verified' in text
+def test_boundary_requires_successful_next_stage_read(tmp_path):
+    source = tmp_path / 'retained.json'
+    source.write_text('[{"id": 1}]')
+    check = dict(rule_id='INGEST-READ-FILE', status='PASS', actual=dict(role='source', record_count=1), source_files=[str(source)])
+    def item(context, checks):
+        return dict(entry=dict(payload=dict(context=context)), stage=dict(rule_results=checks))
+    stages = {'final_action': [item(dict(actual_paths=[str(source)]), [])], 'split': [item(dict(source_paths=[str(source)]), [check])]}
+    text = independent_transfers(tmp_path, stages)
+    assert '1 / 1 output files — next-stage input verified' in text
     detail = (tmp_path / 'final_action_transfers.html').read_text()
-    assert 'Not executed as a connected handoff' in detail
-    assert 'File checks passed' in detail
-    assert 'final_action_file_' in detail
+    assert 'PASS — output used as next-stage input' in detail
+    assert 'SHA-256 fingerprint' in detail
+    stages['split'][0]['stage']['rule_results'][0]['status'] = 'FAIL'
+    text = independent_transfers(tmp_path, stages)
+    assert '0 / 1 output files — transfer discrepancies found' in text
+
+
+def test_validation_pass_alone_cannot_establish_transfer(tmp_path):
+    item = dict(entry=dict(payload=dict(context={})), stage=dict(rule_results=[]))
+    text = independent_transfers(tmp_path, {'final_action': [item]})
+    assert 'No retained-output handoff recorded' in text

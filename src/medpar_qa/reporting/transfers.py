@@ -7,27 +7,66 @@ STAGES = ('final_action', 'split', 'stay', 'intermediate', 'final_medpar')
 
 
 def independent_transfers(master, by_stage):
-    rows = []
+    """Verify saved-run boundary files and reuse explicit record-lineage audit proof."""
+    import json
+    import os
+    from pathlib import Path
+    from datetime import datetime
+    project = next((p for p in master.resolve().parents if (p / 'run_commands.py').exists()), master.resolve().parent)
+    def local(path):
+        p = Path(path)
+        return p if p.is_absolute() else project / p
+    def paths(stage, role):
+        return sorted({str(path) for item in by_stage.get(stage, []) for path in item['entry']['payload'].get('context', {}).get(role, [])})
+    def link(path):
+        return os.path.relpath(local(path), master.resolve()).replace(os.sep, '/')
+    rows, verification = [], []
     for number, stage in enumerate(STAGES):
-        items = by_stage.get(stage, [])
-        checks = [c for item in items for c in item['stage'].get('rule_results', [])]
-        volume = summarize_stage_volume(checks)
         next_stage = STAGES[number + 1] if number + 1 < len(STAGES) else None
-        detail_rows = []
-        for path in sorted(volume['file_sets']['in']):
-            state = 'Validation stopped' if path in volume['file_sets']['stopped'] else 'File checks passed; stage acceptance still required'
-            proof = stage + '_file_' + hashlib.sha256(path.encode()).hexdigest()[:20] + '.html'
-            detail_rows.append(f'<tr data-file="{e(path)}"><td><a href="{proof}">{e(path)}</a></td><td>{e(state)}</td><td>Not executed as a connected handoff</td></tr>')
+        title = stage.replace('_', ' ').title()
+        detail_rows, proofs = [], []
+        outputs = paths(stage, 'actual_paths')
+        next_inputs = paths(next_stage, 'source_paths') if next_stage else []
+        destination = {local(path).resolve(): path for path in next_inputs}
+        verified = 0
+        for path in outputs:
+            file = local(path)
+            target = destination.get(file.resolve())
+            digest = hashlib.sha256(file.read_bytes()).hexdigest() if file.is_file() else None
+            # Successful reader checks demonstrate that the configured input actually ran.
+            read_checks = [c for item in by_stage.get(next_stage, []) for c in item['stage'].get('rule_results', []) if c.get('rule_id') == 'INGEST-READ-FILE' and c.get('status') == 'PASS' and isinstance(c.get('actual'), dict) and c['actual'].get('role') == 'source' and target in c.get('source_files', [])] if target else []
+            ok = bool(digest and read_checks)
+            verified += ok
+            status = 'PASS — output used as next-stage input' if ok else 'FAIL — next-stage input read not established'
+            proofs.append(dict(output_file=path, next_input=target, sha256=digest, status='PASS' if ok else 'FAIL', next_stage_read_checks=len(read_checks)))
+            detail_rows.append(f'<tr data-file="{e(path)}"><td><a href="{e(link(path))}">{e(path)}</a></td><td>{e(target or "No matching next-stage input")}</td><td>{e(status)}</td><td><code>{e(digest or "File unavailable")}</code></td></tr>')
+        # Intermediate transforms into Final; exact field-preservation audit is the proof,
+        # rather than assuming that their differently shaped files have the same bytes.
+        lineage = [c for item in by_stage.get('final_medpar', []) for c in item['stage'].get('rule_results', []) if c.get('rule_id') == 'FM-ARCHIVE-EXACT-LINEAGE'] if stage == 'intermediate' else []
+        if lineage:
+            detail_rows = []
+            for c in lineage:
+                evidence_path = next((str(p) for p in c.get('source_files', []) if str(p) in paths('final_medpar', 'source_paths')), str(c.get('source_files', [''])[0]))
+                proof_link = 'final_medpar_file_' + hashlib.sha256(evidence_path.encode()).hexdigest()[:20] + '.html'
+                detail_rows.append(f'<tr data-file="{e(evidence_path)}"><td><a href="{proof_link}">{e(evidence_path)}</a></td><td>{e(json.dumps(c.get("actual"), ensure_ascii=False))}</td><td>{e(c["status"])}</td><td>{e(c["message"])}</td></tr>')
+            verified = sum(c['status'] == 'PASS' for c in lineage)
+            summary = f'{verified:,} / {len(lineage):,} Final files — exact Intermediate lineage verified' if verified == len(lineage) else f'{verified:,} / {len(lineage):,} Final files — lineage discrepancies found'
+            headings = '<th>Final file — full proof</th><th>Matching source and fingerprint</th><th>Result</th><th>Verification</th>'
+            proofs = lineage
+        else:
+            summary = f'{verified:,} / {len(outputs):,} output files — next-stage input verified' if outputs and verified == len(outputs) else f'{verified:,} / {len(outputs):,} output files — transfer discrepancies found' if outputs else 'No retained-output handoff recorded'
+            headings = '<th>Output file</th><th>Next-stage input</th><th>Verification result</th><th>SHA-256 fingerprint</th>'
+        if next_stage is None:
+            summary = 'Final stage — workflow ends here'
         filename = f'{stage}_transfers.html'
-        next_link = f'<p><a href="index.html#stage-{next_stage}">Open {e(next_stage.replace("_", " ").title())} supplied-input evidence</a></p>' if next_stage else ''
-        body = '<p>These stages were reviewed independently. Passing file checks does not prove that retained records were sent to the next stage. Supplied later-stage files are reviewed separately; no connected transfer is recorded in this session.</p>' + next_link
-        body += '<label>Search filename <input type="search" placeholder="Filename or path…"></label><table><tr><th>Input file — full evidence</th><th>Validation status</th><th>Movement status</th></tr>' + ''.join(detail_rows) + '</table>'
-        (master / filename).write_text(page(stage.replace('_', ' ').title() + ' — Stage transfer evidence', body), encoding='utf-8')
-        status = 'Reviewed independently — transfer not verified' if items else 'Not run'
-        if next_stage is None and items:
-            status = 'Final stage reviewed independently'
-        rows.append(f'<tr><td>{e(stage.replace("_", " ").title())}</td><td>{e(next_stage.replace("_", " ").title()) if next_stage else "End of workflow"}</td><td><a href="{filename}">{volume["files_in"]:,} files — {e(status)}</a></td></tr>')
-    return '<section id="stage-transfers"><h2>Moved to next stage — file status</h2><p>Click a status to see the files, their validation evidence and the next stage’s supplied-input reports.</p><table><tr><th>From stage</th><th>To stage</th><th>Movement status and file evidence</th></tr>' + ''.join(rows) + '</table></section>'
+        body = f'<p><strong>Conclusion: {e(summary)}</strong></p><p>Verification uses the saved run configuration, successful next-stage file-read checks and current local file fingerprints. Exact lineage checks verify transformed Final records against Intermediate. Boundary verification establishes which supplied outputs were used in the next stage. Open the stage reports for business-rule results and acceptance conclusions.</p>'
+        body += f'<p><a href="index.html#stage-{stage}">Source-stage validation and original input-file evidence</a>' + (f' · <a href="index.html#stage-{next_stage}">Next-stage validation evidence</a>' if next_stage else '') + ' · <a href="transfer_verification.json">Download verification evidence</a></p>'
+        body += '<label>Search filename <input type="search" placeholder="Filename or path…"></label><table><tr>' + headings + '</tr>' + ''.join(detail_rows) + '</table>'
+        (master / filename).write_text(page(title + ' — Stage boundary verification', body), encoding='utf-8')
+        verification.append(dict(stage=stage, next_stage=next_stage, conclusion=summary, evidence=proofs))
+        rows.append(f'<tr><td>{e(title)}</td><td>{e(next_stage.replace("_", " ").title()) if next_stage else "End of workflow"}</td><td><a href="{filename}">{e(summary)}</a></td></tr>')
+    (master / 'transfer_verification.json').write_text(json.dumps(dict(verified_at=datetime.now().astimezone().isoformat(), boundaries=verification), indent=2), encoding='utf-8')
+    return '<section id="stage-transfers"><h2>Stage transfer verification</h2><p>Click a result for output-to-input file matches, fingerprints and validation evidence. Counts describe supplied boundary files; the original file may be merged or split as records move through stages.</p><table><tr><th>From stage</th><th>To stage</th><th>Verified result — open proof</th></tr>' + ''.join(rows) + '</table></section>'
 
 
 def connected_transfers(journeys, index):
