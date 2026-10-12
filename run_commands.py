@@ -175,6 +175,7 @@ def r65_stage_runs() -> dict[str, dict[str, Any]]:
         # supplied records; disclose archive completeness independently in the audit.
         item["require_matching_snapshot"] = False
         item["split_current_year"] = 2024
+        item["modern_final_action"] = stage == "final_action"
         profile[stage] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [item]}
     profile["final_medpar"] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [
         _production_run("R65 Final MEDPAR short-stay output checks", ("6-final-processing/MEDPAR_FINAL_SS_FILES",), suffixes=(".json",), data_root=root),
@@ -263,6 +264,8 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
     ]
     if stage == "final_medpar" and item.get("mode", "calculate") == "calculate":
         args.extend(["--per-file", "--final-extract"])
+    if stage == "final_action" and item.get("modern_final_action"):
+        args.append("--modern-final-action")
     if stage == "split":
         args.extend(["--split-current-year", str(item.get("split_current_year", 2025))])
     _append_paths(args, "--source", list(item.get("source") or []))

@@ -49,6 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--aliases", default="config/field_aliases.yaml")
     parser.add_argument("--reports", default="reports", help="Relative root used when no report session is supplied")
     parser.add_argument("--report-session", default=None, help="Relative timestamped report-session directory shared by commands")
+    parser.add_argument("--modern-final-action", action="store_true", help="Disable legacy service-year and 900/875 table limits for modernization validation")
     parser.add_argument("--final-extract", action="store_true", help="Final delivered JSON omits Intermediate Split-Year Indicator")
     parser.add_argument("--split-current-year", type=int, help="Explicit Split Y0 business year")
     parser.add_argument("--per-file", action="store_true", help="Independent source-only checks; do not group identities across files")
@@ -129,6 +130,10 @@ def main() -> int:
     run_id = args.run_id or f"{stage.value}_{run_date.isoformat()}"
     command_id = args.command_id or slugify(run_id)
     settings = _stage_settings(stage, args.mode)
+    if args.modern_final_action:
+        if stage != Stage.FINAL_ACTION:
+            raise ValueError("--modern-final-action is for Final Action only")
+        settings[stage.value].update(enforce_single_service_year=False, enforce_legacy_table_limits=False)
     if stage == Stage.INTERMEDIATE:
         settings[stage.value]["deduplicate_filename_exports"] = True
     if args.final_extract:

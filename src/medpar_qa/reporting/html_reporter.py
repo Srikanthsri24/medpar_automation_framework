@@ -143,7 +143,7 @@ def _validation_card(check: RuleResult, number: int, prefix: str = "check") -> s
     """
 
 
-def _stage_section(stage: StageResult, index: int) -> str:
+def _stage_section(stage: StageResult, index: int, parent_link: str | None = None) -> str:
     """Render a stage with summary, file-level navigation/search and its validation cards."""
     counts = stage.status_counts
     executed_rule_ids = {item.rule_id for item in stage.rule_results}
@@ -152,10 +152,22 @@ def _stage_section(stage: StageResult, index: int) -> str:
         for rule_id, metadata in stage_rule_catalog(stage.stage.value)
     )
     catalogue = f"""<details class='rule-catalogue'><summary>Complete stage rule catalogue and coverage</summary><p><strong>Executed</strong> means the rule/function emitted a result for this run. <strong>Not triggered</strong> means its prerequisites did not occur in this input; it is not a hidden pass.</p><div class='table-wrap'><table><thead><tr><th>Rule ID</th><th>Rule / validation</th><th>Run state</th><th>Business requirement</th></tr></thead><tbody>{catalogue_rows}</tbody></table></div></details>"""
-    cards = "".join(
+    use_linked_proof = len(stage.rule_results) >= 1000 and bool(parent_link and parent_link.endswith("master/index.html"))
+    cards = "" if use_linked_proof else "".join(
         _validation_card(check, number, f"stage-{index}")
         for number, check in enumerate(stage.rule_results, start=1)
     )
+    checks = [dict(asdict(check), status=check.status.value) for check in stage.rule_results]
+    if use_linked_proof:
+        from pathlib import PurePosixPath
+        from .status_navigation import compact_file_index
+        master_base = PurePosixPath(parent_link).parent.as_posix()
+        files_html = compact_file_index(stage.stage.value, checks, master_base)
+        cards = f'<p>Complete rule explanations are available in each linked file proof page. Shared stage checks and the complete stage conclusion remain in the master report.</p><a href="{_esc(parent_link)}#stage-{_esc(stage.stage.value)}">Open all stage findings</a>'
+    else:
+        files_html = file_review(stage.stage.value, checks, f"stage-{index}")
+    keep_count = sum(item.decision.value == "KEEP" for item in stage.decisions)
+    drop_count = sum(item.decision.value == "DROP" for item in stage.decisions)
     decisions = ""
     if stage.decisions:
         rows = "".join(
@@ -163,13 +175,13 @@ def _stage_section(stage: StageResult, index: int) -> str:
             for item in stage.decisions
         )
         decisions = f"""
-        <section class="decision-section">
-          <h3>Record-level KEEP/DROP decisions</h3>
+        <details class="decision-section">
+          <summary>Record-level KEEP/DROP decisions — KEEP {keep_count} · DROP {drop_count}</summary>
           <p>These are the final decisions produced by the applicable Final Action rule for each record.</p>
           <div class="table-wrap"><table><thead><tr><th>Record ID</th><th>Decision</th><th>Rule</th><th>Explanation</th></tr></thead><tbody>{rows}</tbody></table></div>
-        </section>
+        </details>
         """
-    open_attr = " open" if index == 1 or not stage.passed else ""
+    open_attr = ""
     return f"""
     <details class="stage-section"{open_attr} data-stage-container="{_esc(stage.stage.value)}">
       <summary>
@@ -183,7 +195,7 @@ def _stage_section(stage: StageResult, index: int) -> str:
           <strong>How to review this stage:</strong> Read validations in order. Each card states the business requirement, exact check, expected result, observed result, conclusion, and source evidence.
         </div>
         {catalogue}
-        {file_review(stage.stage.value, [dict(asdict(c), status=c.status.value) for c in stage.rule_results], f"stage-{index}")}
+        <details class='file-inventory-collapse'><summary>Files reviewed in this stage — KEEP {keep_count} · DROP {drop_count}</summary>{files_html}</details>
         <details><summary>Full rule explanations and evidence — open any rule link above</summary>
         {cards}</details>
         {decisions}
@@ -255,7 +267,7 @@ def write_html_report(
     )
 
     stages_html = "".join(
-        _stage_section(stage, index)
+        _stage_section(stage, index, parent_link)
         for index, stage in enumerate(stage_results, start=1)
     )
 
@@ -287,9 +299,8 @@ header{{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;p
 <main class="container">
 <section class="summary-grid"><div class="summary-card">Stages<strong>{len(stage_results)}</strong></div><div class="summary-card">Validations<strong>{validation_count}</strong></div><div class="summary-card">Passed<strong>{counts['PASS']}</strong></div><div class="summary-card">Failed<strong>{counts['FAIL']}</strong></div><div class="summary-card">Blocked<strong>{counts['BLOCKED']}</strong></div><div class="summary-card">Not applicable<strong>{counts['NOT_APPLICABLE']}</strong></div><div class="summary-card">Known differences<strong>{counts['KNOWN_DIFFERENCE']}</strong></div><div class="summary-card">Record decisions<strong>{decision_count}</strong></div></section>
 <section class="guide"><h2>How to read this report</h2><ol><li>Open the required stage.</li><li>Use status filters to focus on failures.</li><li>Read the business requirement and exact validation performed.</li><li>Compare Expected result with Observed result.</li><li>Read the conclusion explaining why it passed, failed, or was blocked.</li><li>Open source evidence for relative file paths, record IDs, group keys, and validator function.</li></ol></section>
-<section class="failure-overview"><h2>Failure / blocked overview</h2>{failure_summary}</section>
 <section class="toolbar"><input id="search" type="search" placeholder="Search stage, rule, field, requirement, source file..." oninput="applyFilters()"><select id="statusFilter" onchange="applyFilters()"><option value="ALL">All statuses</option><option>PASS</option><option>FAIL</option><option>BLOCKED</option><option>NOT_APPLICABLE</option><option>KNOWN_DIFFERENCE</option></select><select id="stageFilter" onchange="applyFilters()"><option value="ALL">All stages</option>{''.join(f'<option value="{_esc(stage.stage.value)}">{_esc(stage.stage.value.replace("_"," ").title())}</option>' for stage in stage_results)}</select><button onclick="expandAll(true)">Expand all</button><button onclick="expandAll(false)">Collapse all</button><button onclick="window.print()">Print / Save PDF</button></section>
-{manifest_block}{stages_html}<section class='overall-conclusion'><h2>Overall conclusion — all stages: {'WITH KNOWN DIFFERENCES' if overall_passed and counts['KNOWN_DIFFERENCE'] else 'PASS' if overall_passed and validation_count else 'FAIL / BLOCKED' if failures else 'NOT ESTABLISHED'}</h2><p>{len(stage_results)} stages reviewed. Every required stage must pass its applicable checks before acceptance. Unexecuted rules and absent stages have no acceptance result. File filters do not change these full-run conclusions.</p></section></main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
+{manifest_block}{stages_html}<section class='overall-conclusion'><h2>Overall conclusion — all stages: {'WITH KNOWN DIFFERENCES' if overall_passed and counts['KNOWN_DIFFERENCE'] else 'PASS' if overall_passed and validation_count else 'FAIL / BLOCKED' if failures else 'NOT ESTABLISHED'}</h2><p>{len(stage_results)} stages reviewed. Every required stage must pass its applicable checks before acceptance. Unexecuted rules and absent stages have no acceptance result. File filters do not change these full-run conclusions.</p></section><details class="failure-overview"><summary>Failure / blocked overview — {len(failures)} checks</summary>{failure_summary}</details></main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
 <script>
 function applyFilters(){{const q=document.getElementById('search').value.toLowerCase();const status=document.getElementById('statusFilter').value;const stage=document.getElementById('stageFilter').value;document.querySelectorAll('.validation-card').forEach(card=>{{const okQ=!q||card.dataset.search.includes(q);const okS=status==='ALL'||card.dataset.status===status;const okStage=stage==='ALL'||card.dataset.stage===stage;card.classList.toggle('hidden',!(okQ&&okS&&okStage));}});}}
 function expandAll(open){{document.querySelectorAll('details').forEach(item=>item.open=open);}}

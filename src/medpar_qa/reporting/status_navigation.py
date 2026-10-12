@@ -50,3 +50,46 @@ def write_status_navigation(master, stage, checks, render):
         body = f'<p>{len(matching):,} matching checks · {len(rows):,} linked evidence files. A file can contain both passed and failed checks. Click its filename for the complete file conclusion and full proof. Counts are validation events, not exclusive file outcomes.</p><label>Search filename <input type="search" placeholder="Filename or path…"></label><table><tr><th>File — open full report</th><th>Matching checks</th><th>Explanation</th></tr>' + ''.join(rows) + '</table>'
         body += '<h2>Stage-wide checks without file attribution</h2>' + ''.join(render(c, stage, n, stage+'-global') for n,c in enumerate(global_checks,1))
         (master / f'{stage}_{status.lower()}_files.html').write_text(page(stage.replace('_',' ').title()+' — '+status+' file evidence', body),encoding='utf-8')
+
+
+def write_volume_navigation(master, stage, checks, volume):
+    """Link true input-file counts and explicit decisions to existing per-file proof."""
+    by_file_ids = defaultdict(set)
+    for check in checks:
+        actual = check.get('actual') or {}
+        if check.get('rule_id') == 'INGEST-READ-FILE' and isinstance(actual,dict) and actual.get('role') == 'source':
+            for path in check.get('source_files',[]):
+                by_file_ids[str(path)].update(str(record) for record in check.get('record_ids',[]))
+    for key in ('files_in','files_passed','files_stopped','records_in','kept','dropped','records_stopped'):
+        if key.startswith('files_'):
+            paths = volume['file_sets'][key.removeprefix('files_')]
+        elif key == 'records_in':
+            paths = volume['file_sets']['in']
+        else:
+            outcome = {'kept':'KEEP','dropped':'DROP'}.get(key)
+            paths = {path for path, ids in by_file_ids.items() if any(volume['decisions'].get(record) == outcome if outcome else record not in volume['decisions'] for record in ids)}
+        rows = []
+        for path in sorted(paths):
+            filename = stage + '_file_' + hashlib.sha256(path.encode()).hexdigest()[:20] + '.html'
+            ids = by_file_ids[path]
+            selected = ids if key in ('files_in','files_passed','files_stopped','records_in') else {record for record in ids if volume['decisions'].get(record) == {'kept':'KEEP','dropped':'DROP'}.get(key)} if key != 'records_stopped' else ids - volume['decisions'].keys()
+            rows.append(f'<tr data-file="{e(path)}"><td><a href="{filename}">{e(path)}</a></td><td>{len(selected)}</td><td>{e(", ".join(sorted(selected)))}</td></tr>')
+        body = f'<p>Selected metric: {e(key.replace("_"," "))} — {volume[key] if volume[key] is not None else "Not recorded"}. Input files only; output and reference files are excluded. Open a filename for its complete proof. Global stage discrepancies still affect acceptance.</p><label>Search filename <input type="search"></label><table><tr><th>Input file</th><th>Linked records</th><th>Record IDs</th></tr>' + ''.join(rows) + '</table>'
+        (master / f'{stage}_volume_{key}.html').write_text(page(stage.replace('_',' ').title()+' — '+key.replace('_',' '),body), encoding='utf-8')
+
+
+def compact_file_index(stage, checks, master_base):
+    """Keep large full reports searchable without duplicating thousands of rule cards."""
+    files=defaultdict(list)
+    for check in checks:
+        for path in set(check.get('source_files', [])):
+            files[str(path)].append(check)
+    rows=[]
+    for path, linked in sorted(files.items()):
+        counts=defaultdict(int)
+        for check in linked: counts[check['status']]+=1
+        filename=stage+'_file_'+hashlib.sha256(path.encode()).hexdigest()[:20]+'.html'
+        href=master_base+'/'+filename
+        outcome='FAIL' if counts['FAIL'] else 'BLOCKED' if counts['BLOCKED'] else 'REVIEW DIFFERENCES' if counts['KNOWN_DIFFERENCE'] else 'Recorded applicable checks pass' if counts['PASS'] else 'Not assessed'
+        rows.append(f'<tr data-file="{e(path)}"><td><a href="{e(href)}">{e(path)}</a></td><td>{outcome}</td><td>{counts["PASS"]} / {counts["FAIL"]} / {counts["BLOCKED"]}</td></tr>')
+    return '<p>Open a filename for its complete rule-by-rule proof, including expected/observed values, explanations and all checks linked to that file in this stage.</p><label>Search filename <input class="compact-file-search" type="search" oninput="filterCompactFiles(this)"></label><div class="table-wrap"><table><tr><th>File — open full proof</th><th>Conclusion in this run</th><th>Pass / Fail / Blocked checks</th></tr>'+''.join(rows)+'</table></div><script>function filterCompactFiles(input){const scope=input.closest(".file-inventory-collapse");scope.querySelectorAll("tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(input.value.toLowerCase()));}</script>'

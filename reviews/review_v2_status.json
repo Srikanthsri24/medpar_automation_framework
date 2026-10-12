@@ -19,7 +19,7 @@
       "id": "N2",
       "status": "CODE_FIXED",
       "remarks": "Unvalidated transaction codes no longer create separate bill groups. RICID identifies IP/SNF where supplied; otherwise type is omitted while TC checking is deferred.",
-      "evidence": "test_rule6_mixed_valid_invalid_transaction_cancels_pair",
+      "evidence": "reviews/rule6_verification_current.json cases 8 and 9; test_rule6_mixed_valid_invalid_transaction_cancels_pair",
       "remaining_action": "Validate the production RICID mapping with the team."
     },
     {
@@ -101,10 +101,10 @@
     },
     {
       "id": "G12",
-      "status": "MODERN_RUN_PROFILE_FIXED",
-      "remarks": "Connected modern profile disables single-service-year and legacy900/875 table limits. Library compatibility defaults remain available for legacy tests.",
-      "evidence": "CONNECTED_SETTINGS.final_action",
-      "remaining_action": "Choose modernization profile deliberately for independent legacy runs."
+      "status": "MODERN_RUN_PROFILES_FIXED",
+      "remarks": "Both connected Q61 and independent R65 profiles disable single-service-year and legacy 900/875 table limits. Compatibility library defaults remain available for intentional legacy runs.",
+      "evidence": "run_commands.r65_stage_runs modern_final_action; scripts/run_stage.py --modern-final-action",
+      "remaining_action": "No implementation gap in modern run profiles. Use a legacy profile only when explicitly validating the legacy contract."
     },
     {
       "id": "G13",
@@ -171,7 +171,7 @@
     }
   ],
   "validation": {
-    "automated_tests": "371 passed; includes intentional rejection tests",
+    "automated_tests": "398 passed; includes all eleven supplied Rule 6 scenarios, report-format and large-report navigation guards, and exact-lineage field-defect attribution",
     "r65_final_format_files": 914,
     "r65_exact_lineage_matches": 914,
     "r65_source_defects": {
@@ -182,6 +182,21 @@
       "split_unaccounted_claims": 244
     },
     "production_acceptance": "Not established",
-    "q61_connected": "14FAKEEP/4SplitKEEP/4StayBLOCKED/0completed after explicitY0=2025; supplied candidate identities must reconcile with corrected business-year anchor"
+    "q61_connected": "14FAKEEP/4SplitKEEP/4StayBLOCKED/0completed after explicitY0=2025; supplied candidate identities must reconcile with corrected business-year anchor",
+    "r65_all_stage_report": "reports/20261012_231755/master/index.html",
+    "rule6_scenarios": "11/11 verified; matching-ICN missing-action policy explicitly remains pending PO confirmation",
+    "controlled_connected_demo": "reports/20261012_233426/connected/index.html \u2014 all five real validators completed using fictitious fixtures; not production acceptance"
+  },
+  "verification_evidence": {
+    "rule6": "reviews/rule6_verification_current.json",
+    "report_format": "Report format.pdf (4 pages): master widgets removed, all stages collapsed, clickable file/record volumes, failure overview last, collapsed KEEP/DROP totals"
+  },
+  "rule6_review": {
+    "result": "11 of 11 supplied scenarios reproduced successfully against the actual default processor",
+    "pending_policy": "Matching ICNs without QC0 action remains BLOCKED; the review says PO confirmation is required. No cancellation result is guessed."
+  },
+  "housekeeping": {
+    "office_lock_file": "Removed tracked PowerPoint lock file; all ~$* Office lock files ignored",
+    "gap_workbook": "Existing outputs/medpar_gap_submission_20261011/MedPAR_Gap_Register_Srikanth.xlsx remains tracked; it has not been deleted"
   }
 }

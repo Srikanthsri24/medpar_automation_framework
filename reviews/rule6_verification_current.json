@@ -1,0 +1,179 @@
+{
+  "scope": "Controlled fixtures; actual default FinalActionProcessor. Case 6 preserves the current missing-action BLOCKED policy pending PO confirmation. This is software verification, not production acceptance.",
+  "passed": true,
+  "scenarios": [
+    {
+      "case": 1,
+      "same_icn": false,
+      "qc0_newer": false,
+      "qc0_action": 4,
+      "invalid_transaction_pair": false,
+      "expected": "KEEP_QC5",
+      "observed": "KEEP_QC5",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "KEEP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 kept QC5 and dropped QC0"
+    },
+    {
+      "case": 2,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": 4,
+      "invalid_transaction_pair": false,
+      "expected": "DROP_BOTH",
+      "observed": "DROP_BOTH",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "DROP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 dropped both records for matching control number and configured cancellation code"
+    },
+    {
+      "case": 3,
+      "same_icn": true,
+      "qc0_newer": true,
+      "qc0_action": 6,
+      "invalid_transaction_pair": false,
+      "expected": "DROP_BOTH",
+      "observed": "DROP_BOTH",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc0": "DROP",
+        "qc5": "DROP"
+      },
+      "explanation": "Rule 6 dropped both records for matching control number and configured cancellation code"
+    },
+    {
+      "case": 4,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": 1,
+      "invalid_transaction_pair": false,
+      "expected": "KEEP_QC5",
+      "observed": "KEEP_QC5",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "KEEP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 kept QC5 and dropped QC0"
+    },
+    {
+      "case": 5,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": 2,
+      "invalid_transaction_pair": false,
+      "expected": "KEEP_QC5",
+      "observed": "KEEP_QC5",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "KEEP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 kept QC5 and dropped QC0"
+    },
+    {
+      "case": 6,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": null,
+      "invalid_transaction_pair": false,
+      "expected": "BLOCKED",
+      "observed": "BLOCKED",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {},
+      "explanation": "Rule 6 requires QC0 action code when ICNs match; transaction code is not a substitute"
+    },
+    {
+      "case": 7,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": 4,
+      "invalid_transaction_pair": false,
+      "expected": "DROP_BOTH",
+      "observed": "DROP_BOTH",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "DROP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 dropped both records for matching control number and configured cancellation code"
+    },
+    {
+      "case": 8,
+      "same_icn": false,
+      "qc0_newer": false,
+      "qc0_action": 4,
+      "invalid_transaction_pair": true,
+      "expected": "KEEP_QC5",
+      "observed": "KEEP_QC5",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "KEEP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 kept QC5 and dropped QC0"
+    },
+    {
+      "case": 9,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": 4,
+      "invalid_transaction_pair": true,
+      "expected": "DROP_BOTH",
+      "observed": "DROP_BOTH",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "DROP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 dropped both records for matching control number and configured cancellation code"
+    },
+    {
+      "case": 10,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": " 4 ",
+      "invalid_transaction_pair": false,
+      "expected": "DROP_BOTH",
+      "observed": "DROP_BOTH",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "DROP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 dropped both records for matching control number and configured cancellation code"
+    },
+    {
+      "case": 11,
+      "same_icn": true,
+      "qc0_newer": false,
+      "qc0_action": 4,
+      "invalid_transaction_pair": false,
+      "expected": "DROP_BOTH",
+      "observed": "DROP_BOTH",
+      "rule": "FA-RULE-06",
+      "passed": true,
+      "decisions": {
+        "qc5": "DROP",
+        "qc0": "DROP"
+      },
+      "explanation": "Rule 6 dropped both records for matching control number and configured cancellation code"
+    }
+  ]
+}

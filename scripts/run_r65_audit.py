@@ -16,7 +16,7 @@ def run_audit(session=None):
     result = audit_archive(PROJECT_ROOT / 'data/production/r65', current_year=2024, resolver=resolver)
     directory = session.command_directory('final_medpar', 'r65_lineage_routing_reconciliation')
     bundle = write_report_bundle(run_id='r65_archive_audit', results=[result], output_directory=directory,
-        title='R65 Final MEDPAR — lineage, routing and reconciliation',
+        title='R65 Final MEDPAR — lineage, routing and reconciliation', parent_link='../../master/index.html',
         context={'current_year': 2024, 'dataset': 'R65 DEV Q2 2025', 'scope': 'Supplied JSON evidence; not CMS physical-byte certification'})
     index = refresh_session_indexes(session.root)
     print(f'R65 evidence report: {bundle.html}')

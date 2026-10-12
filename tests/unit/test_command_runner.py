@@ -72,6 +72,7 @@ def test_r65_profile_uses_own_stage_boundaries_and_business_year():
     commands = [c for c in runner.build_commands('reports/test', profile) if c.enabled]
     assert {c.stage for c in commands} == set(profile)
     assert all('q61' not in ' '.join(c.args) for c in commands)
+    assert '--modern-final-action' in next(c for c in commands if c.stage == 'final_action').args
     split = next(c for c in commands if c.stage == 'split')
     assert split.args[split.args.index('--split-current-year') + 1] == '2024'
     assert all(item['run_date'] == '2025-03-18' for item in profile.values())

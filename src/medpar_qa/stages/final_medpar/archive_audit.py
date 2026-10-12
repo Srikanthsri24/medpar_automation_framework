@@ -32,14 +32,19 @@ def audit_archive(root, *, current_year, resolver):
         data = json.loads(path.read_text())
         source_index[payload_fingerprint(data)].append((path, data))
     finals = sorted((root / '6-final-processing').rglob('*.json'))
+    delivered_by_source = defaultdict(list)
     routes = Counter()
     matched_routes = Counter()
 
     def check(rule, valid, expected, actual, paths, message, *, status=None):
+        if rule in {'FM-ARCHIVE-SSI-DAYS-DOMAIN', 'FM-ARCHIVE-SSI-INDICATOR-DOMAIN', 'FM-ARCHIVE-BASE-FACILITY-CCN'}:
+            # Exact lineage proves these values are carried unchanged into Final.
+            # Attribute field findings to those delivered files as well as the source.
+            paths = list(dict.fromkeys([*paths, *[final for source in paths for final in delivered_by_source[source]]]))
         result.rule_results.append(RuleResult(stage=Stage.FINAL_MEDPAR, rule_id=rule,
             status=status or (ValidationStatus.PASS if valid else ValidationStatus.FAIL),
             message=message, expected=expected, actual=actual,
-            source_files=[str(path) for path in paths],
+            source_files=[path.relative_to(Path(__file__).resolve().parents[4]).as_posix() if path.is_relative_to(Path(__file__).resolve().parents[4]) else str(path) for path in paths],
             evidence={'current_year': current_year, 'audit': 'JSON fields and archive routing; not physical bytes'}))
 
     for path in finals:
@@ -57,6 +62,7 @@ def audit_archive(root, *, current_year, resolver):
         if len(matches) != 1:
             continue
         source_path, source = matches[0]
+        delivered_by_source[source_path].append(path)
         indicator = resolver.get(source, 'split_year_indicator')
         match = re.fullmatch(r'Y([0-3])(0109|1012)', str(indicator))
         if not match:

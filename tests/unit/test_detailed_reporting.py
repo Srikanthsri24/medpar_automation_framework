@@ -179,7 +179,7 @@ def test_timestamped_session_writes_stage_and_master_indexes(tmp_path: Path):
     assert (session.root / "stay" / "index.html").exists()
     assert master == session.root / "master" / "index.html"
     assert master.exists()
-    assert "Stage results" in master.read_text(encoding="utf-8")
+    assert "Files and records by stage" in master.read_text(encoding="utf-8")
     assert "ST-TOTAL-CHARGE" in (master.parent / "details.html").read_text(encoding="utf-8")
 
 @pytest.mark.unit
@@ -212,7 +212,7 @@ def test_master_report_defines_metrics_and_file_navigation(tmp_path):
     folder.mkdir(parents=True)
     (folder / 'report.json').write_text(json.dumps({'stages': [{'stage': 'stay', 'passed': False, 'rule_results': [{'rule_id': 'INGEST-READ-FILE', 'status': 'PASS', 'message': 'Read file', 'source_files': ['example.json']}, {'rule_id': 'ST-TOTAL-CHARGE', 'status': 'FAIL', 'message': 'Mismatch', 'source_files': ['example.json']}]}]}))
     page = write_master_index(tmp_path).read_text()
-    assert 'Stage results' in page
+    assert 'Files and records by stage' in page
     assert 'stay_pass_files.html' in page
     assert 'stay_fail_files.html' in page
     selected = (tmp_path / 'master' / 'stay_fail_files.html').read_text()
@@ -221,7 +221,7 @@ def test_master_report_defines_metrics_and_file_navigation(tmp_path):
     assert 'Read file' not in selected
     assert (tmp_path / 'master' / 'overview.html').exists()
     page = (tmp_path / 'master' / 'details.html').read_text()
-    assert 'What these numbers mean' in page
+    assert 'How to read file, record and validation counts' in page
     assert 'Validations = Pass + Fail + Blocked + N/A' in page
     assert "id='stay-1-2'" in page
     assert "href='#stay-1-2'" in page

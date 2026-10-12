@@ -180,3 +180,13 @@ def test_final_action_missing_stay_through_date_is_reported_without_crash(resolv
     result = FinalActionProcessor(resolver, FinalActionSettings(enforce_single_service_year=True)).validate([make_record(claim)])
     assert not result.passed
     assert any(check.status == ValidationStatus.FAIL for check in result.rule_results)
+
+
+def test_archive_field_defect_links_only_exact_matching_final_files(tmp_path,resolver):
+    intermediate={'medparSSANo0021':'DEMO','medparBicCode0022':'A','medparProvider0130':'999999','medparAdmDate0200':'20240101','medparSplitYearIndicator':'Y00109','medparSSLSSNFIND0140':'S','medparCovDays0280':1,'medparLgthStay0260':1,'medparSSIData0251':'','medparSSIData0252':'N','medparPrvdrBaseFacCcn1650':'999999'}
+    source=tmp_path/'5-intermediate-processing/input.json';source.parent.mkdir();source.write_text(json.dumps(intermediate))
+    final=tmp_path/'6-final-processing/MEDPAR_FINAL_SS_FILES/CY/2024/record.json';final.parent.mkdir(parents=True);final.write_text(json.dumps({k:v for k,v in intermediate.items() if k!='medparSplitYearIndicator'}))
+    result=audit_archive(tmp_path,current_year=2024,resolver=resolver)
+    check=next(check for check in result.rule_results if check.rule_id=='FM-ARCHIVE-SSI-DAYS-DOMAIN')
+    assert check.status==ValidationStatus.FAIL
+    assert set(check.source_files)=={str(source),str(final)}

@@ -1,6 +1,7 @@
 """Client-facing file navigation without duplicating or re-counting checks."""
 from collections import Counter, defaultdict
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import html
 import json
 
@@ -11,6 +12,8 @@ def readable_time(value):
     """Format a timestamp with an explicit readable date/time and timezone."""
     try:
         timestamp = datetime.fromisoformat(str(value))
+        if timestamp.tzinfo is not None:
+            timestamp = timestamp.astimezone(ZoneInfo("Asia/Kolkata"))
         return timestamp.strftime('%d %B %Y at %I:%M:%S %p') + ' (UTC' + timestamp.strftime('%z')[:3] + ':' + timestamp.strftime('%z')[3:] + ')'
     except (ValueError, TypeError):
         return str(value)

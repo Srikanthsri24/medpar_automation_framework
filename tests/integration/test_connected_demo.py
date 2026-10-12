@@ -55,4 +55,5 @@ def test_wrong_stay_warning_fails_and_stops_downstream(tmp_path):
     assert failure['actual'] == '2'
     assert 'Intermediate — Not run' in index.read_text()
     assert 'Final Medpar — Not run' in index.read_text()
-    assert 'failed · 0 blocked' in index.read_text()
+    assert 'Files and records by stage' in index.read_text()
+    assert 'PIPELINE-NOT-REACHED' not in index.read_text()  # Skipped rules are not reported as extra blocks.

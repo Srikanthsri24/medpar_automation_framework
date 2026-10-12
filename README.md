@@ -13171,3 +13171,13 @@ The profile uses 18 March 2025 from the archive reconciliation report and Split 
 In the connected report, the compact stage table counts file outcomes. Click Pass (retained/continued), Fail or Blocked to filter directly to those input files; use Show all files to reset. These file counts differ from the master report’s validation-event counts.
 
 Default demonstration command: `python run_commands.py` now selects R65 and reviews all five stage boundaries. `python run_commands.py --dataset r65` selects the same profile explicitly. To run the earlier Q61 connected profile, use `python run_commands.py --dataset q61`. The terminal prints the selected dataset and mode before execution. A failed business check is a validation result, not a failure to launch the runner.
+
+## Lead review updates (12 October 2026)
+
+The report follows the four-page Report format reference: no master dashboard widgets; each stage starts collapsed with clickable source-file and record counts. Expand for validation outcomes, links and conclusions. Full report failure summaries appear last and collapsed; file inventory and KEEP/DROP decisions start collapsed with decision totals visible. Input file counts exclude outputs/references. Independent checks without explicit record dispositions show a dash rather than an invented KEEP/DROP count. Connected counts use actual journey progress.
+
+`python scripts/verify_rule6.py` reproduces all eleven scenarios against the real default processor and writes `reviews/rule6_verification_current.json`. View `reviews/review_v2_status.html` for every N/G/M finding, implementation evidence and any remaining source-data or PO acceptance condition. `python scripts/render_review_status.py` refreshes that review page.
+
+R65 independent Final Action runs use `--modern-final-action` to disable legacy service-year and 900/875 table limits; the compatibility library defaults remain available for deliberate legacy checks. Deferred transaction validation is still a disclosed known difference, following the team instruction. The source QC domain, missing-action policy and external approval requirements are preserved. Office lock files are ignored; the gap workbook remains tracked.
+
+Large full reports keep a searchable file index and link to complete per-file proof instead of repeating all rule cards and catalogues in one document. Stage-wide findings remain visible in the stage conclusion. SSI/CCN defects are linked to both the Intermediate source and the exact matching Final files that carry the same values. Report timestamps display IST (UTC+05:30).

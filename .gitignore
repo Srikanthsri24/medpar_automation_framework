@@ -17,5 +17,5 @@ production_file_inventory.txt
 outputs/**/*.zip
 outputs/**/*.inspect.ndjson
 outputs/**/submission_checksums.json
-~$*.xlsx
+~$*
 outputs/
