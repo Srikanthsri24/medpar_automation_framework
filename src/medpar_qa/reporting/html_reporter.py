@@ -86,10 +86,10 @@ def _validation_card(check: RuleResult, number: int, prefix: str = "check") -> s
         else ""
     )
     return f"""
-    <article id="{_esc(prefix)}-{number}" class="validation-card status-{status.lower()}"
+    <details id="{_esc(prefix)}-{number}" class="validation-card status-{status.lower()}"
              data-files="{_esc(json.dumps(check.source_files))}" data-status="{_esc(status)}" data-stage="{_esc(check.stage.value)}"
              data-search="{_esc(searchable)}">
-      <div class="validation-topline">
+      <summary class="validation-topline">
         <div class="identity-line">
           <span class="sequence">#{number}</span>
           <span class="badge {status.lower()}">{_esc(status)}</span>
@@ -97,7 +97,7 @@ def _validation_card(check: RuleResult, number: int, prefix: str = "check") -> s
           {f'<span class="field-chip">{_esc(check.field_name)}</span>' if check.field_name else ''}
         </div>
         <button class="copy-button" type="button" onclick="copyCard(this)">Copy validation</button>
-      </div>
+      </summary>
 
       <h3>{_esc(metadata.title)}</h3>
 
@@ -139,7 +139,7 @@ def _validation_card(check: RuleResult, number: int, prefix: str = "check") -> s
           <section><h5>Technical evidence</h5><pre>{_esc(_pretty(check.evidence))}</pre></section>
         </div>
       </details>
-    </article>
+    </details>
     """
 
 
@@ -225,6 +225,8 @@ def write_html_report(
     counts = _counts(stage_results)
     overall_passed = all(stage.passed for stage in stage_results)
     validation_count = sum(counts.values())
+    from .stage_volume import summarize_stage_volume
+    file_volume = summarize_stage_volume([dict(rule_id=c.rule_id, status=c.status.value, actual=c.actual, source_files=c.source_files, record_ids=c.record_ids) for stage in stage_results for c in stage.rule_results])
     decision_count = sum(len(stage.decisions) for stage in stage_results)
 
     navigation = (
@@ -297,7 +299,8 @@ header{{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;p
 </style></head>
 <body><header>{navigation}<h1>{_esc(title)}</h1><p><strong>Run ID:</strong> {_esc(run_id)}</p><p><strong>Business run date:</strong> {_esc(run_date)}</p><p><strong>Generated:</strong> {_esc(readable_time(generated.isoformat(timespec='seconds')))}</p><span class="overall-badge">OVERALL {'WITH KNOWN DIFFERENCES' if overall_passed and counts['KNOWN_DIFFERENCE'] else 'PASS' if overall_passed else 'FAIL / BLOCKED'}</span></header>
 <main class="container">
-<section class="summary-grid"><div class="summary-card">Stages<strong>{len(stage_results)}</strong></div><div class="summary-card">Validations<strong>{validation_count}</strong></div><div class="summary-card">Passed<strong>{counts['PASS']}</strong></div><div class="summary-card">Failed<strong>{counts['FAIL']}</strong></div><div class="summary-card">Blocked<strong>{counts['BLOCKED']}</strong></div><div class="summary-card">Not applicable<strong>{counts['NOT_APPLICABLE']}</strong></div><div class="summary-card">Known differences<strong>{counts['KNOWN_DIFFERENCE']}</strong></div><div class="summary-card">Record decisions<strong>{decision_count}</strong></div></section>
+<section class="summary-grid"><div class="summary-card">Input files<strong>{file_volume['files_in']}</strong></div><div class="summary-card">Files passed<strong>{file_volume['files_passed']}</strong></div><div class="summary-card">Files failed<strong>{file_volume['files_failed']}</strong></div><div class="summary-card">Files blocked<strong>{file_volume['files_blocked']}</strong></div></section>
+<details><summary>Validation totals — {validation_count} checks (not files)</summary><section class="summary-grid"><div class="summary-card">Stages<strong>{len(stage_results)}</strong></div><div class="summary-card">Validations<strong>{validation_count}</strong></div><div class="summary-card">Passed<strong>{counts['PASS']}</strong></div><div class="summary-card">Failed<strong>{counts['FAIL']}</strong></div><div class="summary-card">Blocked<strong>{counts['BLOCKED']}</strong></div><div class="summary-card">Not applicable<strong>{counts['NOT_APPLICABLE']}</strong></div><div class="summary-card">Known differences<strong>{counts['KNOWN_DIFFERENCE']}</strong></div><div class="summary-card">Record decisions<strong>{decision_count}</strong></div></section></details>
 <section class="guide"><h2>How to read this report</h2><ol><li>Open the required stage.</li><li>Use status filters to focus on failures.</li><li>Read the business requirement and exact validation performed.</li><li>Compare Expected result with Observed result.</li><li>Read the conclusion explaining why it passed, failed, or was blocked.</li><li>Open source evidence for relative file paths, record IDs, group keys, and validator function.</li></ol></section>
 <section class="toolbar"><input id="search" type="search" placeholder="Search stage, rule, field, requirement, source file..." oninput="applyFilters()"><select id="statusFilter" onchange="applyFilters()"><option value="ALL">All statuses</option><option>PASS</option><option>FAIL</option><option>BLOCKED</option><option>NOT_APPLICABLE</option><option>KNOWN_DIFFERENCE</option></select><select id="stageFilter" onchange="applyFilters()"><option value="ALL">All stages</option>{''.join(f'<option value="{_esc(stage.stage.value)}">{_esc(stage.stage.value.replace("_"," ").title())}</option>' for stage in stage_results)}</select><button onclick="expandAll(true)">Expand all</button><button onclick="expandAll(false)">Collapse all</button><button onclick="window.print()">Print / Save PDF</button></section>
 {manifest_block}{stages_html}<section class='overall-conclusion'><h2>Overall conclusion — all stages: {'WITH KNOWN DIFFERENCES' if overall_passed and counts['KNOWN_DIFFERENCE'] else 'PASS' if overall_passed and validation_count else 'FAIL / BLOCKED' if failures else 'NOT ESTABLISHED'}</h2><p>{len(stage_results)} stages reviewed. Every required stage must pass its applicable checks before acceptance. Unexecuted rules and absent stages have no acceptance result. File filters do not change these full-run conclusions.</p></section><details class="failure-overview"><summary>Failure / blocked overview — {len(failures)} checks</summary>{failure_summary}</details></main><footer>Generated by MEDPAR QA Automation. All displayed file paths are relative to the project folder.</footer>
@@ -305,6 +308,6 @@ header{{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;p
 function applyFilters(){{const q=document.getElementById('search').value.toLowerCase();const status=document.getElementById('statusFilter').value;const stage=document.getElementById('stageFilter').value;document.querySelectorAll('.validation-card').forEach(card=>{{const okQ=!q||card.dataset.search.includes(q);const okS=status==='ALL'||card.dataset.status===status;const okStage=stage==='ALL'||card.dataset.stage===stage;card.classList.toggle('hidden',!(okQ&&okS&&okStage));}});}}
 function expandAll(open){{document.querySelectorAll('details').forEach(item=>item.open=open);}}
 function copyCard(button){{const card=button.closest('.validation-card');navigator.clipboard.writeText(card.innerText).then(()=>{{button.textContent='Copied';setTimeout(()=>button.textContent='Copy validation',1200);}});}}
-</script><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script>{FILE_FILTER_SCRIPT}</body></html>"""
+</script><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{if(target.tagName==='DETAILS')target.open=true;for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script>{FILE_FILTER_SCRIPT}</body></html>"""
     output.write_text(document, encoding="utf-8")
     return output

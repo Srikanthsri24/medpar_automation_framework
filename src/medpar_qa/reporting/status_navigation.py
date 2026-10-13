@@ -1,7 +1,7 @@
 """Small file navigation pages with the existing full validation-card format."""
 import hashlib
 import html
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 
 def e(value):
@@ -9,7 +9,7 @@ def e(value):
 
 
 def page(title, body):
-    return f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)}</title><style>body{{font:16px/1.5 system-ui;background:#f4f6f9;color:#172033;margin:24px}}main{{max-width:1400px;margin:auto}}article,section,details{{background:white;padding:16px;border:1px solid #d0d5dd;border-radius:8px;margin:12px 0}}table{{width:100%;border-collapse:collapse}}td,th{{padding:10px;text-align:left;border:1px solid #d0d5dd;overflow-wrap:anywhere}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto}}input{{padding:10px;width:min(90%,600px)}}a{{color:#1864ab}}[hidden]{{display:none!important}}summary{{cursor:pointer}}.three,.two{{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}}.badge,.field{{display:inline-block;padding:4px 8px;border-radius:20px;font-weight:700}}.pass{{background:#d3f9d8}}.fail{{background:#ffe3e3}}.blocked{{background:#fff3bf}}</style></head><body><main><a href="index.html#stage-results">← Master report</a><h1>{e(title)}</h1>{body}</main><script>const field=document.querySelector('input');if(field)field.addEventListener('input',()=>{{document.querySelectorAll('tr[data-file]').forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(field.value.toLowerCase()));}});</script></body></html>'''
+    return f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)}</title><style>body{{font:16px/1.5 system-ui;background:#f4f6f9;color:#172033;margin:24px}}main{{max-width:1400px;margin:auto}}article,section,details{{background:white;padding:16px;border:1px solid #d0d5dd;border-radius:8px;margin:12px 0}}table{{width:100%;border-collapse:collapse}}td,th{{padding:10px;text-align:left;border:1px solid #d0d5dd;overflow-wrap:anywhere}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto}}input{{padding:10px;width:min(90%,600px)}}a{{color:#1864ab}}[hidden]{{display:none!important}}summary{{cursor:pointer}}.three,.two{{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}}.badge,.field{{display:inline-block;padding:4px 8px;border-radius:20px;font-weight:700}}.pass{{background:#d3f9d8}}.fail{{background:#ffe3e3}}.blocked{{background:#fff3bf}}</style></head><body><main><a href="index.html#stage-results">← Master report</a><h1>{e(title)}</h1>{body}</main><script>const fields=document.querySelectorAll('input');fields.forEach(field=>field.addEventListener('input',()=>{{document.querySelectorAll('tr[data-file]').forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(field.value.toLowerCase()));}}));</script></body></html>'''
 
 
 def write_status_navigation(master, stage, checks, render):
@@ -32,10 +32,12 @@ def write_status_navigation(master, stage, checks, render):
                 if shared not in written_shared:
                     written_shared.add(shared)
                     (master / shared).write_text(page('Shared rule evidence', render(check, stage, index, stage+'-selected')), encoding='utf-8')
-                cards.append(f'<section><b>{e(check["status"])} · {e(check["rule_id"])}</b><p>{e(check.get("message", ""))}</p><a href="{shared}">Full shared-check proof</a></section>')
+                cards.append(f'<details><summary>{e(check["status"])} · {e(check["rule_id"])}</summary><p>{e(check.get("message", ""))}</p><a href="{shared}">Full shared-check proof</a></details>')
             else:
                 cards.append(render(check, stage, index, stage+'-selected'))
-        body = f'<p>{e(path)}</p><p><strong>File conclusion: {conclusion}</strong> — based on all checks linked to this file, including failed and blocked checks. Stage-wide findings still affect acceptance; this is not physical-byte certification.</p>' + ''.join(cards)
+        totals = Counter(check['status'] for _, check in items)
+        count_summary = ' · '.join(f'{status}: {totals[status]}' for status in ('PASS', 'FAIL', 'BLOCKED', 'NOT_APPLICABLE', 'KNOWN_DIFFERENCE'))
+        body = f'<p><strong>Validations: {len(items)} · {count_summary}</strong></p><p>{e(path)}</p><p><strong>File conclusion: {conclusion}</strong> — based on all checks linked to this file, including failed and blocked checks. Stage-wide findings still affect acceptance; this is not physical-byte certification.</p>' + ''.join(cards)
         (master / filename).write_text(page(stage.replace('_', ' ').title()+' — File evidence', body), encoding='utf-8')
     for status in ('PASS', 'FAIL', 'BLOCKED'):
         matching = [check for check in checks if check['status'] == status]
@@ -60,7 +62,7 @@ def write_volume_navigation(master, stage, checks, volume):
         if check.get('rule_id') == 'INGEST-READ-FILE' and isinstance(actual,dict) and actual.get('role') == 'source':
             for path in check.get('source_files',[]):
                 by_file_ids[str(path)].update(str(record) for record in check.get('record_ids',[]))
-    for key in ('files_in','files_passed','files_stopped','records_in','kept','dropped','records_stopped'):
+    for key in ('files_in','files_passed','files_stopped','files_failed','files_blocked','records_in','kept','dropped','records_stopped'):
         if key.startswith('files_'):
             paths = volume['file_sets'][key.removeprefix('files_')]
         elif key == 'records_in':
@@ -72,7 +74,7 @@ def write_volume_navigation(master, stage, checks, volume):
         for path in sorted(paths):
             filename = stage + '_file_' + hashlib.sha256(path.encode()).hexdigest()[:20] + '.html'
             ids = by_file_ids[path]
-            selected = ids if key in ('files_in','files_passed','files_stopped','records_in') else {record for record in ids if volume['decisions'].get(record) == {'kept':'KEEP','dropped':'DROP'}.get(key)} if key != 'records_stopped' else ids - volume['decisions'].keys()
+            selected = ids if key in ('files_in','files_passed','files_stopped','files_failed','files_blocked','records_in') else {record for record in ids if volume['decisions'].get(record) == {'kept':'KEEP','dropped':'DROP'}.get(key)} if key != 'records_stopped' else ids - volume['decisions'].keys()
             rows.append(f'<tr data-file="{e(path)}"><td><a href="{filename}">{e(path)}</a></td><td>{len(selected)}</td><td>{e(", ".join(sorted(selected)))}</td></tr>')
         body = f'<p>Selected metric: {e(key.replace("_"," "))} — {volume[key] if volume[key] is not None else "Not recorded"}. Input files only; output and reference files are excluded. Open a filename for its complete proof. Global stage discrepancies still affect acceptance.</p><label>Search filename <input type="search"></label><table><tr><th>Input file</th><th>Linked records</th><th>Record IDs</th></tr>' + ''.join(rows) + '</table>'
         (master / f'{stage}_volume_{key}.html').write_text(page(stage.replace('_',' ').title()+' — '+key.replace('_',' '),body), encoding='utf-8')
@@ -80,9 +82,11 @@ def write_volume_navigation(master, stage, checks, volume):
 
 def compact_file_index(stage, checks, master_base):
     """Keep large full reports searchable without duplicating thousands of rule cards."""
+    from .stage_volume import summarize_stage_volume
+    inputs = summarize_stage_volume(checks)['file_sets']['in']
     files=defaultdict(list)
     for check in checks:
-        for path in set(check.get('source_files', [])):
+        for path in set(check.get('source_files', [])) & inputs:
             files[str(path)].append(check)
     rows=[]
     for path, linked in sorted(files.items()):

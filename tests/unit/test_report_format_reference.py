@@ -50,8 +50,29 @@ def test_leads_eleven_rule6_scenarios():
 
 def test_large_full_report_keeps_searchable_file_proof_without_duplicating_cards(tmp_path):
     result=StageResult(Stage.STAY,rule_results=[RuleResult(Stage.STAY,'ST-TOTAL-CHARGE',ValidationStatus.PASS,'matched',1,1,source_files=['a.json']) for _ in range(1000)])
+    result.rule_results.insert(0, RuleResult(Stage.STAY,'INGEST-READ-FILE',ValidationStatus.PASS,'read',actual={'role':'source','record_count':1},source_files=['a.json']))
     output=write_html_report('large','2025-03-18',[result],tmp_path,parent_link='../../master/index.html')
     page=output.read_text()
     assert 'Search filename' in page and '../../master/stay_file_' in page
     assert 'id="stage-1-1000"' not in page
     assert 'Complete rule explanations are available' in page
+
+
+def test_detail_file_totals_and_collapsed_validation_cards(tmp_path):
+    from medpar_qa.reporting.session_index import _render_raw_validation
+    check = dict(stage='final_action', rule_id='INGEST-READ-FILE', status='PASS', message='Loaded', actual={'role':'source','record_count':5}, source_files=['a.json'], record_ids=['one'])
+    result=StageResult(Stage.FINAL_ACTION, rule_results=[RuleResult(stage=Stage.FINAL_ACTION,rule_id=check['rule_id'],status=ValidationStatus.PASS,message=check['message'],actual=check['actual'],source_files=check['source_files'])])
+    page=write_html_report('files','2025-03-18',[result],tmp_path).read_text()
+    assert 'Input files<strong>1</strong>' in page
+    assert '<details><summary>Validation totals — 1 checks (not files)</summary>' in page
+    assert '<details id="stage-1-1"' in page
+    raw=_render_raw_validation(check,'final_action',1)
+    assert '<details id=' in raw and '<summary>' in raw
+    assert '<article' not in raw
+
+
+def test_file_pass_fail_blocked_are_exclusive():
+    checks=[dict(rule_id='INGEST-READ-FILE',status='PASS',actual={'role':'source','record_count':1},source_files=[p]) for p in ('a','b','c')]
+    checks += [dict(rule_id='X',status='FAIL',source_files=['a']),dict(rule_id='Y',status='BLOCKED',source_files=['a','b'])]
+    volume=summarize_stage_volume(checks)
+    assert (volume['files_in'],volume['files_passed'],volume['files_failed'],volume['files_blocked'])==(3,1,1,1)

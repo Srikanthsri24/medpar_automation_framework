@@ -15,6 +15,8 @@ def summarize_stage_volume(checks, decisions=()):
     problems = {str(path) for check in checks if check.get('status') in ('FAIL', 'BLOCKED') for path in check.get('source_files', [])}
     passed = set(inputs) - problems
     stopped = set(inputs) & problems
+    failed = set(inputs) & {str(path) for check in checks if check.get('status') == 'FAIL' for path in check.get('source_files', [])}
+    blocked = stopped - failed
     decisions_by_id = {}
     for decision in decisions:
         record = str(decision.get('record_id'))
@@ -26,17 +28,18 @@ def summarize_stage_volume(checks, decisions=()):
     counts = Counter(decisions_by_id.values())
     input_ids = set().union(*ids_by_file.values()) if ids_by_file else set()
     undecided = input_ids - decisions_by_id.keys()
-    return dict(files_in=len(inputs), files_passed=len(passed), files_stopped=len(stopped),
+    return dict(files_failed=len(failed), files_blocked=len(blocked), files_in=len(inputs), files_passed=len(passed), files_stopped=len(stopped),
                 records_in=sum(inputs.values()), kept=counts['KEEP'] if decisions else None,
                 dropped=counts['DROP'] if decisions else None,
                 records_stopped=len(undecided) if decisions else None,
-                file_sets={'in':set(inputs), 'passed':passed, 'stopped':stopped}, decisions=decisions_by_id)
+                file_sets={'in':set(inputs), 'passed':passed, 'stopped':stopped, 'failed':failed, 'blocked':blocked}, decisions=decisions_by_id)
 
 
 def volume_strip(volume, href=None):
     """Render the two metric groups from the lead's reference, with honest missing counts."""
     cells = []
-    for key, label in [('files_in','Files in'),('files_passed','Files passed'),('files_stopped','Files stopped'),('records_in','Records in'),('kept','Kept'),('dropped','Dropped'),('records_stopped','Stopped')]:
+    file_cells = [('files_in', 'Input files'), ('files_passed', 'Files passed')] + ([('files_failed', 'Files failed'), ('files_blocked', 'Files blocked')] if 'files_failed' in volume else [('files_stopped', 'Files stopped')])
+    for key, label in file_cells + [('records_in','Records in'),('kept','Kept'),('dropped','Dropped'),('records_stopped','Stopped')]:
         value = volume[key]
         text = '—' if value is None else f'{value:,}'
         if href and value is not None:
