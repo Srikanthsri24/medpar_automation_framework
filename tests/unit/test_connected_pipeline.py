@@ -9,7 +9,7 @@ from medpar_qa.models import RuleResult, ClaimDecision
 from medpar_qa.orchestration.connected import ConnectedPipeline, _failfast
 from test_final_action import base_claim
 
-DATES = {s.value: '2026-03-20' for s in Stage}
+DATES = {s.value: '2026-04-20' for s in Stage}
 
 
 def setup_pipeline(tmp_path, resolver, records):
@@ -98,6 +98,7 @@ def test_all_five_stage_handoffs_with_validated_candidates(tmp_path, resolver, m
             RuleResult(self.stage, 'TEST-CHECK', ValidationStatus.PASS, 'controlled check')
             if self.stage in (Stage.FINAL_ACTION,Stage.SPLIT):
                 for r in sources: ClaimDecision(r.record_id,RecordDecision.KEEP,'TEST-CHECK','keep')
+        def stay_key(self, record): return tuple(resolver.get(record.data,f) for f in ('hicn','provider_id','admission_date'))
         def calculate_indicator(self, record, last_thru=None): return 'Y00109'
         def _transaction_code(self, record): return 1
         settings=SimpleNamespace(outside_window_indicator='Y99999',identity_fields=('icn',),allowed_transaction_codes=(0,1,2,3,4))

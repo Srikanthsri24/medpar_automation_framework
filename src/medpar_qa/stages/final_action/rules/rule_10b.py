@@ -17,7 +17,7 @@ class Rule10BQC5Fallback(FinalActionRule):
     rule_id = "FA-RULE-10B"
 
     def __init__(self, settings=None):
-        self.requires_latest_qc0 = bool(settings and settings.rule10a_requires_latest_qc0)
+        self.requires_latest_qc0 = True if settings is None else settings.rule10a_requires_latest_qc0
 
     def applies(self, context: FinalActionGroupContext) -> bool:
         """Test this route prerequisite: QC5 exists, the group is not the simple Rule-6 pair and

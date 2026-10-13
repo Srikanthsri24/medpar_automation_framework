@@ -383,7 +383,8 @@ def test_specific_new_rule10a_precedes_general_fallback(resolver,make_record):
     base={"hicn":"H","providerId":"P","stayFromDate":"20260101","stayThruDate":"20260102","transactionCode":1}
     qcs=[5,0,0,3]
     records=[make_record({**base,"queryCode":qc,"internalControlNumber":f"I{i}","processingDate":f"202601{20-i:02d}"},row=i+1) for i,qc in enumerate(qcs)]
-    result=FinalActionProcessor(resolver).validate_group(records)
+    from medpar_qa.stages.final_action.settings import FinalActionSettings
+    result=FinalActionProcessor(resolver,FinalActionSettings(rule10a_requires_latest_qc0=False)).validate_group(records)
     decision=next(r for r in result.rule_results if r.rule_id=="FA-RULE-10A")
     assert decision.evidence["requirement"]=="MM-FINAC-16C/D/E"
     assert sum(d.decision==RecordDecision.KEEP for d in result.decisions)==2

@@ -1,0 +1,466 @@
+{
+  "reviewed_on": "2026-10-14",
+  "source": "MedPAR_QA_Requirements_Gaps_v3.1.pdf",
+  "branch": "medpar-v3-demo",
+  "decisions": [
+    "Revised Final Action tree takes precedence.",
+    "Byte-by-byte document takes precedence for field calculations.",
+    "Keep newest per distinct non-cancelled ICN: A,A,B -> newestA plusB."
+  ],
+  "scope": "Code corrections and supplied-archive QA; not CMS acceptance or live AWS processing.",
+  "findings": [
+    {
+      "id": "FA-1 / G1",
+      "status": "IMPLEMENTED",
+      "remarks": "Revised tree is default: newest non-QC0 routes to 10B; 10A requires newest QC0 and QC0>QC5.",
+      "code": "src/medpar_qa/stages/final_action/settings.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "FA-2",
+      "status": "IMPLEMENTED_WITH_INPUT_DEPENDENCY",
+      "remarks": "Exact supplied RIC is part of group key, including RIC aliases. Sparse legacy records use the existing type fallback.",
+      "code": "src/medpar_qa/stages/final_action/grouping.py",
+      "remaining_action": "Supply original RIC for any input lacking it; an absent value cannot establish exact RIC separation."
+    },
+    {
+      "id": "FA-3",
+      "status": "IMPLEMENTED",
+      "remarks": "ICN ascending breaks date/QC ties before source sequence. Exact unresolved ties still require evidence.",
+      "code": "src/medpar_qa/stages/final_action/ordering.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "FA-4",
+      "status": "POLICY_APPLIED",
+      "remarks": "Byte-by-byte source takes precedence; admission date remains excluded from FA sort.",
+      "code": "src/medpar_qa/stages/final_action/ordering.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "FA-5",
+      "status": "IMPLEMENTED",
+      "remarks": "FA checks thru date from Jan1 of run-year minus5 through run-year end.",
+      "code": "src/medpar_qa/stages/final_action/processor.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "FA-6",
+      "status": "IMPLEMENTED",
+      "remarks": "Matched KEEP records checked for original-field preservation; explicit dropped-output role reconciles DROP identities and episode WI01 net indicator.",
+      "code": "src/medpar_qa/stages/final_action/dropped_output.py",
+      "remaining_action": "Dropped records without net operands are blocked; incompatible archive identities remain failures."
+    },
+    {
+      "id": "FA-7",
+      "status": "IMPLEMENTED",
+      "remarks": "Input/kept/dropped/error counts and source charge balance are explicit.",
+      "code": "src/medpar_qa/stages/balance.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "FA-8",
+      "status": "TEAM_WAIVER_EXTERNAL_APPROVAL_PENDING",
+      "remarks": "Transaction-code validation stays temporarily deferred under the user request. It is not automatically accepted as a valid domain.",
+      "code": "config/known_differences.yaml",
+      "remaining_action": "Team must provide approval/expiry and approved source mapping before production acceptance."
+    },
+    {
+      "id": "FA-9 / G3",
+      "status": "IMPLEMENTED_USER_DECISION",
+      "remarks": "Newest claim per distinct non-cancelled ICN: A,A,B retains newest A plus B. ICNs on QC0 are excluded.",
+      "code": "src/medpar_qa/stages/final_action/rules/helpers.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "G2",
+      "status": "IMPLEMENTED",
+      "remarks": "Rule2 extra accretion prerequisite is optional and off by default.",
+      "code": "src/medpar_qa/stages/final_action/rules/rule_02.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "G4",
+      "status": "IMPLEMENTED_WITH_REQUIRED_DATA_GUARDS",
+      "remarks": "Modernization defaults do not enforce legacy table/service-year caps. ICN tie-breaker resolves distinct-ICN ties; missing required Rule6 action cannot be invented.",
+      "code": "src/medpar_qa/stages/final_action/settings.py",
+      "remaining_action": "Supply action code for matching-ICN QC0/QC5 cancellation decisions; genuinely equal unresolved order needs source evidence."
+    },
+    {
+      "id": "G5",
+      "status": "LABEL_COMPATIBILITY_RETAINED",
+      "remarks": "Rule7/8/9 IDs remain for report compatibility; all use one approved ICN policy. SingleQC0 may be labelledRule1 with DROP outcome.",
+      "code": "src/medpar_qa/stages/final_action/router.py",
+      "remaining_action": "No outcome defect; tree box and implementation labels differ."
+    },
+    {
+      "id": "SP-1",
+      "status": "IMPLEMENTED",
+      "remarks": "Processing quarter derives Y0: Q1 previous year;Q2-Q4 quarter year. Explicitcurrent_year is an override.",
+      "code": "src/medpar_qa/stages/split/processor.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "SP-2",
+      "status": "IMPLEMENTED",
+      "remarks": "Eligible actual outputs checked for all original FA leaf values, allowing extra derivedfields.",
+      "code": "src/medpar_qa/stages/preservation.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "SP-3",
+      "status": "IMPLEMENTED",
+      "remarks": "Claim identity includes ICN and QC, preserving legitimate multipleRule 3 keeps.",
+      "code": "src/medpar_qa/stages/split/settings.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "SP-4",
+      "status": "IMPLEMENTED",
+      "remarks": "Record and charge breakdown by calculated year/quarter indicator, Y99999 and exceptions.",
+      "code": "src/medpar_qa/stages/split/processor.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "SP-5",
+      "status": "IMPLEMENTED",
+      "remarks": "Missing admission date gets a record-specific fallback key and cannot pool unrelated bills.",
+      "code": "src/medpar_qa/stages/split/processor.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "SP-6",
+      "status": "SCOPE_CONFIRMATION_REQUIRED",
+      "remarks": "Optional 1% sample, weekly HCFA audit and low-count warnings have no approved scope/threshold input.",
+      "code": "src/medpar_qa/stages/split/processor.py",
+      "remaining_action": "Confirm inclusion, audit calendar and low-count threshold. No silent claim that these optional checks ran."
+    },
+    {
+      "id": "ST-1",
+      "status": "IMPLEMENTED",
+      "remarks": "SNF 0220 uses highest span 22 thru date across bills; YYYYDDD, blank when inapplicable.",
+      "code": "src/medpar_qa/stages/stay/requirements_v31.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "ST-2",
+      "status": "IMPLEMENTED",
+      "remarks": "0380 computed from six source monetary operands across all bills with byte-by-byte rounding.",
+      "code": "src/medpar_qa/stages/stay/requirements_v31.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "ST-3",
+      "status": "PARTIAL_SINGLE_BILL_POLICY_PENDING",
+      "remarks": "Multi-bill0150 checked against merged source count. Single-bill output preserved from source.",
+      "code": "src/medpar_qa/stages/stay/requirements_v31.py",
+      "remaining_action": "Confirm conflicting single-bill 0 versus 1 convention; absent approved convention is not fabricated."
+    },
+    {
+      "id": "ST-4",
+      "status": "PARTIAL",
+      "remarks": "Like revenue occurrences sum units/charges/non-covered; differentserviceDates/NDCs stay separate.45-line physical output segments are coalesced only with stable headers.",
+      "code": "src/medpar_qa/stages/stay/revenue_merge.py",
+      "remaining_action": "Verify actual physical segment ordering and all 45-line limit cases against approved writer/golden outputs."
+    },
+    {
+      "id": "ST-5",
+      "status": "IMPLEMENTED",
+      "remarks": "Corrected merged rictypeCode typo to separate ric and typeCode fields.",
+      "code": "src/medpar_qa/stages/stay/merge_rules.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "ST-6",
+      "status": "IMPLEMENTED",
+      "remarks": "Latest non-empty IDE and R-else-blank rpInd consolidation.",
+      "code": "src/medpar_qa/stages/stay/requirements_v31.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "ST-7",
+      "status": "IMPLEMENTED_WITH_POLICY_LIMITS",
+      "remarks": "Added equatableCAN, four positionalNG-ACO selections and patch fields; low-volume follows sum policy.",
+      "code": "src/medpar_qa/stages/stay/merge_rules.py",
+      "remaining_action": "Confirm ambiguous fields listed under multiple first/first-found/sum rules before final certification."
+    },
+    {
+      "id": "ST-8",
+      "status": "PARTIAL_POLICY_PENDING",
+      "remarks": "Highest accreteCounter checked; procFromDate follows high-date selection.",
+      "code": "src/medpar_qa/stages/stay/merge_rules.py",
+      "remaining_action": "REQ simultaneously lists procFromDate first/high/low; needs explicit selection for full closure."
+    },
+    {
+      "id": "ST-9 / ST-11",
+      "status": "POLICY_APPLIED_WITH_PARTIAL_FIELD_COVERAGE",
+      "remarks": "Byte-by-byte latest-claim-first precedence retained for clinical arrays and 30/36 truncation.",
+      "code": "src/medpar_qa/stages/stay/merge_rules.py",
+      "remaining_action": "Per-revenue orderingPhysicianNpi precedence requires original source mapping/approved examples."
+    },
+    {
+      "id": "ST-10",
+      "status": "IMPLEMENTED",
+      "remarks": "Stay grouping HICN/provider/admission; Split indicator removed from identity.",
+      "code": "src/medpar_qa/stages/stay/settings.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "ST-12",
+      "status": "IMPLEMENTED_WITH_REFERENCE_DEPENDENCY",
+      "remarks": "WI08 prefers matched EDB DOD when reference feed exists; no fabricated EDB match.",
+      "code": "src/medpar_qa/stages/stay/warnings.py",
+      "remaining_action": "Supply EDB/BIC cache for production reference verification."
+    },
+    {
+      "id": "ST-13",
+      "status": "IMPLEMENTED",
+      "remarks": "Single-bill original-field preservation comparison.",
+      "code": "src/medpar_qa/stages/stay/processor.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "INT-REVENUE-TOTALS",
+      "status": "PARTIAL_MAPPING_PENDING",
+      "remarks": "Revenue category totals 0890-1120,1440,1510-1530 added. Operating-room1100 can use approved configurable ranges.",
+      "code": "src/medpar_qa/stages/intermediate/revenue_totals.py",
+      "remaining_action": "Confirm ambiguous 1100 range and supply 1620 hospital-at-home derivation; unsupported definitions remain unverified."
+    },
+    {
+      "id": "INT-0410-0440-0470",
+      "status": "PARTIAL",
+      "remarks": "0410 covered revenue and 0440 departmental total source derivations added.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "0470 service charge category definition still required."
+    },
+    {
+      "id": "INT-0483-0484-0488-0850",
+      "status": "EXTERNAL_MAPPING_REQUIRED",
+      "remarks": "No guessed pharmacy/transplant/ESRD/observation codes. Mail LD-1514 explicitly refers to UTLIPSNL/MPRPARL for detailed rules.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "Provide approved COBOL-derived mappings/ranges and expected outputs."
+    },
+    {
+      "id": "INT-1230-1490-1400",
+      "status": "IMPLEMENTED",
+      "remarks": "Source revenue patient-addon/modelamount totals and R indicator checked.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "INT-0137-0140 / FM-1",
+      "status": "IMPLEMENTED_WITH_SOURCE_DEPENDENCY",
+      "remarks": "Specialunit andS/L/N classification derive from original6-character provider third position; Final repeats classification when original full provider is supplied.",
+      "code": "src/medpar_qa/stages/final_medpar/processor.py",
+      "remaining_action": "Missing original full provider prevents classification derivation; outputdomain alone is not derivation evidence."
+    },
+    {
+      "id": "INT-1220",
+      "status": "IMPLEMENTED",
+      "remarks": "ppsFlexiblePayment7 money move added.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "INT-0253",
+      "status": "EXTERNAL_MAPPING_REQUIRED",
+      "remarks": "Second SSI field derivation cannot be certified from missing copybook definition.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "Provide0253 field definition and expected SSI cases."
+    },
+    {
+      "id": "INT-WI10",
+      "status": "PARTIAL_MAPPING_PENDING",
+      "remarks": "No RUG9000-9044 derives 0; populated RUG cases require approved date/code policy.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "V3 duplicates conditions for 2/3; supply an unambiguous approved mapping."
+    },
+    {
+      "id": "INT-DIRECT-MOVES",
+      "status": "PARTIAL",
+      "remarks": "Added source equality checks for 0040,0060,0072,0110,0150,0280-0300,0520,0532,0533,0540,0560-0580,0650-0660,1600,1610,1660.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "0530 old BIC source alias/precedence remains required."
+    },
+    {
+      "id": "INT-0531",
+      "status": "EXTERNAL_GROUPER_REQUIRED",
+      "remarks": "Format/golden checks available; no invented3M grouper result.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "Supply approved 3M grouper executable/service and mapping/version golden cases."
+    },
+    {
+      "id": "IN-1",
+      "status": "POLICY_APPLIED",
+      "remarks": "Byte-by-byte boundary test applied:Jan 1 of Y-5 included,Dec 31 of Y-6 excluded.",
+      "code": "src/medpar_qa/stages/intermediate/processor.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "IN-2",
+      "status": "IMPLEMENTED",
+      "remarks": "Shared whole-dollar calculation quantizes to 3 decimals before half-away-from-zero rounding; positive amount cap retained.",
+      "code": "src/medpar_qa/stages/intermediate/business_rules.py",
+      "remaining_action": "None for this code change; production acceptance still depends on run evidence."
+    },
+    {
+      "id": "IN-3",
+      "status": "IMPLEMENTED_WITH_PHYSICAL_INPUT_DEPENDENCY",
+      "remarks": "Supplied physical Intermediate payload checked for3050 ASCII bytes; JSON alone does not prove fixedwidth layout.",
+      "code": "src/medpar_qa/stages/intermediate/processor.py",
+      "remaining_action": "Provide approved byte payload, encoding and offset copybook to certify physical layout."
+    },
+    {
+      "id": "FM-2",
+      "status": "EXTERNAL_LAYOUT_REQUIRED",
+      "remarks": "Trailer/length/golden machinery remains available; full 3050-to-3000 offset map and HICN precedence absent.",
+      "code": "src/medpar_qa/stages/final_medpar/processor.py",
+      "remaining_action": "ProvideMPRRECL/UTLIPSNL/MPRPARL copybooks and approved CMS physical goldens."
+    },
+    {
+      "id": "REQ4.1 / REQ4.2 / REQ4.3 / REQ4.9",
+      "status": "OFFLINE_VALIDATORS_IMPLEMENTED_LIVE_EVIDENCE_PENDING",
+      "remarks": "New exported evidence validators cover SSI duplicate flags/recreation, partition/schedule/bucket checks, 14-file historical byte and JSON parity/promotion, and structured redacted logs/sinks/retention/alarms.",
+      "code": "src/medpar_qa/infrastructure_validation.py",
+      "remaining_action": "Supply actual DynamoDB, S3, schedule, historical goldens/promotion, and CloudWatch/Splunk exports. Offline checks do not establish live AWS execution."
+    },
+    {
+      "id": "BAYSTATE",
+      "status": "SCOPE_AND_INPUT_REQUIRED",
+      "remarks": "Quarterly SSI recalculation cannot be accepted without scope and actual quarterly inputs.",
+      "code": "config/known_differences.yaml",
+      "remaining_action": "Confirm BayState scope and provide quarterly SSI feeds and approved recalculation outputs."
+    },
+    {
+      "id": "REPORT-COUNTS-TRANSFER",
+      "status": "IMPLEMENTED",
+      "remarks": "Unique source-file metrics separated from validation events; unreadable files counted; missing retained outputs attributed to source; per-stage received/output-forwarded/next-received counts;serial numbers and collapsed proofs.",
+      "code": "src/medpar_qa/reporting/transfers.py",
+      "remaining_action": "Boundary lineage proves supplied archive correspondence, not a live pipeline rerun. Business failures remain visible."
+    }
+  ],
+  "verification": {
+    "r65_report": "reports/20261014_010453/master/index.html",
+    "q61_report": "reports/20261014_010923/connected/index.html",
+    "synthetic_demo": "reports/20261014_010838/connected/index.html",
+    "r65_stage_counts": {
+      "split": {
+        "files_in": 6,
+        "files_passed": 6,
+        "files_failed": 0,
+        "files_blocked": 0,
+        "validation_events": {
+          "PASS": 143,
+          "FAIL": 2
+        }
+      },
+      "stay": {
+        "files_in": 37,
+        "files_passed": 0,
+        "files_failed": 37,
+        "files_blocked": 0,
+        "validation_events": {
+          "PASS": 4674,
+          "NOT_APPLICABLE": 592,
+          "FAIL": 253
+        }
+      },
+      "final_medpar": {
+        "files_in": 914,
+        "files_passed": 0,
+        "files_failed": 914,
+        "files_blocked": 0,
+        "validation_events": {
+          "PASS": 39566,
+          "KNOWN_DIFFERENCE": 5,
+          "FAIL": 1114,
+          "BLOCKED": 1,
+          "NOT_APPLICABLE": 15670
+        }
+      },
+      "final_action": {
+        "files_in": 1934,
+        "files_passed": 0,
+        "files_failed": 1900,
+        "files_blocked": 34,
+        "validation_events": {
+          "PASS": 6913,
+          "KNOWN_DIFFERENCE": 1,
+          "FAIL": 787,
+          "BLOCKED": 37,
+          "NOT_APPLICABLE": 1
+        }
+      },
+      "intermediate": {
+        "files_in": 37,
+        "files_passed": 0,
+        "files_failed": 37,
+        "files_blocked": 0,
+        "validation_events": {
+          "PASS": 7277,
+          "FAIL": 290,
+          "NOT_APPLICABLE": 1718,
+          "BLOCKED": 158
+        }
+      }
+    },
+    "r65_boundary_counts": [
+      {
+        "stage": "final_action",
+        "next_stage": "split",
+        "input_files": 1934,
+        "output_files": 6,
+        "output_files_forwarded": 6,
+        "next_stage_input_files": 6,
+        "conclusion": "6 / 6 output files \u2014 next-stage input verified"
+      },
+      {
+        "stage": "split",
+        "next_stage": "stay",
+        "input_files": 6,
+        "output_files": 37,
+        "output_files_forwarded": 37,
+        "next_stage_input_files": 37,
+        "conclusion": "37 / 37 output files \u2014 next-stage input verified"
+      },
+      {
+        "stage": "stay",
+        "next_stage": "intermediate",
+        "input_files": 37,
+        "output_files": 37,
+        "output_files_forwarded": 37,
+        "next_stage_input_files": 37,
+        "conclusion": "37 / 37 output files \u2014 next-stage input verified"
+      },
+      {
+        "stage": "intermediate",
+        "next_stage": "final_medpar",
+        "input_files": 37,
+        "output_files": 552,
+        "output_files_forwarded": 552,
+        "next_stage_input_files": 914,
+        "conclusion": "914 / 914 Final files \u2014 exact Intermediate lineage verified"
+      },
+      {
+        "stage": "final_medpar",
+        "next_stage": null,
+        "input_files": 914,
+        "output_files": 0,
+        "output_files_forwarded": 0,
+        "next_stage_input_files": null,
+        "conclusion": "Final stage \u2014 workflow ends here"
+      }
+    ],
+    "scope": "Counts checked against supplied source files and report evidence. Production business failures remain; archived boundaries are not a live connected execution.",
+    "automated_tests": {
+      "passed": 452,
+      "failed": 0,
+      "report": "reports/20261014_011049/pytest/pytest_complete_suite/report.html"
+    },
+    "report_checks": [
+      "Input files = passed + failed + blocked for all five stages.",
+      "Serial numbers restart at1 in each file table.",
+      "All local links on five transfer proof pages resolve."
+    ]
+  }
+}

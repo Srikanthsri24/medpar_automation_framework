@@ -318,7 +318,7 @@ def test_rule6_drops_both_for_same_icn_and_qc0_cancel_code(
 @pytest.mark.unit
 @pytest.mark.final_action
 @pytest.mark.regression
-def test_rule7_drops_qc0_and_duplicate_icns(resolver, make_record):
+def test_rule7_keeps_newest_non_cancelled_icn(resolver, make_record):
     """Verify rule7 drops qc0 and duplicate icns. The assertions below state exactly what this test
     proves for its fixtures.
     """
@@ -344,7 +344,7 @@ def test_rule7_drops_qc0_and_duplicate_icns(resolver, make_record):
 
     assert result.passed
     assert selected_rule(result) == "FA-RULE-07"
-    assert all(item.decision == RecordDecision.DROP for item in result.decisions)
+    assert {item.record_id for item in result.decisions if item.decision==RecordDecision.KEEP}=={'record-3'}
 
 
 @pytest.mark.unit
@@ -459,7 +459,7 @@ def test_rule10b_keeps_first_non_qc0_without_icn_comparison(resolver, make_recor
 
 @pytest.mark.unit
 @pytest.mark.final_action
-def test_ambiguous_ordering_is_blocked(resolver, make_record):
+def test_distinct_icns_break_otherwise_tied_ordering(resolver, make_record):
     """Verify ambiguous ordering is blocked. The assertions below state exactly what this test
     proves for its fixtures.
     """
@@ -475,9 +475,8 @@ def test_ambiguous_ordering_is_blocked(resolver, make_record):
     ]
     result = FinalActionProcessor(resolver).validate_group(records)
 
-    assert not result.passed
-    assert result.rule_results[0].rule_id == "FA-PRE-ORDERING"
-    assert result.rule_results[0].status == ValidationStatus.BLOCKED
+    assert result.passed
+    assert not any(c.rule_id == "FA-PRE-ORDERING" for c in result.rule_results)
 
 
 @pytest.mark.unit

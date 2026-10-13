@@ -32,7 +32,14 @@
     ],
     "MEDPAR-TOT-CHRG-0400": "100.125",
     "stayFromDate": "20260301",
-    "stayThruDate": "20260331"
+    "stayThruDate": "20260331",
+    "transactionCode": 1,
+    "claimPaymentAmount": "450",
+    "primary_payment_amount": "0",
+    "coinsuranceAmount": "0",
+    "inPatientDeduction": "0",
+    "bloodDeductable": "0",
+    "outlierAmount": "0"
   },
   {
     "claimCan": "CAN-102",
@@ -63,6 +70,13 @@
     ],
     "MEDPAR-TOT-CHRG-0400": "50.250",
     "stayFromDate": "20260301",
-    "stayThruDate": "20260331"
+    "stayThruDate": "20260331",
+    "transactionCode": 1,
+    "claimPaymentAmount": "450",
+    "primary_payment_amount": "0",
+    "coinsuranceAmount": "0",
+    "inPatientDeduction": "0",
+    "bloodDeductable": "0",
+    "outlierAmount": "0"
   }
 ]

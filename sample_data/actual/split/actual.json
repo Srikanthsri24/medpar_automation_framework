@@ -8,6 +8,7 @@
     "admissionDate": "20260403",
     "stayFromDate": "20260403",
     "stayThruDate": "20260405",
-    "splitYearIndicator": "Y00109"
+    "splitYearIndicator": "Y00109",
+    "transactionCode": 1
   }
 ]

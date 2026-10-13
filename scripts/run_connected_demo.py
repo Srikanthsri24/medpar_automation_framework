@@ -16,7 +16,7 @@ from medpar_qa.reporting.run_layout import ReportSession
 
 def demo_config():
     """Configure one synthetic source and independently supplied downstream candidates."""
-    config = {stage.value: {'run_date': '2026-03-20'} for stage in STAGES}
+    config = {stage.value: {'run_date': '2026-04-20'} for stage in STAGES}
     config['final_action'].update(enabled=True, single_files=[{
         'source': ['data/demo_connected/claims.json'],
         'pipeline_outputs': {stage: [f'data/demo_connected/{stage}_candidate.json']

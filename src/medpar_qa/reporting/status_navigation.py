@@ -8,7 +8,24 @@ def e(value):
     return html.escape(str(value), quote=True)
 
 
+def number_file_tables(body):
+    """Number displayed file rows per table; retain stable serials during filtering."""
+    import re
+    def table(match):
+        text=match.group(0)
+        if 'data-file=' not in text: return text
+        text=re.sub(r'(<tr[^>]*>)(<th>)', r'\1<th>No.</th>\2', text, count=1)
+        serial=0
+        def row(m):
+            nonlocal serial
+            serial+=1
+            return m.group(0)+f'<td>{serial}</td>'
+        return re.sub(r'<tr\s+data-file=[^>]+>',row,text)
+    return re.sub(r'<table\b[^>]*>.*?</table>',table,body,flags=re.S)
+
+
 def page(title, body):
+    body=number_file_tables(body)
     return f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)}</title><style>body{{font:16px/1.5 system-ui;background:#f4f6f9;color:#172033;margin:24px}}main{{max-width:1400px;margin:auto}}article,section,details{{background:white;padding:16px;border:1px solid #d0d5dd;border-radius:8px;margin:12px 0}}table{{width:100%;border-collapse:collapse}}td,th{{padding:10px;text-align:left;border:1px solid #d0d5dd;overflow-wrap:anywhere}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto}}input{{padding:10px;width:min(90%,600px)}}a{{color:#1864ab}}[hidden]{{display:none!important}}summary{{cursor:pointer}}.three,.two{{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}}.badge,.field{{display:inline-block;padding:4px 8px;border-radius:20px;font-weight:700}}.pass{{background:#d3f9d8}}.fail{{background:#ffe3e3}}.blocked{{background:#fff3bf}}</style></head><body><main><a href="index.html#stage-results">← Master report</a><h1>{e(title)}</h1>{body}</main><script>const fields=document.querySelectorAll('input');fields.forEach(field=>field.addEventListener('input',()=>{{document.querySelectorAll('tr[data-file]').forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(field.value.toLowerCase()));}}));</script></body></html>'''
 
 
@@ -96,4 +113,4 @@ def compact_file_index(stage, checks, master_base):
         href=master_base+'/'+filename
         outcome='FAIL' if counts['FAIL'] else 'BLOCKED' if counts['BLOCKED'] else 'REVIEW DIFFERENCES' if counts['KNOWN_DIFFERENCE'] else 'Recorded applicable checks pass' if counts['PASS'] else 'Not assessed'
         rows.append(f'<tr data-file="{e(path)}"><td><a href="{e(href)}">{e(path)}</a></td><td>{outcome}</td><td>{counts["PASS"]} / {counts["FAIL"]} / {counts["BLOCKED"]}</td></tr>')
-    return '<p>Open a filename for its complete rule-by-rule proof, including expected/observed values, explanations and all checks linked to that file in this stage.</p><label>Search filename <input class="compact-file-search" type="search" oninput="filterCompactFiles(this)"></label><div class="table-wrap"><table><tr><th>File — open full proof</th><th>Conclusion in this run</th><th>Pass / Fail / Blocked checks</th></tr>'+''.join(rows)+'</table></div><script>function filterCompactFiles(input){const scope=input.closest(".file-inventory-collapse");scope.querySelectorAll("tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(input.value.toLowerCase()));}</script>'
+    return number_file_tables('<p>Open a filename for its complete rule-by-rule proof, including expected/observed values, explanations and all checks linked to that file in this stage.</p><label>Search filename <input class="compact-file-search" type="search" oninput="filterCompactFiles(this)"></label><div class="table-wrap"><table><tr><th>File — open full proof</th><th>Conclusion in this run</th><th>Pass / Fail / Blocked checks</th></tr>'+''.join(rows)+'</table></div><script>function filterCompactFiles(input){const scope=input.closest(".file-inventory-collapse");scope.querySelectorAll("tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(input.value.toLowerCase()));}</script>')

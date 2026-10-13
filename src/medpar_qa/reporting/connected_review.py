@@ -62,7 +62,7 @@ def write_connected_review(journeys, index, *, synthetic=False):
                 + (f' · <a href="{output_link}">Retained output</a>' if step["output"] else "") + '</p></section>')
         routes = _esc(json.dumps({step['stage'].replace('_', ' ').title(): step['status'] for step in journey['steps']}))
         volumes = _esc(json.dumps({step["stage"].replace("_", " ").title(): {"records_in": step.get("input_records", 0), "kept": step.get("retained", 0), "dropped": step.get("dropped", 0), "records_stopped": max(0, step.get("input_records", 0)-step.get("retained", 0)-step.get("dropped", 0))} for step in journey["steps"]}))
-        sections.append(f'<details class="file-card" data-routes="{routes}" data-volumes="{volumes}"><summary>File: {_esc(journey["source_file"])}</summary>'
+        sections.append(f'<details class="file-card" data-routes="{routes}" data-volumes="{volumes}"><summary>#{len(sections)+1} · File: {_esc(journey["source_file"])}</summary>'
                         f'<p><b>File conclusion:</b> {_esc(journey["conclusion"])}</p>' + ''.join(stages) + '</details>')
     completed = sum(journey['completed'] for journey, _ in journeys)
     stage_table = '<section id="stage-results"><h2>Files and records by stage</h2><p>Kept: continues. Dropped: removed by a business rule. Stopped: not processed after a failed check or missing prerequisite. Click a count for its file evidence. Files passed includes valid business drops; known differences remain disclosed in full reports.</p>'

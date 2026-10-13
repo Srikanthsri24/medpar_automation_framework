@@ -274,6 +274,12 @@ class StayProcessor(BaseStageProcessor):
             scale=self.settings.decimal_scale,
         )
         if expected_total is not None:
+            # Explicit MEDPAR field output uses BxB p8 whole dollars. Raw merged
+            # claim-header totals retain three decimals until Intermediate.
+            names=["medpar_tot_chrg_0400",*self.resolver.aliases.get("medpar_tot_chrg_0400",[])]
+            if any(name in actual.data and "medpar" in name.lower() for name in names):
+                from medpar_qa.stages.intermediate.business_rules import whole_dollars
+                expected_total=whole_dollars(expected_total)
             results.append(
                 compare_values(
                     stage=self.stage,
@@ -344,6 +350,10 @@ class StayProcessor(BaseStageProcessor):
                 )
             )
 
+        from .revenue_merge import coalesce_segments
+        actuals, segment_checks = coalesce_segments(actuals,self.resolver,self.settings.identity_fields)
+        result.rule_results.extend(segment_checks)
+        expecteds, _ = coalesce_segments(expecteds,self.resolver,self.settings.identity_fields)
         actual_index, actual_duplicates = index_unique_records(
             actuals, self.resolver, self.settings.identity_fields
         )
@@ -418,25 +428,11 @@ class StayProcessor(BaseStageProcessor):
                         decimal_scale=self.settings.decimal_scale,
                     )
                 )
-                result.rule_results.append(
-                    validate_latest_selected_value(
-                        source_group=source_group,
-                        actual=actual,
-                        resolver=self.resolver,
-                        field_name="medpar_drg_price_0380",
-                        rule_id="ST-DRG-PRICE-LATEST-RECORD",
-                        decimal_scale=self.settings.decimal_scale,
-                    )
-                )
-                result.rule_results.append(
-                    validate_latest_selected_value(
-                        source_group=source_group,
-                        actual=actual,
-                        resolver=self.resolver,
-                        field_name="medpar_dte_cr_ended_0220",
-                        rule_id="ST-DTE-CR-ENDED-LATEST-RECORD",
-                    )
-                )
+                if len(source_group)==1:
+                    from medpar_qa.stages.preservation import unchanged_fields
+                    result.rule_results.append(unchanged_fields(self.stage,source_group[0],actual,self.resolver,"ST-SINGLE-BILL-PRESERVATION"))
+                from .requirements_v31 import validate_stay_calculations
+                result.rule_results.extend(validate_stay_calculations(source_group, actual, self.resolver))
 
             if expected is not None and actual is not None:
                 result.rule_results.extend(

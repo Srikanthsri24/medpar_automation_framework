@@ -41,24 +41,24 @@ def keep_unique_non_qc0_icns(
     context: FinalActionGroupContext,
     rule_id: str,
 ) -> tuple[ClaimDecision, ...]:
-    """Keep only non-QC0 records whose ICN occurs once in the full group.
+    """Keep the newest claim per distinct ICN not present on a QC0 cancellation.
 
-    This follows the supplied wording "non-QC0 records with non-matching
-    control numbers". If the business owner later means "newest per ICN",
-    this helper is the only place that needs changing for Rules 7/8/9/10A.
+    User decision: revised tree precedence and newest-per-distinct non-cancelled ICN.
     """
 
-    icn_counts = context.icn_counts
+    cancelled = {icn for qc,icn in zip(context.query_codes,context.icns) if qc==0}
+    seen=set()
     decisions: list[ClaimDecision] = []
     for record, qc, icn in zip(context.records, context.query_codes, context.icns):
         if qc == 0:
             decision = RecordDecision.DROP
             reason = "QC0 records are dropped"
-        elif icn_counts[icn] == 1:
+        elif icn not in cancelled and icn not in seen:
             decision = RecordDecision.KEEP
-            reason = "Non-QC0 record has a non-matching ICN"
+            seen.add(icn)
+            reason = "Newest non-QC0 record for this distinct non-cancelled ICN"
         else:
             decision = RecordDecision.DROP
-            reason = "ICN matches another record in the group"
+            reason = "ICN cancelled by QC0 or superseded by a newer non-QC0 claim"
         decisions.append(ClaimDecision(record.record_id, decision, rule_id, reason))
     return tuple(decisions)

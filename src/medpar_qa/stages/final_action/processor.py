@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Any
 from collections import Counter
 
-from medpar_qa.enums import FileRole, Stage, ValidationStatus
+from medpar_qa.enums import FileRole, RecordDecision, Stage, ValidationStatus
 from medpar_qa.models import RuleResult, SourceRecord, StageResult
 from medpar_qa.normalization.fields import FieldResolver
 from medpar_qa.stages.base import BaseStageProcessor
@@ -31,10 +31,12 @@ class FinalActionProcessor(BaseStageProcessor):
         self,
         resolver: FieldResolver,
         settings: FinalActionSettings | None = None,
+        *, run_date=None,
     ) -> None:
         """Initialize this FinalActionProcessor with the supplied dependencies/configuration and
         the assignments in its constructor.
         """
+        self.run_date = run_date
         self.resolver = resolver
         self.settings = settings or FinalActionSettings()
         self.router = FinalActionRuleRouter(self.settings)
@@ -136,6 +138,16 @@ class FinalActionProcessor(BaseStageProcessor):
                     )
                 )
             return result
+
+        if self.run_date is not None:
+            from datetime import date
+            from medpar_qa.normalization.dates import parse_date
+            start = date(self.run_date.year - 5, 1, 1)
+            end = date(self.run_date.year, 12, 31)
+            outside = [r for r in group if not start <= parse_date(self.resolver.get(r.data, "stay_thru_date")) <= end]
+            result.rule_results.append(RuleResult(self.stage,"FA-INPUT-WINDOW",ValidationStatus.FAIL if outside else ValidationStatus.PASS,
+                "Final Action source thru dates must be within the byte-by-byte Y-5 boundary",expected={'start':start.isoformat(),'end':end.isoformat()},actual={'outside_record_ids':[r.record_id for r in outside]},record_ids=[r.record_id for r in group],source_files=sorted({r.source.file_path for r in group})))
+            if outside: return result
 
         # Legacy table limits are enforced explicitly; oversized groups are
         # quarantined rather than truncated and silently processed.
@@ -247,7 +259,7 @@ class FinalActionProcessor(BaseStageProcessor):
         # A Rule 2 sequence must not fall through to Rule 10B when the
         # accretion-date requirement is absent or contradicted.  The V3
         # requires QC5 to have the greatest processing AND accretion date.
-        if context.count == 3 and context.query_codes in ((5, 0, 3), (5, 0, 1)):
+        if self.settings.rule2_requires_latest_accrete and context.count == 3 and context.query_codes in ((5, 0, 3), (5, 0, 1)):
             from medpar_qa.normalization.dates import parse_date
             dates = [parse_date(self.resolver.get(record.data, "accrete_date"), allow_none=True)
                      for record in context.records]
@@ -450,6 +462,9 @@ class FinalActionProcessor(BaseStageProcessor):
             )
         )
 
+        from medpar_qa.stages.balance import three_way_balance
+        overall.rule_results.extend(three_way_balance(self.stage,source_records,overall.decisions,self.resolver))
+
         if actual_records:
             overall.rule_results.append(
                 reconcile_actual_output(
@@ -460,6 +475,17 @@ class FinalActionProcessor(BaseStageProcessor):
                     self.settings,
                 )
             )
+            from .reconciler import record_identity
+            from medpar_qa.stages.preservation import unchanged_fields
+            by_identity = {}
+            for record in actual_records:
+                by_identity.setdefault(record_identity(record,self.resolver,self.settings),[]).append(record)
+            kept_ids={d.record_id for d in overall.decisions if d.decision==RecordDecision.KEEP}
+            for source in valid_source_records:
+                matches=by_identity.get(record_identity(source,self.resolver,self.settings),[])
+                if source.record_id in kept_ids and len(matches)==1:
+                    overall.rule_results.append(unchanged_fields(self.stage,source,matches[0],self.resolver,"FA-UNCHANGED-SOURCE-FIELDS"))
+
         else:
             overall.rule_results.append(
                 RuleResult(
@@ -469,6 +495,11 @@ class FinalActionProcessor(BaseStageProcessor):
                     message="Actual Final Action output was not supplied; expected decisions only",
                 )
             )
+
+        dropped_records=[r for r in records if r.source.role==FileRole.DROPPED_OUTPUT]
+        if dropped_records:
+            from .dropped_output import validate_dropped_output
+            overall.rule_results.extend(validate_dropped_output(valid_source_records,dropped_records,overall.decisions,self.resolver,self.settings))
 
         # Explain absent Rule 6 coverage without inventing or collapsing input claims.
         candidates = 0

@@ -1,40 +1,51 @@
 version: 1
-reviewed_on: '2026-10-12'
+reviewed_on: '2026-10-14'
 entries:
   FA-TC-DEFERRED:
-    scope: Final Action transaction-code domain validation only; Split still validates 0-4
+    scope: Final Action transaction-code domain validation only; Split still validates
+      0-4
     status: TEAM_REQUESTED_CMS_APPROVAL_NOT_SUPPLIED
     owner: MedPAR team / product owner
     requested_on: '2026-10-11'
     expires_on: null
-    reason: User instructed temporary suspension; not a statement that invalid codes are valid.
-    next_action: Supply CMS approval, expiry and approved source mapping before production acceptance.
+    reason: User instructed temporary suspension; not a statement that invalid codes
+      are valid.
+    next_action: Supply CMS approval, expiry and approved source mapping before production
+      acceptance.
   LD-3188:
     scope: SORT_TIE_FINAL_ACTION_10B_QC5 only
     status: ACCEPT_BOTH_AS_REPORTED_IN_CLARIFICATIONS
     owner: Product owner
     source: FA_Split_Intermediate_Clarifications.pdf p4
     expires_on: null
-    reason: Stable incoming order may differ for tied QC5 selection in Rule 10B; do not generalize to other rules.
+    reason: Stable incoming order may differ for tied QC5 selection in Rule 10B; do
+      not generalize to other rules.
   SPLIT-Y0:
     scope: Split business-year anchor
-    status: CONFIGURABLE_SOURCE_CONFIRMATION_REQUIRED
+    status: PROCESSING_QUARTER_DERIVED_WITH_EXPLICIT_OVERRIDE
     owner: Product owner / CMS
     source: Clarifications p5 and Simple Responses Q20
-    reason: DEV run uses last complete year; processing quarter parameter must be supplied explicitly.
-    next_action: Confirm business-year anchor for each dataset; Q61 March 2026 configuration uses 2025.
+    reason: Q1 uses previous calendar year; Q2-Q4 use processing-quarter year. Explicit
+      current_year overrides derived Y0.
+    next_action: Verify supplied business processing quarter and any explicit dataset
+      Y0 override.
   RULE-10A:
     scope: Requirements MM-FINAC-16A-E versus May 2026 Tree latest-QC0 guard
-    status: SPECIFICATION_CONFLICT
+    status: USER_DIRECTED_REVISED_TREE
     owner: Product owner / CMS
-    next_action: Confirm precedence; existing requirements implementation remains default.
+    next_action: Revised tree is the default; explicit legacy override remains available.
+      Production output and golden acceptance are separate.
+    reason: User selected revised decision tree precedence and newest-per-distinct
+      non-cancelled ICN semantics.
   STAY-IDENTITY:
     scope: HICN/provider/admission grouping versus LD-3137 sort changes
     status: SPECIFICATION_CONFLICT
     owner: Product owner / CMS
-    next_action: Confirm intended grouping/sort separately; do not remove admission date by assumption.
+    next_action: Confirm intended grouping/sort separately; do not remove admission
+      date by assumption.
   FY-PARTIAL:
     scope: R65 FY2025 October-December 2024 subset
     status: SOURCE_OBSERVED_NOT_ACCEPTANCE_APPROVED
     owner: Product owner / CMS
-    next_action: Confirm whether partial newest fiscal year belongs in accepted final deliverables.
+    next_action: Confirm whether partial newest fiscal year belongs in accepted final
+      deliverables.

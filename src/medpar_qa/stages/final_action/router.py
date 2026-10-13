@@ -32,7 +32,7 @@ class FinalActionRuleRouter:
         self.rules: tuple[FinalActionRule, ...] = (
             AllQC0Rule(),
             Rule01SingleClaim(settings),
-            Rule02ThreeClaimSequence(),
+            Rule02ThreeClaimSequence(settings),
             Rule06TwoClaimsQC0QC5(settings),
             Rule05ThreeClaimsOneQC0NoQC5(),
             Rule03SameQueryCode(),

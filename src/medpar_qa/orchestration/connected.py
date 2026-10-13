@@ -104,12 +104,12 @@ def _candidate_split(records, processor):
                 message='Split input transaction code is outside the documented IP/SNF domain; output cannot be calculated',
                 expected=list(processor.settings.allowed_transaction_codes), actual=raw_code,
                 field_name='transaction_code', record_ids=[record.record_id], source_files=[record.source.file_path]))
-        key = tuple(processor.resolver.get(record.data, f) for f in ('hicn', 'provider_id', 'admission_date'))
+        key = processor.stay_key(record)
         thru = parse_date(processor.resolver.get(record.data, 'stay_thru_date'))
         groups[key] = max(groups.get(key, thru), thru)
     payload = []
     for record in records:
-        key = tuple(processor.resolver.get(record.data, f) for f in ('hicn', 'provider_id', 'admission_date'))
+        key = processor.stay_key(record)
         indicator = processor.calculate_indicator(record, last_thru=groups[key])
         if indicator != processor.settings.outside_window_indicator:
             row = copy.deepcopy(record.data)

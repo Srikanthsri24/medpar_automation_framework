@@ -916,3 +916,14 @@ edit_codes:
 - editCodes
 - editCodeTable
 - nchEditCodes
+
+medpar_ipps_flex7_amt_1220:
+- MEDPAR-IPPS-FLEX7-1220
+- MEDPAR-IPPS-FLEX7-AMT-1220
+- medparIppsFlex71220
+
+ric:
+- ricCode
+- recordIdentificationCode
+- nchNearLineRIC.code
+- nchNearLineRIC

@@ -65,7 +65,7 @@ class IntermediateProcessor(BaseStageProcessor):
         physical/field contracts before source comparisons.
         """
         start, end = january_aligned_window(
-            self.run_date, self.settings.window_years
+            self.run_date, self.settings.window_years + 1
         )
         results = validate_decimal_values(
             record,
@@ -122,6 +122,15 @@ class IntermediateProcessor(BaseStageProcessor):
                     fields=self.settings.required_selected_fields,
                 )
             )
+        raw = self.resolver.get(record.data,"fixed_width_record")
+        if raw is not None:
+            try:
+                width=len(raw if isinstance(raw,bytes) else str(raw).encode("ascii"))
+                status=ValidationStatus.PASS if width==3050 else ValidationStatus.FAIL
+                message="Intermediate physical record length matches 3050 bytes" if width==3050 else "Intermediate physical record length mismatch"
+            except UnicodeEncodeError:
+                width="Non-ASCII payload; declared encoding required";status=ValidationStatus.BLOCKED;message=str(width)
+            results.append(RuleResult(self.stage,"INT-PHYSICAL-LENGTH",status,message,3050,width,record_ids=[record.record_id],source_files=[record.source.file_path]))
         return results
 
     def validate(self, records: list[SourceRecord]) -> StageResult:
@@ -258,7 +267,7 @@ class IntermediateProcessor(BaseStageProcessor):
 
             from .business_rules import validate_business_rules
             result.rule_results.extend(self._validate_actual_structure(target, source=source))
-            result.rule_results.extend(validate_business_rules(source, target, self.resolver))
+            result.rule_results.extend(validate_business_rules(source, target, self.resolver, revenue_category_ranges=self.settings.revenue_category_ranges))
             from medpar_qa.stages.v3_fields import validate_whole_dollar_fields
             result.rule_results.extend(validate_whole_dollar_fields(source,target,self.resolver))
             if actual is not None:

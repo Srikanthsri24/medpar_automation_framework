@@ -70,11 +70,12 @@ def order_newest_first(
     ambiguity evidence.
     """
     decorated = [(business_order_key(record, resolver), record) for record in records]
-    decorated.sort(key=lambda item: item[0], reverse=True)
+    decorated.sort(key=lambda item: (-item[0].processing_date.toordinal(), -item[0].accrete_date.toordinal(), -item[0].query_code,
+                                     str(resolver.get(item[1].data,"icn") or "").strip(), -item[0].source_sequence))
 
     duplicate_keys: dict[BusinessOrderKey, list[SourceRecord]] = {}
     for key, record in decorated:
-        duplicate_keys.setdefault(key, []).append(record)
+        duplicate_keys.setdefault((key, str(resolver.get(record.data,"icn") or "").strip()), []).append(record)
     ambiguous, equivalent = [], []
     for records_with_key in duplicate_keys.values():
         if len(records_with_key) < 2:

@@ -101,12 +101,12 @@ def test_ld3188_scope_accepts_only_rule10b_qc5_tie(resolver, make_record):
     records = [make_record(base_claim(queryCode=5,internalControlNumber=icn)) for icn in ('A','B')]
     records.append(make_record(base_claim(queryCode=1,internalControlNumber='C',nchWeeklyProcessingDate='20260101')))
     result = FinalActionProcessor(resolver).validate(records)
-    assert any(r.rule_id == 'FA-ORDERING-LD3188' and r.status == ValidationStatus.KNOWN_DIFFERENCE for r in result.rule_results)
+    assert not any(r.rule_id == 'FA-PRE-ORDERING' for r in result.rule_results)
     assert {d.rule_id for d in result.decisions} == {'FA-RULE-10B'}
-    other = [make_record(base_claim(queryCode=1,internalControlNumber=icn)) for icn in ('A','B')]
+    other = [make_record(base_claim(queryCode=1,internalControlNumber=icn),row=i+1) for i,icn in enumerate(('A','B'))]
     result = FinalActionProcessor(resolver).validate(other)
-    assert any(r.rule_id == 'FA-PRE-ORDERING' and r.status == ValidationStatus.BLOCKED for r in result.rule_results)
-    assert not result.decisions
+    assert result.passed
+    assert result.decisions
 
 
 @pytest.mark.parametrize('payment,charge,primary,days,expected', [(10,20,0,1,'0'),(-10,-20,0,1,'1'),(-10,20,0,1,'2'),(10,-20,0,1,'3'),(0,0,0,0,'4')])
@@ -148,7 +148,7 @@ def test_tree_rule10a_policy_is_explicit(resolver,make_record):
     from medpar_qa.stages.final_action.settings import FinalActionSettings
     records=[make_record(base_claim(queryCode=5, internalControlNumber='DEBIT'))]
     records += [make_record(base_claim(queryCode=0, internalControlNumber=str(i),nchWeeklyProcessingDate=f'2026010{9-i}'),row=i+2) for i in range(2)]
-    requirements=FinalActionProcessor(resolver).validate(records)
+    requirements=FinalActionProcessor(resolver,FinalActionSettings(rule10a_requires_latest_qc0=False)).validate(records)
     tree=FinalActionProcessor(resolver,FinalActionSettings(rule10a_requires_latest_qc0=True)).validate(records)
     assert {d.rule_id for d in requirements.decisions} == {'FA-RULE-10A'}
     assert {d.rule_id for d in tree.decisions} == {'FA-RULE-10B'}

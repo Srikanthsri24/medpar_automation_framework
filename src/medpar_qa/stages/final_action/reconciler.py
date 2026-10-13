@@ -107,6 +107,7 @@ def reconcile_actual_output(
     missing = list((expected_counter - actual_counter).elements())
     unexpected = list((actual_counter - expected_counter).elements())
     passed = not missing and not unexpected
+    missing_source = [record for record in expected_kept if record_identity(record,resolver,settings) in set(missing)]
 
     return RuleResult(
         stage=Stage.FINAL_ACTION,
@@ -119,8 +120,8 @@ def reconcile_actual_output(
         ),
         expected={"kept_count": sum(expected_counter.values())},
         actual={"output_count": sum(actual_counter.values())},
-        record_ids=[record.record_id for record in actual_records],
-        source_files=sorted({record.source.file_path for record in actual_records}),
+        record_ids=[record.record_id for record in [*actual_records,*missing_source]],
+        source_files=sorted({record.source.file_path for record in [*actual_records,*missing_source]}),
         evidence={
             "identity_fields": list(settings.identity_fields),
             "missing_expected_identities": missing,

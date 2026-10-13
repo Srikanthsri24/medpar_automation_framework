@@ -41,6 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-date", required=True, help="Business date in YYYY-MM-DD format")
     parser.add_argument("--source", action="append", required=True, help="Relative source file or wildcard. Repeat as needed.")
     parser.add_argument("--actual", action="append", default=[], help="Relative actual-output file or wildcard")
+    parser.add_argument("--dropped", action="append", default=[], help="Relative Final Action dropped-output file or wildcard")
     parser.add_argument("--expected", action="append", default=[], help="Relative expected/golden file or wildcard")
     parser.add_argument("--mode", choices=("calculate", "reconcile", "golden"), default="calculate")
     parser.add_argument("--require-matching-snapshot", action="store_true", help="Block reconciliation when extraction snapshot metadata differs or is unavailable")
@@ -100,7 +101,7 @@ def _validate_relative_paths(args: argparse.Namespace) -> None:
     """Reject absolute user-supplied business paths so the configuration can be shared across
     machines.
     """
-    for label, values in (("source", args.source), ("actual", args.actual), ("expected", args.expected)):
+    for label, values in (("source", args.source), ("actual", args.actual), ("expected", args.expected), ("dropped", args.dropped)):
         for value in values:
             ensure_relative_user_path(value, label)
     ensure_relative_user_path(args.aliases, "aliases")
@@ -116,6 +117,8 @@ def main() -> int:
     args = parse_stage_args()
     _validate_relative_paths(args)
     stage = Stage(args.stage)
+    if args.dropped and stage != Stage.FINAL_ACTION:
+        raise SystemExit("--dropped is supported only for Final Action")
     run_date = date.fromisoformat(args.run_date)
     if args.mode in {"reconcile", "golden"} and not args.actual:
         raise SystemExit(f"--mode {args.mode} requires at least one --actual path")
@@ -126,6 +129,7 @@ def main() -> int:
         *_manifest_files(stage, FileRole.SOURCE, args.source),
         *_manifest_files(stage, FileRole.ACTUAL_OUTPUT, args.actual),
         *_manifest_files(stage, FileRole.EXPECTED_OUTPUT, args.expected),
+        *_manifest_files(stage, FileRole.DROPPED_OUTPUT, args.dropped),
     ]
     run_id = args.run_id or f"{stage.value}_{run_date.isoformat()}"
     command_id = args.command_id or slugify(run_id)
@@ -195,6 +199,7 @@ def main() -> int:
             "source_paths": args.source,
             "actual_paths": args.actual,
             "expected_paths": args.expected,
+            "dropped_paths": args.dropped,
         },
     )
     if stage == Stage.FINAL_ACTION:

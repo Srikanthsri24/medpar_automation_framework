@@ -6,13 +6,20 @@ import html
 def summarize_stage_volume(checks, decisions=()):
     inputs = {}
     ids_by_file = defaultdict(set)
+    read_inputs = set()
     for check in checks:
         actual = check.get('actual') or {}
-        if check.get('rule_id') == 'INGEST-READ-FILE' and isinstance(actual, dict) and actual.get('role') == 'source' and check.get('status') == 'PASS':
+        role = actual.get('role') if isinstance(actual,dict) else None
+        role = role or (check.get('evidence') or {}).get('role')
+        if check.get('rule_id') == 'INGEST-DISCOVERY' and role == 'source' and check.get('status') == 'PASS':
+            for path in check.get('source_files', []): inputs.setdefault(str(path),0)
+        if check.get('rule_id') == 'INGEST-READ-FILE' and role == 'source':
             for path in check.get('source_files', []):
                 inputs[str(path)] = max(inputs.get(str(path), 0), int(actual.get('record_count', 0)))
+                if check.get('status')=='PASS': read_inputs.add(str(path))
                 ids_by_file[str(path)].update(str(record) for record in check.get('record_ids', []))
     problems = {str(path) for check in checks if check.get('status') in ('FAIL', 'BLOCKED') for path in check.get('source_files', [])}
+    problems |= set(inputs) - read_inputs
     passed = set(inputs) - problems
     stopped = set(inputs) & problems
     failed = set(inputs) & {str(path) for check in checks if check.get('status') == 'FAIL' for path in check.get('source_files', [])}

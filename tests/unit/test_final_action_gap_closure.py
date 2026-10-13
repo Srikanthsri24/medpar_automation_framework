@@ -59,7 +59,8 @@ def test_table_limit_detected(resolver, make_record):
                     nchWeeklyProcessingDate=f'202601{(i%28)+1:02d}') for i in range(901)]
     for item in group:
         item.data['record_table_type'] = 'continuation'
-    result = FinalActionProcessor(resolver).validate_group(group)
+    from medpar_qa.stages.final_action.settings import FinalActionSettings
+    result = FinalActionProcessor(resolver,FinalActionSettings(enforce_legacy_table_limits=True)).validate_group(group)
     assert any(r.rule_id == 'FA-PRE-TABLE-LIMIT' and r.status == ValidationStatus.FAIL
                for r in result.rule_results)
 

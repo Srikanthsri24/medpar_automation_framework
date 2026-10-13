@@ -27,11 +27,22 @@ class ReportSession:
         """Create the timestamped report session directories."""
         stamp = timestamp_folder_name(moment)
         if session_path is None:
-            root = resolve_project_path(reports_root, project_root=project_root) / stamp
+            parent = resolve_project_path(reports_root, project_root=project_root)
+            parent.mkdir(parents=True, exist_ok=True)
+            base_stamp = stamp
+            suffix = 1
+            while True:
+                stamp = base_stamp if suffix == 1 else f"{base_stamp}_{suffix:02d}"
+                root = parent / stamp
+                try:
+                    root.mkdir()
+                    break
+                except FileExistsError:
+                    suffix += 1
         else:
             root = resolve_project_path(session_path, project_root=project_root)
             stamp = root.name
-        root.mkdir(parents=True, exist_ok=True)
+            root.mkdir(parents=True, exist_ok=True)
         (root / "master").mkdir(parents=True, exist_ok=True)
         return cls(root=root, timestamp=stamp)
 

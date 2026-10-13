@@ -314,3 +314,34 @@ KNOWN_STAGE_RULE_IDS: dict[str, tuple[str, ...]] = {
         "FM-MISSING-ACTUAL-OUTPUT", "FM-MISSING-EXPECTED-OUTPUT", "FM-GOLDEN-COMPARISON", "FM-OUTPUT-RECONCILIATION",
     ),
 }
+
+# Current user-directed v3.1 policy and source-derived checks. Legacy configuration
+# overrides remain explicit in run settings; these descriptions state the default.
+for _rule in ('FA-RULE-07','FA-RULE-08','FA-RULE-09'):
+    CATALOG[_rule] = _meta('Final Action '+_rule.replace('FA-RULE-','Rule '),
+        'With mixed query codes and no QC5, retain the newest claim per distinct non-cancelled ICN; drop QC0, cancelled ICNs and older duplicate claims.',
+        'Use newest-first claim order, collect QC0 ICNs, and select the first remaining claim for each distinct ICN.',
+        'PASS when each eligible ICN has one newest retained record and all other claims are dropped.',
+        'Correct source ordering, cancellation matches, or newest-per-ICN decisions.')
+CATALOG['FA-RULE-10A'] = _meta('Final Action Rule 10A — revised tree',
+    'Default revised-tree routing requires QC5, newest QC0 and QC0 count greater than QC5; retain newest claims for distinct non-cancelled ICNs.',
+    'Check newest QC, query-code counts and QC0 cancellation ICNs; an explicit legacy override can disable the newest-QC0 guard.',
+    'PASS when routing and per-ICN KEEP/DROP decisions match the selected policy.',
+    'Use revised-tree defaults and compare the retained output with source-based decisions.')
+for _rule,_title,_requirement,_logic in (
+    ('FA-INPUT-WINDOW','Final Action input calendar window','Source thru dates must satisfy the BxB Y-5 lower boundary and current calendar-year upper boundary.','Compare parsed source thru dates with the recorded window.'),
+    ('FA-UNCHANGED-SOURCE-FIELDS','Final Action field preservation','Original kept claim fields remain unchanged in retained output.','Compare every original field, with documented aliases and lineage/context metadata excluded.'),
+    ('FA-DROPPED-NET-INDICATOR','Dropped claim net indicator','WI01 is 1 for QC0, 2 for QC5, 3 for both, 0 for neither in the matched source episode.','Match source identity first, then compare the episode-derived net indicator.'),
+    ('SP-UNCHANGED-FA-FIELDS','Split field preservation','All original Final Action fields survive Split; derived routing fields may be added.','Compare every original source field with the matched Split output.'),
+    ('ST-DRG-PRICE-CALCULATION','Stay DRG price calculation','Sum payment, primary payer, coinsurance, inpatient deductible and blood deductible minus outlier across all bills, then apply BxB rounding.','Quantize the aggregate to three decimals, then round half away from zero to whole dollars.'),
+    ('ST-COVERED-CARE-END','Stay covered-care end date','SNF 0220 is the highest span-22 thru date across the stay, in YYYYDDD; otherwise blank.','Read all source span-22 dates, choose the highest and compare the output.'),
+    ('ST-MERGED-BILL-COUNT','Stay merged bill count','For a multi-bill stay, 0150 equals the number of source claims merged.','Compare output bill count with source-group size.'),
+    ('INT-REVENUE-CATEGORY-TOTAL','Intermediate revenue category amount','Amounts derive from source revenue code groups; ambiguous ranges require supplied approved mappings.','Sum eligible source charges, quantize three decimals, round the complete sum to whole dollars.'),
+    ('FM-PROVIDER-CLASSIFICATION','Final provider-based classification','0140 derives from the third character of the supplied original full provider number under V3 p26.','Compare the provider-derived S/L/N category with Final output.')
+):
+    CATALOG[_rule]=_meta(_title,_requirement,_logic,'PASS when source-derived expectation equals observed output; missing required operands block the check.','Open the source evidence and correct mismatches or supply required reference inputs.')
+KNOWN_STAGE_RULE_IDS['stay'] = tuple(rule for rule in KNOWN_STAGE_RULE_IDS['stay'] if rule not in ('ST-DTE-CR-ENDED-LATEST-RECORD','ST-DRG-PRICE-LATEST-RECORD'))
+
+# Superseded by source formula and span-date checks; do not display retired rules.
+for _retired in ("ST-DTE-CR-ENDED-LATEST-RECORD", "ST-DRG-PRICE-LATEST-RECORD"):
+    CATALOG.pop(_retired, None)

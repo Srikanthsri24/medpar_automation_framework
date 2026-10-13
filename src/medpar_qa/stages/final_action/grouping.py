@@ -47,6 +47,13 @@ def build_group_key(
         rec_type = {"1": "I", "2": "S"}.get(str(ricid).strip(), "TYPE_NOT_USED")
     else:
         rec_type = derive_record_type(resolver.get(record.data, "transaction_code"))
+    ric = resolver.get(record.data, "ric")
+    if isinstance(ric, dict):
+        ric = ric.get("code", ric.get("id"))
+    if ric is None:
+        ric = resolver.get(record.data, "ricid")
+    if ric not in (None, ""):
+        rec_type = "RIC:" + str(ric).strip()
     hicn = str(resolver.get(record.data, "hicn", "")).strip()
     provider_id = str(resolver.get(record.data, "provider_id", "")).strip()
     stay_from = parse_date(resolver.get(record.data, "stay_from_date"))

@@ -21,6 +21,7 @@ class FileRole(StrEnum):
     """
     SOURCE = "source"
     ACTUAL_OUTPUT = "actual_output"
+    DROPPED_OUTPUT = "dropped_output"
     EXPECTED_OUTPUT = "expected_output"
 
 

@@ -21,7 +21,7 @@ from medpar_qa.stages.common import normalize_collection
 def whole_dollars(value: Any) -> Decimal:
     """Whole dollars, ties away from zero (including negative credits)."""
     # LD-1410's supplied COBOL notes cap positive dollar outputs at nine digits.
-    return min(Decimal("999999999"), to_decimal(value).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    return min(Decimal("999999999"), to_decimal(value).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
 
 def length_of_stay(admission: date, thru: date, discharge_status: Any) -> int:
@@ -184,7 +184,7 @@ VALUE_FIELDS = {"18": "medpar_disproportionate_0360", "19": "medpar_ime_amount_0
                 "77": "medpar_new_tech_add_on_amt_0860", "73": "medpar_sqstrtn_rdctn_amt_1130",
                 "Q7": "medpar_islet_addon_pmt_amt_1450", "Q1": "medpar_val_q1_pmt_rdctn_amt_1470",
                 "QB": "medpar_val_qb_pmt_adj_amt_1500"}
-MONEY_MOVES={"baseOperatingDrgAmount":"medpar_base_oprtg_drg_amt_0870",
+MONEY_MOVES={"ppsFlexiblePayment7":"medpar_ipps_flex7_amt_1220","baseOperatingDrgAmount":"medpar_base_oprtg_drg_amt_0870",
              "operatingHspAmount":"medpar_oprtg_hsp_amt_0880",
              "uncompensatedCarePayment":"medpar_uncmp_care_pmt_amt_1140",
              "bundledAdjustmentPayment":"medpar_bndld_adjstmt_amt_1150",
@@ -209,6 +209,16 @@ MONEY_MOVES={"baseOperatingDrgAmount":"medpar_base_oprtg_drg_amt_0870",
 
 # Recovered CMS sprint demonstrations LD-1407/1408 provide these JSON mappings.
 DIRECT_MOVES = {
+    "beneficiary_gender": "medpar_sex_0040", "medicare_status": "medpar_mscode_0060",
+    "county_code": "medpar_bene_coun_0072", "hmoPaidIndicator": "medpar_hmo_readm_0110",
+    "bill_count": "medpar_no_bills_0150", "utilization_days": "medpar_cov_days_0280",
+    "daysCoinsurance": "medpar_coin_days_0290", "daysLRTotal": "medpar_life_res_0300",
+    "provider_id": "medpar_prvdr_full_num_1660", "primaryPaymentCode": "medpar_primry_pyr_0540",
+    "pintsFurnished": "medpar_blood_pints_0520", "dischargeDestination": "med_disch_dest_0532",
+    "outlierCode": "med_outlier_code_0533", "admissionSource": "medpar_adm_source_0560",
+    "admissionType": "medpar_type_admis_0570", "fiscal_intermediary": "medpar_intmd_num_0580",
+    "attendingPhysicianNpi": "medpar_at_phys_0650", "operatingPhysicianNpi": "medpar_op_phys_0660",
+    "pricerVersion": "medpar_clm_prcr_vrsn_1600", "grouperVersion": "medpar_clm_drg_grpr_vrsn_1610",
     "patientRelationship": "medpar_clm_pnt_rltnshp_cd_0700",
     "careImprovementModel1": "medpar_car_imprv_mod_1_cd_0710",
     "careImprovementModel2": "medpar_car_imprv_mod_2_cd_0720",
@@ -233,7 +243,7 @@ DIRECT_MOVES = {
 
 
 def validate_business_rules(source: SourceRecord, target: SourceRecord,
-                            resolver: FieldResolver) -> list[RuleResult]:
+                            resolver: FieldResolver, *, revenue_category_ranges=None) -> list[RuleResult]:
     """Calculate supported Intermediate expectations from source operands and compare them with the
     matched target, emitting field-specific evidence.
     """
@@ -442,9 +452,44 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         outlier = required("outlier_payment_amount", "NCH-DRG-OUTLIER-APRV-PMT-AMT", "outlierApprovedPaymentAmount", "outlierAmount")
         return whole_dollars(sum(map(to_decimal, operands), Decimal(0)) - to_decimal(outlier))
     check("INT-DRG-PRICE-CALCULATION", "medpar_drg_price_0380", drg_price, True)
+    def warning10():
+        lines=normalize_collection(required("revenue_lines"))
+        if any(9000 <= int(line_value(line,"code","revenueCode","revCntrCd")) <= 9044 for line in lines):
+            raise LookupError("WI10 RUG date/code mapping requires approved RIF/COBOL reference")
+        return "0"
+    check("INT-WARNING-10-RUG", "warning_indicator_10", warning10)
+    def provider_category():
+        provider = str(required("provider_id", "medpar_prvdr_full_num_1660")).strip()
+        if len(provider) != 6:
+            raise LookupError("Provider derivation requires a six-character provider number")
+        third = provider[2].upper()
+        special = third if third in "STUWYMR" else ""
+        classification = "N" if third in "56UWYZ" else "S" if third in "01STMR" else "L"
+        return special, classification
+    check("INT-SPECIAL-UNIT-DERIVATION", "medpar_prov_code_0137", lambda: provider_category()[0])
+    check("INT-PROVIDER-CLASSIFICATION", "medpar_ss_ls_snf_ind_0140", lambda: provider_category()[1])
+    from .revenue_totals import FIELDS, RANGES, revenue_total, sum_line_field, covered_revenue
+    def category_total(field, low, high):
+        approved=(revenue_category_ranges or {}).get(field)
+        if approved:
+            return whole_dollars(sum((revenue_total(get("revenue_lines"), int(a), int(b), round_result=False) for a,b in approved), Decimal(0)))
+        if field=="medpar_oprtg_room_amt_1100":
+            raise LookupError("Operating-room range requires approved MPRPARL/RIF mapping; V3 p33 lists ambiguous 0360-0719")
+        return revenue_total(get("revenue_lines"),low,high)
+    for field, (low, high) in zip(FIELDS, RANGES):
+        check("INT-REVENUE-CATEGORY-TOTAL", field, lambda field=field, low=low, high=high: category_total(field, low, high), True)
+    check("INT-DEPARTMENTAL-TOTAL", "medpar_tot_dpt_chrg_0440", lambda: revenue_total(get("revenue_lines"), 0, 9999), True)
+    check("INT-COVERED-REVENUE-TOTAL", "medpar_cov_chrg_0410", lambda: covered_revenue(get("revenue_lines"), resolver), True)
+    check("INT-PATIENT-ADDON-TOTAL", "medpar_ptnt_add_on_amt_1230", lambda: sum_line_field(get("revenue_lines"), resolver, "rev_cntr_ptnt_add_on_pmt_amt"), True)
+    check("INT-REVENUE-MODEL-TOTAL", "medpar_rev_cntr_modl_amt_1490", lambda: sum_line_field(get("revenue_lines"), resolver, "rev_cntr_model_reimbrsmt_amt"), True)
+    def revenue_rp():
+        lines=normalize_collection(required("revenue_lines"))
+        return "R" if any(str(line_value(line,"rpInd","rpIndicator","revCntrRpIndCd")).strip()=="R" for line in lines) else ""
+    check("INT-REVENUE-RP-INDICATOR", "medpar_rev_cntr_rp_ind_cd_1400", revenue_rp)
+
     for input_field, output_field in DIRECT_MOVES.items():
-        if get(input_field) is not None:
-            check("INT-DOCUMENTED-DIRECT-MOVE", output_field, lambda input_field=input_field: required(input_field))
+        if get(input_field, output_field) is not None or resolver.get(target.data, output_field) not in (None, ""):
+            check("INT-DOCUMENTED-DIRECT-MOVE", output_field, lambda input_field=input_field, output_field=output_field: required(input_field, output_field))
     aco = get("ngAcoIndicatorCodes")
     if aco is not None:
         for index, field in enumerate(("medpar_ng_aco_ind_1_cd_1330", "medpar_ng_aco_ind_2_cd_1340",

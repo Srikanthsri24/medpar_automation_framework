@@ -14,10 +14,13 @@ class SplitSettings:
     """
     window_years: int = 4
     current_year: int | None = None
+    processing_quarter: str | None = None
     allowed_transaction_codes: tuple[int, ...] = (0, 1, 2, 3, 4)
     maximum_bills_per_stay: int = 75
     identity_fields: tuple[str, ...] = (
         "claim_can",
+        "icn",
+        "query_code",
         "hicn",
         "provider_id",
         "stay_from_date",
@@ -38,6 +41,7 @@ class SplitSettings:
         """
         raw = raw or {}
         return cls(
+            processing_quarter=raw.get("processing_quarter"),
             window_years=int(raw.get("window_years", 4)),
             current_year=int(raw["current_year"]) if raw.get("current_year") is not None else None,
             allowed_transaction_codes=tuple(int(v) for v in raw.get("allowed_transaction_codes", (0, 1, 2, 3, 4))),

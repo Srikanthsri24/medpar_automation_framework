@@ -158,7 +158,7 @@ class Pipeline:
                     RuleResult(
                         stage=entry.stage,
                         rule_id="INGEST-READ-FILE",
-                        status=ValidationStatus.PASS,
+                        status=ValidationStatus.PASS if records else ValidationStatus.FAIL,
                         message=f"File was read successfully and produced {len(records)} record(s)",
                         expected="Readable file containing at least one record",
                         actual={
@@ -193,6 +193,7 @@ class Pipeline:
                 FinalActionSettings.from_mapping(
                     self.manifest.settings.get("final_action")
                 ),
+                run_date=self.manifest.run_date,
             ),
             Stage.SPLIT: SplitProcessor(
                 self.field_resolver,

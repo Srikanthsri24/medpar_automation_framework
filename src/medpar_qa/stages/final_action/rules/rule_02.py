@@ -17,12 +17,17 @@ class Rule02ThreeClaimSequence(FinalActionRule):
     rule_id = "FA-RULE-02"
     _VALID_SEQUENCES = {(5, 0, 3), (5, 0, 1)}
 
+    def __init__(self, settings=None):
+        self.require_accrete = bool(settings and settings.rule2_requires_latest_accrete)
+
     def applies(self, context: FinalActionGroupContext) -> bool:
         """Test this route prerequisite: Three newest-first QCs are 5-0-3 or 5-0-1 and QC5 has a
         verified latest accretion date. Earlier router matches take precedence.
         """
         if context.count != 3 or context.query_codes not in self._VALID_SEQUENCES:
             return False
+        if not self.require_accrete:
+            return True
         # V3 page 20 requires QC5 to have the greatest accretion date.
         # If accretion ordering is not established, do not apply Rule 2.
         from medpar_qa.normalization.dates import parse_date

@@ -30,13 +30,17 @@
         "code": "0110",
         "units": 1,
         "charges": "10.125",
-        "investigationalDeviceExemption": "00012345678"
+        "investigationalDeviceExemption": "00012345678",
+        "nonCoveredCharge": "0"
       },
       {
         "code": "0120",
         "units": 2,
-        "charges": "20.250"
+        "charges": "20.250",
+        "nonCoveredCharge": "0"
       }
-    ]
+    ],
+    "primaryPaymentCode": "A",
+    "mbiId": "1EG4TE5MK73"
   }
 ]

@@ -81,6 +81,18 @@ class FinalMedparProcessor(BaseStageProcessor):
             )
         )
 
+        full_provider = self.resolver.get(record.data,"medpar_prvdr_full_num_1660")
+        if full_provider not in (None, ""):
+            provider=str(full_provider).strip()
+            if len(provider)!=6:
+                expected_class="Six-character provider number";provider_valid=False
+            else:
+                third=provider[2].upper()
+                expected_class="N" if third in "56UWYZ" else "S" if third in "01STMR" else "L"
+                provider_valid=str(classification).strip()==expected_class
+            results.append(RuleResult(self.stage,"FM-PROVIDER-CLASSIFICATION",ValidationStatus.PASS if provider_valid else ValidationStatus.FAIL,
+                "Final classification derived from original provider number",expected_class,classification,field_name="medpar_ss_ls_snf_ind_0140",record_ids=[record.record_id],source_files=[record.source.file_path],evidence={"specification":"V3 p26 / BxB provider-position rules", "provider_number":provider}))
+
         fixed_width = self.resolver.get(record.data, "fixed_width_record")
         if fixed_width is None:
             results.append(

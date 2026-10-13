@@ -12,7 +12,7 @@ from .helpers import keep_unique_non_qc0_icns
 
 class Rule09NoQC5LatestNonQC0(FinalActionRule):
     """No QC5, newest non-QC0 and QC0 count less than QC1 plus QC3 counts. Drop QC0 and repeated
-    ICNs; keep only non-QC0 records whose ICN occurs exactly once across the complete group.
+    ICNs; keep only non-QC0 records selected newest per distinct non-cancelled ICN across the complete group.
     """
     rule_id = "FA-RULE-09"
 
@@ -27,7 +27,7 @@ class Rule09NoQC5LatestNonQC0(FinalActionRule):
         )
 
     def evaluate(self, context: FinalActionGroupContext) -> RuleEvaluation:
-        """Drop QC0 and repeated ICNs; keep only non-QC0 records whose ICN occurs exactly once
+        """Drop QC0 and cancelled ICNs and older duplicates; keep only non-QC0 records selected newest per distinct non-cancelled ICN
         across the complete group. Return RuleEvaluation with its outcome and any explicit
         record decisions.
         """

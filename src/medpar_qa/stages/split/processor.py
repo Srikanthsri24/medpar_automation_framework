@@ -58,6 +58,22 @@ class SplitProcessor(BaseStageProcessor):
         except (TypeError, ValueError) as exc:
             raise ValueError(f"Invalid transactionCode: {value!r}") from exc
 
+    def stay_key(self, record):
+        hicn,provider,admission=(self.resolver.get(record.data,name) for name in ("hicn","provider_id","admission_date"))
+        return hicn,provider,admission if admission not in (None,"") else ("missing_admission",record.record_id)
+
+    def reference_year(self):
+        """An explicit Y0 overrides an explicitly supplied processing quarter."""
+        if self.settings.current_year is not None:
+            return self.settings.current_year
+        if self.settings.processing_quarter:
+            import re
+            match=re.fullmatch(r"(\d{4})Q([1-4])", str(self.settings.processing_quarter).upper())
+            if not match: raise ValueError("processing_quarter must be YYYYQ1..YYYYQ4")
+            year,quarter=map(int,match.groups())
+            return year-1 if quarter==1 else year
+        return self.run_date.year-1 if self.run_date.month<=3 else self.run_date.year
+
     def calculate_indicator(self, record: SourceRecord, *, last_thru: date | None = None) -> str:
         """Use inpatient last stay-thru or SNF admission/stay-from; calculate relative calendar-
         year Y0..Y3 and Jan–Sep/Oct–Dec suffix, otherwise Y99999.
@@ -74,9 +90,9 @@ class SplitProcessor(BaseStageProcessor):
         if stay_from > stay_thru:
             raise ValueError("stayFromDate must be on or before stayThruDate")
 
-        # Y0 is an explicit business-year parameter when configured; otherwise retain the prior run-year default.
+        # Explicit Y0 overrides processing-quarter derivation; Q1 anchors the previous calendar year.
         reference = (admission or stay_from) if self._transaction_code(record) in (0, 4) else (last_thru or stay_thru)
-        years_back = (self.settings.current_year if self.settings.current_year is not None else self.run_date.year) - reference.year
+        years_back = self.reference_year() - reference.year
         if not 0 <= years_back < self.settings.window_years:
             return self.settings.outside_window_indicator
         suffix = "0109" if reference.month <= 9 else "1012"
@@ -150,8 +166,7 @@ class SplitProcessor(BaseStageProcessor):
         # dates are represented consistently and do not get guessed.
         stay_groups: dict[tuple[Any, ...], list[SourceRecord]] = defaultdict(list)
         for record in source_records:
-            key = tuple(self.resolver.get(record.data, name) for name in
-                        ("hicn", "provider_id", "admission_date"))
+            key = self.stay_key(record)
             stay_groups[key].append(record)
         for key, group in stay_groups.items():
             if len(group) > self.settings.maximum_bills_per_stay:
@@ -235,7 +250,7 @@ class SplitProcessor(BaseStageProcessor):
                     )
                     continue
 
-                key = tuple(self.resolver.get(record.data, name) for name in ("hicn", "provider_id", "admission_date"))
+                key = self.stay_key(record)
                 last_thru = max(parse_date(self.resolver.get(bill.data, "stay_thru_date"), allow_none=False) for bill in stay_groups[key])
                 expected = self.calculate_indicator(record, last_thru=last_thru)
                 identity = record_identity(
@@ -249,6 +264,9 @@ class SplitProcessor(BaseStageProcessor):
                     rule_id="SP-WINDOW-ROUTING", reason=expected,
                 ))
                 actual_record = actual_index.get(identity)
+                if actual_record is not None and expected != self.settings.outside_window_indicator:
+                    from medpar_qa.stages.preservation import unchanged_fields
+                    stage_result.rule_results.append(unchanged_fields(self.stage,record,actual_record,self.resolver,"SP-UNCHANGED-FA-FIELDS"))
                 inline_actual = self.resolver.get(
                     record.data, "split_year_indicator"
                 )
@@ -364,6 +382,36 @@ class SplitProcessor(BaseStageProcessor):
                 actual={k:str(v) for k,v in charge_totals.items()},evidence={"source_bills_without_amount":missing_amounts}))
         except (ValueError,ArithmeticError) as exc:
             stage_result.rule_results.append(RuleResult(stage=self.stage,rule_id="SP-CHARGE-BALANCE",status=ValidationStatus.FAIL,message=str(exc)))
+        # BxB balance by Split year/quarter indicator, with exceptions kept separate.
+        categories = {}
+        decisions = {decision.record_id: decision for decision in stage_result.decisions}
+        missing = []
+        invalid = []
+        for record in source_records:
+            decision = decisions.get(record.record_id)
+            indicator = decision.reason if decision else "EXCEPTION"
+            category = categories.setdefault(indicator, {"records": 0, "charges": Decimal(0)})
+            category["records"] += 1
+            raw = self.resolver.get(record.data, "medpar_tot_chrg_0400")
+            if raw is None:
+                raw = self.resolver.get(record.data, "totalCharges")
+            if raw is None:
+                missing.append(record.record_id)
+            else:
+                try:
+                    category["charges"] += to_decimal(raw)
+                except (ValueError, ArithmeticError):
+                    invalid.append(record.record_id)
+        stage_result.rule_results.append(RuleResult(
+            stage=self.stage, rule_id="SP-INDICATOR-BALANCE",
+            status=ValidationStatus.FAIL if invalid else ValidationStatus.NOT_APPLICABLE if missing else ValidationStatus.PASS,
+            message="Source records and charges grouped by calculated year/quarter indicator, outside-window indicator, and exceptions" if not missing and not invalid else "Indicator counts available; complete charge balance requires valid amounts on every source bill",
+            expected={"source_records": len(source_records), "source_charges": str(charge_totals["input"]) if not missing and not invalid else "Valid amount on every source bill"},
+            actual={"categories": {key: {"records": value["records"], "charges": str(value["charges"])} for key, value in sorted(categories.items())}, "accounted_records": sum(value["records"] for value in categories.values())},
+            evidence={"missing_amount_record_ids": missing, "invalid_amount_record_ids": invalid},
+            record_ids=[record.record_id for record in source_records],
+            source_files=sorted({record.source.file_path for record in source_records}),
+        ))
         if actual_records:
             actual_keys = set(actual_index)
             unexpected = sorted(str(key) for key in actual_keys - expected_eligible)

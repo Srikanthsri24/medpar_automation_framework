@@ -21,6 +21,7 @@ class IntermediateSettings:
     )
     decimal_scale: Decimal = Decimal("0.001")
     window_years: int = 5
+    revenue_category_ranges: dict | None = None
     deduplicate_filename_exports: bool = False
     require_actual_output: bool = False
     require_expected_output: bool = False
@@ -169,6 +170,7 @@ class IntermediateSettings:
             deduplicate_filename_exports=bool(raw.get("deduplicate_filename_exports", False)),
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),
             decimal_scale=Decimal(str(raw.get("decimal_scale", "0.001"))),
+            revenue_category_ranges=raw.get("revenue_category_ranges"),
             window_years=int(raw.get("window_years", 5)),
             require_actual_output=bool(raw.get("require_actual_output", False)),
             require_expected_output=bool(raw.get("require_expected_output", False)),

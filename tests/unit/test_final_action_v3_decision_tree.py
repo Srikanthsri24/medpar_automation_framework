@@ -81,7 +81,7 @@ def test_rule2_requires_newest_accretion(resolver, make_record):
     proves for its fixtures.
     """
     records = make_group(make_record, [5,0,3], ["A","B","C"], accretes=["20260101","20260103","20260102"])
-    result = FinalActionProcessor(resolver).validate_group(records)
+    result = FinalActionProcessor(resolver, FinalActionSettings(rule2_requires_latest_accrete=True)).validate_group(records)
     assert rule(result).rule_id != "FA-RULE-02"
 
 
@@ -102,7 +102,7 @@ def test_rule2_invalid_accretion_must_not_fall_through_to_rule10b(resolver, make
     """
     records = make_group(make_record, [5, 0, 3], ["A", "B", "C"],
                          accretes=["20260101", "20260103", "20260102"])
-    result = FinalActionProcessor(resolver).validate_group(records)
+    result = FinalActionProcessor(resolver, FinalActionSettings(rule2_requires_latest_accrete=True)).validate_group(records)
     assert any(x.rule_id == "FA-RULE-02-PRECONDITION" and x.status == ValidationStatus.BLOCKED
                for x in result.rule_results)
     assert not result.decisions
@@ -114,7 +114,7 @@ def test_rule2_missing_accretion_must_not_fall_through_to_rule10b(resolver, make
     """
     records = make_group(make_record, [5, 0, 1], ["A", "B", "C"])
     records[1].data.pop("accreteDate")
-    result = FinalActionProcessor(resolver).validate_group(records)
+    result = FinalActionProcessor(resolver, FinalActionSettings(rule2_requires_latest_accrete=True)).validate_group(records)
     assert any(x.rule_id == "FA-RULE-02-PRECONDITION" and x.status == ValidationStatus.BLOCKED
                for x in result.rule_results)
     assert not result.decisions

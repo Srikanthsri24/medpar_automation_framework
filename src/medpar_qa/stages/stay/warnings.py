@@ -34,7 +34,7 @@ def warning08(records, resolver):
                 raise LookupError(f'Warning 08 missing duplicate-identity operand: {field}')
             values.append(parse_date(value).isoformat() if field.endswith('_date') else str(value).strip())
         identities.append(tuple(values))
-        death = resolver.get(record.data, 'date_of_death')
+        death = record.data.get('matched_date_of_death') if record.data.get('dod_reference_available') else resolver.get(record.data, 'date_of_death')
         if death not in (None, '', 0, '00000000'):
             death_before |= parse_date(death) < parse_date(resolver.get(record.data, 'admission_date'))
     duplicate = any(count > 1 for count in Counter(identities).values())

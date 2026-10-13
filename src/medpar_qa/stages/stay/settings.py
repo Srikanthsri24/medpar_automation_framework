@@ -13,7 +13,7 @@ class StaySettings:
     """Store the typed Stay options. Defaults are declared in this class; from_mapping applies
     explicit manifest overrides.
     """
-    identity_fields: tuple[str, ...] = ("hicn", "provider_id", "admission_date", "split_year_indicator")
+    identity_fields: tuple[str, ...] = ("hicn", "provider_id", "admission_date")
     sort_fields: tuple[str, ...] = (
         "hicn", "provider_id", "split_year_indicator",
         "stay_from_date", "stay_thru_date", "processing_date",

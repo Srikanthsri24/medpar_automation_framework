@@ -176,6 +176,8 @@ def r65_stage_runs() -> dict[str, dict[str, Any]]:
         item["require_matching_snapshot"] = False
         item["split_current_year"] = 2024
         item["modern_final_action"] = stage == "final_action"
+        if stage == "final_action":
+            item["dropped"] = [p.as_posix() for p in sorted((root / "2-final-action-dropped").rglob("*.json"))]
         profile[stage] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [item]}
     profile["final_medpar"] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [
         _production_run("R65 Final MEDPAR short-stay output checks", ("6-final-processing/MEDPAR_FINAL_SS_FILES",), suffixes=(".json",), data_root=root),
@@ -270,6 +272,7 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
         args.extend(["--split-current-year", str(item.get("split_current_year", 2025))])
     _append_paths(args, "--source", list(item.get("source") or []))
     _append_paths(args, "--actual", list(item.get("actual") or []))
+    _append_paths(args, "--dropped", list(item.get("dropped") or []))
     _append_paths(args, "--expected", list(item.get("expected") or []))
     if item.get("per_file"):
         args.append("--per-file")

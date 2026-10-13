@@ -14,13 +14,13 @@ from medpar_qa.stages.intermediate.business_rules import codes
 FIRST_FIELDS = (
     "state_code", "county_code", "fiscal_intermediary", "beneficiary_zip_code",
     "beneficiary_gender", "beneficiary_race", "beneficiary_date_of_birth", "medicare_status",
-    "patient_surname", "patient_first_initial", "patientMiddleInitial", "claim_can", "hicn", "bic",
+    "claimCanNchEquatable", "patient_surname", "patient_first_initial", "patientMiddleInitial", "claim_can", "hicn", "bic",
     "action_code", "provider_id", "providerStateCode", "medicaidProvider", "medicaidInformation",
     "medical_record", "proMedicalNumber", "admission_date", "patientControl", "nchNearLineRIC",
-    "rictypeCode", "pro_approval", "daysPrPsychology", "kronIndicator", "host_site",
+    "ric", "typeCode", "pro_approval", "daysPrPsychology", "kronIndicator", "host_site",
     "primaryPaymentCode", "internal_control_number_origin", "cancel_only_adjustment_code",
     "nchStateSegment", "transaction_code", "hmoPaidIndicator", "treatmentAuth",
-    "patchTrailerData", "demonstrationLine",
+    "patchTrailerData", "patchTrailerData.code", "patchTrailerData.dateApplied", "demonstrationLine",
 )
 LAST_FIELDS = ("bundled_m1_percent", "vbp_adjustment_percent", "hrr_adjustment_percent",
                "diagnosisLines", "diagnosisELines", "procedureLines", "diagnosis_codes", "procedure_codes")
@@ -30,12 +30,12 @@ FIRST_FOUND_FIELDS = (
     "diagnosisRelatedGroup.id", "patientRelationship", "careImprovementModel1", "careImprovementModel2",
     "careImprovementModel3", "careImprovementModel4", "vbpParticipantIndicator",
     "hrrParticipantIndicator", "hacReductionIndicatorSwitch", "ehrReductionIndicatorSwitch",
-    "priorAuthorizationIndicator", "uniqueTrackingNumber", "ngAcoIndicatorCodes",
+    "priorAuthorizationIndicator", "uniqueTrackingNumber",
     "residualPaymentIndicatorCode", "rpIndicator", "initialMedicareSeverityDrgCode", "acoId",
     "mbiId", "beneIdTypeCode",
 )
 HIGH_DATES = ("stay_thru_date", "processing_date", "accrete_date", "forwarded_date", "hcfa_received",
-              "mqaDate", "approvedDate", "proProcessDate", "qualifiedStayThruDate", "nonCoverageThruDate",
+              "procFromDate", "mqaDate", "approvedDate", "proProcessDate", "qualifiedStayThruDate", "nonCoverageThruDate",
               "outPatientPhysicalTherapyDate", "activeCareEndsDate", "benefits_exhausted_date")
 LOW_DATES = ("stay_from_date", "qualifiedStayFromDate", "nonCoverageFromDate")
 SUM_FIELDS = (
@@ -45,7 +45,7 @@ SUM_FIELDS = (
     "modelReimbursmentAmount", "ltchDischargePercentAmount", "siteNtrlCostAmount", "siteNtrlIppsAmount",
     "fullStandardAmount", "ssoStandardAmount", "reimbursement_amount", "primary_payment_amount",
     "totalCharges", "inPatientDeduction", "coinsuranceAmount", "bloodDeductable", "capitalTotal",
-    "utilization_days", "daysCoinsurance", "daysLRTotal", "pintsFurnished", "outlierAmount",
+    "lowVolumePaymentAmount", "utilization_days", "daysCoinsurance", "daysLRTotal", "pintsFurnished", "outlierAmount",
     # lowVolumePaymentAmount also appears in first-bill rules: excluded pending resolution.
 )
 
@@ -99,6 +99,13 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
                       and str(get(r, field)).strip()), None)
         if value is not None:
             check(field, value, "ST-FIRST-NONBLANK")
+    arrays=[get(r,"ngAcoIndicatorCodes") for r in ordered]
+    if any(isinstance(value,list) for value in arrays):
+        expected=[next((value[i] for value in arrays if isinstance(value,list) and i<len(value) and value[i] not in (None,"")), "") for i in range(4)]
+        check("ngAcoIndicatorCodes",expected,"ST-NG-ACO-BY-POSITION")
+    counters=[get(r,"accreteCounter") for r in ordered]
+    if any(value is not None for value in counters):
+        check("accreteCounter",max(int(value) for value in counters if value is not None),"ST-HIGH-ACCRETE-COUNTER",True)
     for fields, choose, rule in ((HIGH_DATES,max,"ST-HIGH-DATE"), (LOW_DATES,min,"ST-LOW-DATE")):
         for field in fields:
             values = [parse_date(get(r,field)) for r in records if get(r,field) not in (None,"")]
@@ -124,7 +131,16 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
                 check(field, sum(map(to_decimal,values),Decimal(0)),"ST-SUM-FIELD", True)
     revenue = [item for r in ordered for item in (get(r,"revenue_lines") or [])]
     if revenue:
-        check("revenue_lines",revenue,"ST-ALL-REVENUE-LINES")
+        from .revenue_merge import aggregate_revenue, AMOUNTS
+        accumulated=aggregate_revenue(revenue)
+        check("revenue_lines",accumulated,"ST-ALL-REVENUE-LINES")
+        def normalized(lines):
+            return [{k:to_decimal(v) if k in AMOUNTS else v for k,v in line.items() if not k.startswith('_')} for line in (lines or [])]
+        observed=get(actual,"revenue_lines") if actual else None
+        if observed is not None:
+            results[-1].status=ValidationStatus.PASS if normalized(observed)==normalized(accumulated) else ValidationStatus.FAIL
+            results[-1].message="Revenue occurrences and accumulated amounts match" if results[-1].status==ValidationStatus.PASS else "Revenue aggregation differs from source expectations"
+
     qcs = {str(get(r,"query_code")) for r in records}
     check("warning_indicator_01",str((1 if "0" in qcs else 0)+(2 if "5" in qcs else 0)),"ST-WARNING-01", True)
     snf = str(get(first,"transaction_code")) in {"0","4"}
@@ -148,6 +164,6 @@ def validate_merge_rules(records, actual, resolver, scale):
     """Wrap merge derivation and convert invalid numeric/date operands into a reportable failure."""
     try:
         return _validate_merge_rules(records,actual,resolver,scale)
-    except (ValueError,TypeError,ArithmeticError) as exc:
+    except (ValueError,TypeError,ArithmeticError,LookupError) as exc:
         return [RuleResult(stage=Stage.STAY,rule_id="ST-MERGE-OPERANDS",status=ValidationStatus.FAIL,
             message=str(exc),record_ids=[r.record_id for r in records])]
