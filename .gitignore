@@ -19,3 +19,10 @@ outputs/**/*.inspect.ndjson
 outputs/**/submission_checksums.json
 ~$*
 outputs/
+# Downloaded/external inputs and machine-specific AWS settings
+data/.input_cache/
+# config/aws_credentials.local.json
+# config/stage_runs.local.json
+
+# Keep machine-local settings private; examples remain versioned.
+config/*.local.json

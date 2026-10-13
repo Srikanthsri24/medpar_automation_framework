@@ -1,7 +1,7 @@
 """MEDPAR QA stage-wise command runner.
 
-Edit only the configuration sections below. All file paths must be relative to this
-project folder. Each execution creates one timestamped folder under ``reports/``:
+Edit STAGE_RUNS below or pass --config with a stage-runs JSON file. Inputs may be
+local files/folders, wildcards, or S3 URIs/standard AWS HTTPS links. Each execution creates one timestamped folder under ``reports/``:
 
 reports/<timestamp>/
     master/index.html
@@ -52,6 +52,7 @@ CONNECTED_SETTINGS: dict[str, Any] = {
 }  # Optional stage settings; no code-domain overrides by default.
 STOP_ON_FAILURE = False
 REPORTS_ROOT = "reports"  # Relative path only.
+AWS_CREDENTIALS_FILE = "config/aws_credentials.local.json"  # Copy the example; never commit real credentials.
 
 
 # =============================================================================
@@ -60,7 +61,8 @@ REPORTS_ROOT = "reports"  # Relative path only.
 # Each stage has two clear lists:
 #   single_files: run named individual files
 #   folder_paths: run complete folders/wildcards
-# Paths may be JSON or Parquet. Repeat paths in source/actual/expected lists.
+# Paths may be JSON/Parquet files, local folders or S3 prefixes.
+# Repeat local/S3 paths in source/actual/expected/dropped lists; mixing is supported.
 
 # Production data must be copied under PROJECT_ROOT/data/production/q61.
 # Never commit it. Paths remain relative as required by the runner.
@@ -239,7 +241,8 @@ def _append_paths(args: list[str], flag: str, paths: list[str]) -> None:
     entries.
     """
     for path in paths:
-        ensure_relative_user_path(path, flag)
+        if not isinstance(path, str) or not path.strip():
+            raise ValueError(f"{flag} requires a nonempty path")
         args.extend([flag, path])
 
 
@@ -268,8 +271,8 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
         args.extend(["--per-file", "--final-extract"])
     if stage == "final_action" and item.get("modern_final_action"):
         args.append("--modern-final-action")
-    if stage == "split":
-        args.extend(["--split-current-year", str(item.get("split_current_year", 2025))])
+    if stage == "split" and item.get("split_current_year") is not None:
+        args.extend(["--split-current-year", str(item["split_current_year"])])
     _append_paths(args, "--source", list(item.get("source") or []))
     _append_paths(args, "--actual", list(item.get("actual") or []))
     _append_paths(args, "--dropped", list(item.get("dropped") or []))
@@ -408,18 +411,48 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run connected MEDPAR validation or one configured stage")
     parser.add_argument('--stage', choices=tuple(STAGE_RUNS), help="Validate only this configured stage independently")
     parser.add_argument("--dataset", choices=("q61", "r65"), default=DEFAULT_DATASET, help="Dataset profile (default: R65 all-stage review; Q61 explicitly selects connected mode)")
+    parser.add_argument("--config", help="Stage-runs JSON configuration; overrides the dataset profile")
+    parser.add_argument("--aws-config", default=AWS_CREDENTIALS_FILE, help="Local AWS credentials/profile settings JSON (not included in reports)")
     options = parser.parse_args()
     selected_stage = options.stage
+    connected = CONNECTED_PIPELINE_ENABLED and selected_stage is None and options.dataset != "r65"
     configured_stages = r65_stage_runs() if options.dataset == "r65" else STAGE_RUNS
-    print(f"Selected dataset: {options.dataset.upper()}", flush=True)
-    print("Run mode: independent review of all supplied R65 stage boundaries" if options.dataset == "r65" else "Run mode: configured Q61 validation", flush=True)
+    if options.config:
+        try:
+            configuration = json.loads(Path(options.config).read_text(encoding="utf-8"))
+            configured_stages = configuration["stage_runs"]
+            if not isinstance(configured_stages, dict) or set(configured_stages) - set(STAGE_RUNS):
+                raise ValueError("stage_runs must map supported stage names to configurations")
+            for stage, entry in configured_stages.items():
+                if not isinstance(entry, dict): raise ValueError(f"{stage} configuration must be an object")
+                if entry.get("enabled", True):
+                    datetime.strptime(str(entry["run_date"]), "%Y-%m-%d")
+                    for list_name in ("single_files", "folder_paths"):
+                        if not isinstance(entry.get(list_name, []), list) or any(not isinstance(item, dict) for item in entry.get(list_name, [])):
+                            raise ValueError(f"{stage}.{list_name} must contain configuration objects")
+            connected = bool(configuration.get("connected_pipeline_enabled", False)) and selected_stage is None
+            if connected and any(stage not in configured_stages for stage in STAGE_RUNS):
+                raise ValueError("Connected configuration requires run_date entries for all five stages")
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            parser.error(f"Cannot load stage configuration: {exc}")
+    print(f"Selected dataset: {'CONFIGURED' if options.config else options.dataset.upper()}", flush=True)
+    print("Run mode: connected validation" if connected else "Run mode: independent stage validation", flush=True)
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
-    if options.dataset == "r65":
+    from medpar_qa.ingestion.input_sources import InputSources, InputSourceError
+    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=Path(options.aws_config) if Path(options.aws_config).is_absolute() else PROJECT_ROOT / options.aws_config)
+    try:
+        configured_stages = sources.prepare(configured_stages, selected_stage=selected_stage, connected=connected)
+    except InputSourceError as exc:
+        print(f"Input preparation failed: {exc}", flush=True)
+        print(f"Input evidence: {relative_display(session.root / 'input_sources.html', project_root=PROJECT_ROOT)}", flush=True)
+        return 2
+    print(f"Unique resolved local/S3 files: {len(sources.files)}", flush=True)
+    if options.dataset == "r65" and not options.config:
         (session.root / "review_scope.json").write_text(json.dumps({"dataset": "R65", "description": "All five supplied stage boundaries reviewed independently. Later supplied outputs are checked even when earlier stages fail. This is not a completed connected journey. Business processing date: 18 March 2025; Split Y0: 2024. No shared snapshot manifest or approved golden physical-byte outputs supplied."}, indent=2), encoding="utf-8")
-    if CONNECTED_PIPELINE_ENABLED and selected_stage is None and options.dataset != "r65":
+    if connected:
         from medpar_qa.orchestration.connected import run_configured
-        journeys, index = run_configured(PROJECT_ROOT, session, STAGE_RUNS, CONNECTED_SETTINGS)
+        journeys, index = run_configured(PROJECT_ROOT, session, configured_stages, CONNECTED_SETTINGS)
         print(f"Connected pipeline report: {relative_display(index, project_root=PROJECT_ROOT)}")
         for payload, directory in journeys:
             print(f"{payload['source_file']}: {payload['conclusion']}")
@@ -511,7 +544,7 @@ def main() -> int:
         if unexpected_failures and STOP_ON_FAILURE:
             break
 
-    if (selected_stage == "final_medpar" or options.dataset == "r65" and selected_stage is None) and (PROJECT_ROOT / "data/production/r65").is_dir():
+    if not options.config and (selected_stage == "final_medpar" or options.dataset == "r65" and selected_stage is None) and (PROJECT_ROOT / "data/production/r65").is_dir():
         from scripts.run_r65_audit import run_audit
         audit = run_audit(session)
         audit_code = 0 if audit.passed else 1

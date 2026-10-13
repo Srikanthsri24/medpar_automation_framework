@@ -42,7 +42,39 @@ Run the configured production stages:
 python run_commands.py
 ```
 
-Edit `STAGE_RUNS` in `run_commands.py` to select stage dates, individual files and folders. Enable only the required runs. Input paths must be relative to the repository. Production inputs are local under `data/production/q61/` and are excluded from Git. Missing files, mismatched snapshots and business failures remain visible in reports.
+Edit `STAGE_RUNS` in `run_commands.py` or use `--config` to select stages, dates and inputs. The default command uses the R65 profile; `--dataset q61` selects the Q61 configuration. A `--config` file overrides either profile. Missing files, mismatched snapshots and business failures remain visible in reports.
+
+### Local folders and AWS S3 inputs
+
+Copy `config/stage_runs.example.json` to your own configuration, remove the example paths, and fill `source`, `actual`, `expected` and `dropped` with strings or lists of paths. Each list supports mixed inputs:
+
+- A local file: `data/production/claims.json` or an absolute path on your laptop.
+- One or multiple local folders: recursively discovers JSON and Parquet files.
+- Local wildcards: `data/production/**/*.parquet`.
+- S3 files: `s3://your-bucket/claims/file.parquet`.
+- One or multiple S3 folders: `s3://your-bucket/claims/folder-one/`, `s3://your-bucket/claims/folder-two/`.
+- S3 wildcards: `s3://your-bucket/claims/**/*.parquet` (matches nested keys).
+- Standard AWS HTTPS object links and S3 console bucket/prefix/object links. These use the configured AWS credentials. For signed or versioned links, use the canonical `s3://bucket/key` instead.
+
+```sh
+pip install -r requirements.txt
+python run_commands.py --config config/stage_runs.local.json
+```
+
+Copy `config/aws_credentials.example.json` to `config/aws_credentials.local.json`. The example contains dummy placeholders; they are ignored rather than sent to AWS. Fill both access key and secret key, plus session token when using temporary credentials. Alternatively leave keys empty and set `profile_name`, or use the standard AWS environment/profile/role credential chain. Change `region_name` to the bucket's region. A different local settings file can be selected with `--aws-config`.
+
+```sh
+python run_commands.py --config config/stage_runs.local.json --aws-config config/aws_credentials.local.json
+```
+
+S3 access requires read permission for selected objects and list permission for selected prefixes. The runner uses paginated discovery, excludes non-JSON/Parquet folder objects, deduplicates overlapping paths, and downloads into `data/.input_cache/<report-session>/`. External local files are copied there; repository-local files remain in place. Original directory/hive partition labels are preserved. The cache and local credentials file are excluded from Git. The runner reads S3; it does not upload reports or modify bucket objects.
+
+Open **Local/S3 input sources** from the generated report for a collapsed list of original paths, files used, byte sizes and SHA-256 fingerprints. An unreadable S3 object or empty S3 folder stops input preparation with exit code 2 and records the reason in `input_sources.html`; the runner does not silently validate a partial folder. Missing repository-local paths continue into the existing ingestion failure report.
+
+Set `connected_pipeline_enabled` to `false` for independent configured stages. For connected mode, set it to `true`, supply all five stage dates, and configure Final Action seed inputs plus `pipeline_outputs` for Stay, Intermediate and Final MEDPAR. Local/S3 paths work in those candidate lists too. Resolving sources does not change stage rules or create missing production outputs.
+
+[Boto3 credentials reference](https://docs.aws.amazon.com/boto3/latest/guide/credentials.html) · [S3 pagination reference](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/paginator/ListObjectsV2.html)
+
 
 The current production review overview is `reports/20261012_023159/master/index.html`. Reports are generated locally and are not uploaded to GitHub. To view them in a browser:
 

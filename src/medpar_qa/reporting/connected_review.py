@@ -86,6 +86,7 @@ def write_connected_review(journeys, index, *, synthetic=False):
     scope = ('Fictitious inputs; all five real validators run. Final Action and Split calculate retained records. '
              'Stay, Intermediate and Final validate supplied candidate JSON outputs. This is workflow evidence, not production acceptance. '
              'Approved golden outputs, external reference calculations and the complete 3000-byte layout are not certified.' if synthetic else 'Production input validation. Stage outcomes below identify what ran and where processing stopped. A completed journey would establish only the executed checks; approved golden outputs and full physical layout certification remain separate acceptance requirements.')
+    source_link = '<p><a href="../input_sources.html">Local/S3 input sources — file counts and download evidence</a></p>' if (index.parent.parent / 'input_sources.html').exists() else ''
     index.write_text('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
         '<title>MEDPAR evidence report</title><style>body{font:16px system-ui;line-height:1.55;background:#f3f6fa;color:#18324b;margin:0}'
         'header{background:#18324b;color:white;padding:30px}main{max-width:1200px;margin:auto;padding:24px}'
@@ -93,7 +94,7 @@ def write_connected_review(journeys, index, *, synthetic=False):
         '.volume-strip{display:grid;grid-template-columns:repeat(7,minmax(70px,1fr));gap:10px;margin-top:12px}.volume-cell span{display:block;font-size:12px;font-weight:400}.volume-cell strong{display:block;font-size:22px}.volume-cell:nth-child(3){border-right:1px solid #cbd5e1}.volume-cell:nth-child(2) strong,.volume-cell:nth-child(5) strong{color:#087f5b}.volume-cell:nth-child(3) strong,.volume-cell:nth-child(7) strong{color:#c92a2a}.volume-cell:nth-child(6) strong{color:#996600}.volume-cell a{color:inherit}@media(max-width:700px){.volume-strip{grid-template-columns:repeat(3,1fr)}}input,select{padding:12px;border:1px solid #a8b8ca;border-radius:8px;margin:8px} .file-card{overflow-wrap:anywhere} [hidden]{display:none!important} summary{cursor:pointer;font-weight:600;padding:10px}table{border-collapse:collapse;width:100%;font-size:14px}'
         'td,th{border:1px solid #d9e2eb;padding:10px;text-align:left;vertical-align:top}.scroll{overflow:auto}'
         'pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto}a{color:#1958a0}</style></head>'
-        f'<body><header><h1>MEDPAR — {_esc(label)}</h1><p>Generated {_esc(datetime.now().astimezone().strftime("%d %B %Y, %I:%M:%S %p %Z (%z)"))}</p></header><main>'
+        f'<body><header><h1>MEDPAR — {_esc(label)}</h1><p>Generated {_esc(datetime.now().astimezone().strftime("%d %B %Y, %I:%M:%S %p %Z (%z)"))}</p>{source_link}</header><main>'
         f'<p>{_esc(scope)}</p><details><summary>How to read this report</summary>'
         '<p>KEEP: retained records continue. DROP: business rules excluded records. FAIL: observed data differs from the requirement. '
         'BLOCKED: a required input or prerequisite prevents a decision. NOT REACHED: an earlier stage stopped the file, so this stage did not run. '

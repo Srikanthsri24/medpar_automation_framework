@@ -1,0 +1,26 @@
+{
+  "connected_pipeline_enabled": false,
+  "stage_runs": {
+    "final_action": {
+      "enabled": true,
+      "run_date": "2026-03-20",
+      "single_files": [],
+      "folder_paths": [
+        {
+          "name": "Final Action local and S3 inputs",
+          "enabled": true,
+          "mode": "calculate",
+          "source": [
+            "sample_data/input/final_action",
+            "s3://your-medpar-bucket/quarterly-claims/file.json",
+            "s3://your-medpar-bucket/quarterly-claims/folder-one/",
+            "s3://your-medpar-bucket/quarterly-claims/folder-two/"
+          ],
+          "actual": [],
+          "expected": [],
+          "dropped": []
+        }
+      ]
+    }
+  }
+}
