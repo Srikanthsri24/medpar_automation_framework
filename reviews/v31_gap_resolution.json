@@ -350,7 +350,7 @@
         "files_failed": 0,
         "files_blocked": 0,
         "validation_events": {
-          "PASS": 143,
+          "PASS": 144,
           "FAIL": 2
         }
       },
@@ -459,8 +459,9 @@
     },
     "report_checks": [
       "Input files = passed + failed + blocked for all five stages.",
-      "Serial numbers restart at1 in each file table.",
-      "All local links on five transfer proof pages resolve."
+      "Serial numbers restart at 1 in each file table.",
+      "Local links on all five transfer proof pages resolve.",
+      "SP-INDICATOR-BALANCE executed on R65 with a PASS result."
     ]
   }
 }
