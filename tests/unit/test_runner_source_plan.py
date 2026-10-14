@@ -8,7 +8,7 @@ import run_commands as runner
 def plan_for(stage='stay',source_type='local',files=None,folders=None):
     plan=deepcopy(runner.SOURCE_RUN)
     plan.update(start_stage=stage,source_type=source_type)
-    plan['source_paths'][stage]={'files':files or [],'folders':folders or []}
+    plan['source_paths'][source_type][stage]={'files':files or [],'folders':folders or []}
     return plan
 
 
@@ -58,3 +58,16 @@ def test_stage_selection_and_automatic_current_date():
     stage,config,_=runner.source_run_configuration(runner.SOURCE_RUN,start_stage='final_medpar')
     assert config[stage]['single_files'][0]['source']==['data/production/r65/5-intermediate-processing']
     assert config[stage]['run_date']==datetime.now().date().isoformat()
+
+
+def test_switching_backend_selects_saved_paths_without_editing_them():
+    plan=plan_for(folders=['C:/MEDPAR/local'])
+    plan['source_paths']['s3']['stay']={'files':['s3://medpar-demo-bucket/stay.json'],'folders':[]}
+    _,local,_=runner.source_run_configuration(plan)
+    plan['source_type']='s3'
+    _,remote,_=runner.source_run_configuration(plan)
+    plan['source_type']='local'
+    _,local_again,_=runner.source_run_configuration(plan)
+    assert local==local_again
+    assert local['stay']['single_files'][0]['source']==['C:/MEDPAR/local']
+    assert remote['stay']['single_files'][0]['source']==['s3://medpar-demo-bucket/stay.json']

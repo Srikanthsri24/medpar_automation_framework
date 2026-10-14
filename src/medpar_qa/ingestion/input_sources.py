@@ -87,7 +87,8 @@ class InputSources:
     def __init__(self, root: Path, session_root: Path, *, credentials_file=None, client=None):
         self.root = root.resolve()
         self.session_root = session_root
-        self.cache = self.root / 'data' / '.input_cache' / session_root.name
+        cache_session = Path(session_root.parent.parent.name)/session_root.name if session_root.parent.name=='entries' else Path(session_root.name)
+        self.cache = self.root / 'data' / '.input_cache' / cache_session
         self.credentials_file = Path(credentials_file or self.root / 'config/aws_credentials.local.json')
         self.client = client
         self.files = {}

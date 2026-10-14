@@ -38,7 +38,7 @@ STAGE_ORDER = ("final_action", "split", "stay", "intermediate", "final_medpar")
 # ONLY EDIT THIS INPUT CONFIGURATION
 # =============================================================================
 # Choose source_type: local or s3. Each stage accepts files, folders, or both.
-# For s3, replace paths with your s3://bucket/key files and s3://bucket/prefix/ folders.
+# Fill local and s3 sections once; source_type selects the saved section automatically.
 # Use forward slashes for Windows paths, e.g. C:/MEDPAR/input.
 # Start with final_action for raw claims; split for retained Final Action claims;
 # stay for retained Split bills; intermediate for merged Stay records;
@@ -48,11 +48,20 @@ SOURCE_RUN: dict[str, Any] = {
     "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
     "run_date": None,  # Resolve today's local business date once at execution.
     "source_paths": {
-        "final_action": {"files": [], "folders": ["data/production/q61/1-quarterly-claims-parquet"]},
-        "split": {"files": [], "folders": ["data/production/q61/2-final-action-rules-parquet"]},
-        "stay": {"files": [], "folders": ["data/production/q61/3-4yr-window-parquet"]},
-        "intermediate": {"files": [], "folders": ["data/production/q61/4-stay-processing"]},
-        "final_medpar": {"files": [], "folders": ["data/production/r65/5-intermediate-processing"]},
+        "local": {
+            "final_action": {"files": [], "folders": ["data/production/q61/1-quarterly-claims-parquet"]},
+            "split": {"files": [], "folders": ["data/production/q61/2-final-action-rules-parquet"]},
+            "stay": {"files": [], "folders": ["data/production/q61/3-4yr-window-parquet"]},
+            "intermediate": {"files": [], "folders": ["data/production/q61/4-stay-processing"]},
+            "final_medpar": {"files": [], "folders": ["data/production/r65/5-intermediate-processing"]},
+        },
+        "s3": {
+            "final_action": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/1-quarterly-claims-parquet/"]},
+            "split": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/2-final-action-rules-parquet/"]},
+            "stay": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/3-4yr-window-parquet/"]},
+            "intermediate": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/4-stay-processing/"]},
+            "final_medpar": {"files": [], "folders": ["s3://YOUR-BUCKET/r65/5-intermediate-processing/"]},
+        },
     },
     "aws_credentials_file": "config/aws_credentials.local.json",
     "settings": {},  # Optional reference feeds and approved calculation/layout options.
@@ -68,15 +77,16 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
     source_type = plan.get('source_type')
     if source_type not in ('local','s3'):
         raise ValueError('SOURCE_RUN.source_type must be "local" or "s3"')
-    entry = plan.get('source_paths',{}).get(stage) if isinstance(plan.get('source_paths'),dict) else None
+    sources = plan.get('source_paths',{}).get(source_type,{}) if isinstance(plan.get('source_paths'),dict) else {}
+    entry = sources.get(stage) if isinstance(sources,dict) else None
     if not isinstance(entry,dict):
-        raise ValueError(f'SOURCE_RUN.source_paths.{stage} must contain files and folders lists')
+        raise ValueError(f'SOURCE_RUN.source_paths.{source_type}.{stage} must contain files and folders lists')
     from medpar_qa.ingestion.input_sources import s3_location
     paths=[]
     for role in ('files','folders'):
         values=entry.get(role,[])
         if not isinstance(values,list) or any(not isinstance(value,str) or not value.strip() for value in values):
-            raise ValueError(f'SOURCE_RUN.source_paths.{stage}.{role} must be a list of nonempty paths')
+            raise ValueError(f'SOURCE_RUN.source_paths.{source_type}.{stage}.{role} must be a list of nonempty paths')
         for value in values:
             path=value.strip()
             if 'YOUR-BUCKET' in path:
@@ -93,7 +103,7 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
                     raise ValueError(f'{stage}.{role}: existing path is not a {"file" if role=="files" else "folder"}')
             paths.append(path)
     if not paths:
-        raise ValueError(f'SOURCE_RUN.source_paths.{stage} needs one or more files or folders')
+        raise ValueError(f'SOURCE_RUN.source_paths.{source_type}.{stage} needs one or more files or folders')
     paths=list(dict.fromkeys(paths))
     business_date = run_date or plan.get("run_date") or datetime.now().date().isoformat()
     datetime.strptime(str(business_date), "%Y-%m-%d")
@@ -281,7 +291,9 @@ def run_all_source_entries(options):
         if options.aws_config:args.extend(['--aws-config',options.aws_config])
         stream=Tee()
         with redirect_stdout(stream):
-            code=main(args)
+            child_root=session.root/'entries'/stage
+            child_session=ReportSession.create(REPORTS_ROOT,session_path=relative_display(child_root,project_root=PROJECT_ROOT),project_root=PROJECT_ROOT)
+            code=main(args,report_session=child_session)
         matched=re.search(r'Connected pipeline report: (.+)',stream.getvalue())
         row={'entry_stage':stage,'return_code':code,'input_files':0,'steps':[]}
         if matched:
@@ -325,7 +337,7 @@ def write_source_entry_overview(session,report):
     return index
 
 
-def main(argv=None) -> int:
+def main(argv=None, *, report_session=None) -> int:
     """Run this script command-line workflow and return its process exit status. The team entry
     point. SOURCE_RUN selects the source paths, starting stage and business date;
     commands run sequentially and their reports are combined into a session.
@@ -423,7 +435,7 @@ def main(argv=None) -> int:
         parser.error("The explicit --aws-config file does not exist; copy the AWS credentials example or use your AWS profile/environment")
     print(f"Selected dataset: {'CONFIGURED' if options.config else 'SOURCE INPUTS'}", flush=True)
     print("Run mode: connected validation" if connected else "Run mode: independent stage validation", flush=True)
-    session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
+    session = report_session or ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
     from medpar_qa.ingestion.input_sources import InputSources, InputSourceError
     sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path)

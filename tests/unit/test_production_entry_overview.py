@@ -8,13 +8,13 @@ import run_commands as runner
 def test_overview_links_separate_entry_reports_and_records_counts(tmp_path,monkeypatch,capsys):
     monkeypatch.setattr(runner,'PROJECT_ROOT',tmp_path)
     calls=[]
-    def child(args):
+    def child(args, *, report_session=None):
         stage=args[1];calls.append(args)
-        folder=tmp_path/'reports'/stage/'connected';folder.mkdir(parents=True)
+        folder=report_session.root/'connected';folder.mkdir(parents=True)
         (folder/'index.html').write_text('entry evidence')
         journey=folder/'batch';journey.mkdir()
         (journey/'journey.json').write_text(json.dumps(dict(source_file_count=3,conclusion='Validation stopped',steps=[dict(stage=stage,status='FAIL',input_files=['a','b','c'],input_records=7,retained=0,dropped=0)])))
-        print(f'Connected pipeline report: reports/{stage}/connected/index.html')
+        print('Connected pipeline report: '+(folder/'index.html').relative_to(tmp_path).as_posix())
         return 1
     monkeypatch.setattr(runner,'main',child)
     assert runner.run_all_source_entries(SimpleNamespace(run_date=None,aws_config=None))==1
@@ -26,4 +26,7 @@ def test_overview_links_separate_entry_reports_and_records_counts(tmp_path,monke
     page=report.with_name('index.html').read_text()
     assert 'not evidence of a shared transfer' in page
     assert page.count('3 files received, 7 records read, 0 kept, 0 dropped; FAIL')==5
-    for row in data['entries']:assert (report.parent/row['report']).resolve().is_file()
+    assert len(list((tmp_path/'reports').iterdir()))==1
+    for row in data['entries']:
+        target=(report.parent/row['report']).resolve()
+        assert target.is_file() and target.is_relative_to(report.parent.parent)

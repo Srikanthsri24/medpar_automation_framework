@@ -168,7 +168,7 @@ def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,c
     plan['source_type']=remote
     file_paths=[f's3://medpar-demo-bucket/folder{number}/source.json' for number in range(2)] if remote=='s3' else [str(Path(folder)/'source.json') for folder in folders]
     folder_paths=[f's3://medpar-demo-bucket/folder{number}/' for number in range(2)] if remote=='s3' else folders
-    plan['source_paths'][start_stage]={'files':file_paths if input_kind=='files' else [file_paths[1]] if input_kind=='both' else [],'folders':folder_paths if input_kind=='folders' else [folder_paths[0]] if input_kind=='both' else []}
+    plan['source_paths'][remote][start_stage]={'files':file_paths if input_kind=='files' else [file_paths[1]] if input_kind=='both' else [],'folders':folder_paths if input_kind=='folders' else [folder_paths[0]] if input_kind=='both' else []}
     monkeypatch.setattr(runner,'SOURCE_RUN',plan)
     monkeypatch.setattr(sys,'argv',['run_commands.py'])
     assert runner.main()==0
@@ -181,3 +181,41 @@ def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,c
     selected=[step for step in journey['steps'] if step['status']!='BEFORE_START']
     assert selected[0]['input_records']==2
     for current,following in zip(selected,selected[1:]):assert current['output']==following['input']
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize('backend',['local','s3'])
+def test_all_entries_share_one_timestamp_folder_with_live_report_links(tmp_path,monkeypatch,capsys,backend):
+    from copy import deepcopy
+    import run_commands as runner
+    import medpar_qa.ingestion.input_sources as sources
+    plan=deepcopy(runner.SOURCE_RUN);plan.update(source_type=backend,start_stage='all',run_date='2026-04-20')
+    objects={}
+    for stage in runner.STAGE_ORDER:
+        fixture='intermediate_candidate.json' if stage=='final_medpar' else 'stay_candidate.json' if stage=='intermediate' else 'claims.json'
+        content=json.loads((runner.PROJECT_ROOT/'data/demo_connected'/fixture).read_text())
+        if stage=='stay':
+            for row in content:row['split_year_indicator']='Y00109'
+        encoded=json.dumps(content).encode()
+        folder=tmp_path/'sources'/stage;folder.mkdir(parents=True);(folder/'input.json').write_bytes(encoded)
+        objects[f'{stage}/input.json']=encoded
+        plan['source_paths'][backend][stage]={'files':[],'folders':[str(folder) if backend=='local' else f's3://medpar-demo-bucket/{stage}/']}
+    class FakeS3:
+        def get_paginator(self,operation):return self
+        def paginate(self,Bucket,Prefix):yield {'Contents':[{'Key':key,'Size':len(value)} for key,value in objects.items() if key.startswith(Prefix)]}
+        def download_file(self,bucket,key,filename):Path(filename).write_bytes(objects[key])
+    monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
+    monkeypatch.setattr(runner,'SOURCE_RUN',plan)
+    report_root=runner.PROJECT_ROOT/'reports'/f'test_single_root_{tmp_path.name}_{backend}'
+    monkeypatch.setattr(runner,'REPORTS_ROOT',report_root.relative_to(runner.PROJECT_ROOT).as_posix())
+    monkeypatch.setattr(sys,'argv',['run_commands.py'])
+    assert runner.main()==0
+    capsys.readouterr()
+    timestamps=list(report_root.iterdir());assert len(timestamps)==1
+    overview=json.loads((timestamps[0]/'master/entry_reviews.json').read_text())
+    assert len(overview['entries'])==5
+    for entry in overview['entries']:
+        link=(timestamps[0]/'master'/entry['report']).resolve()
+        assert link.is_file() and link.is_relative_to(timestamps[0])
+        assert entry['input_files']==1
+        assert len(list((timestamps[0]/'entries'/entry['entry_stage']/'connected').glob('*/journey.json')))==1
