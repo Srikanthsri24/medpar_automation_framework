@@ -1,5 +1,5 @@
 {
-  "connected_pipeline_enabled": false,
+  "connected_pipeline_enabled": true,
   "stage_runs": {
     "final_action": {
       "enabled": true,
@@ -18,7 +18,18 @@
           ],
           "actual": [],
           "expected": [],
-          "dropped": []
+          "dropped": [],
+          "pipeline_outputs": {
+            "stay": [
+              "s3://your-medpar-bucket/stay-outputs/"
+            ],
+            "intermediate": [
+              "s3://your-medpar-bucket/intermediate-outputs/"
+            ],
+            "final_medpar": [
+              "s3://your-medpar-bucket/final_medpar-outputs/"
+            ]
+          }
         }
       ]
     }

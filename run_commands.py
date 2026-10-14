@@ -412,35 +412,70 @@ def main() -> int:
     parser.add_argument('--stage', choices=tuple(STAGE_RUNS), help="Validate only this configured stage independently")
     parser.add_argument("--dataset", choices=("q61", "r65"), default=DEFAULT_DATASET, help="Dataset profile (default: R65 all-stage review; Q61 explicitly selects connected mode)")
     parser.add_argument("--config", help="Stage-runs JSON configuration; overrides the dataset profile")
-    parser.add_argument("--aws-config", default=AWS_CREDENTIALS_FILE, help="Local AWS credentials/profile settings JSON (not included in reports)")
+    parser.add_argument("--flow", choices=("connected", "independent"), help="Override the configuration: forward retained records or review stages independently")
+    parser.add_argument("--aws-config", default=None, help="Local AWS credentials/profile settings JSON (not included in reports)")
     options = parser.parse_args()
     selected_stage = options.stage
     connected = CONNECTED_PIPELINE_ENABLED and selected_stage is None and options.dataset != "r65"
+    connected_settings = CONNECTED_SETTINGS
     configured_stages = r65_stage_runs() if options.dataset == "r65" else STAGE_RUNS
     if options.config:
         try:
-            configuration = json.loads(Path(options.config).read_text(encoding="utf-8"))
+            configuration = json.loads(Path(options.config).read_text(encoding="utf-8-sig"))
             configured_stages = configuration["stage_runs"]
             if not isinstance(configured_stages, dict) or set(configured_stages) - set(STAGE_RUNS):
                 raise ValueError("stage_runs must map supported stage names to configurations")
             for stage, entry in configured_stages.items():
                 if not isinstance(entry, dict): raise ValueError(f"{stage} configuration must be an object")
                 if entry.get("enabled", True):
-                    datetime.strptime(str(entry["run_date"]), "%Y-%m-%d")
+                    if entry.get("run_date"):
+                        datetime.strptime(str(entry["run_date"]), "%Y-%m-%d")
                     for list_name in ("single_files", "folder_paths"):
                         if not isinstance(entry.get(list_name, []), list) or any(not isinstance(item, dict) for item in entry.get(list_name, [])):
                             raise ValueError(f"{stage}.{list_name} must contain configuration objects")
-            connected = bool(configuration.get("connected_pipeline_enabled", False)) and selected_stage is None
-            if connected and any(stage not in configured_stages for stage in STAGE_RUNS):
-                raise ValueError("Connected configuration requires run_date entries for all five stages")
+            connected = bool(configuration.get("connected_pipeline_enabled", True)) and selected_stage is None
+            connected_settings = configuration.get("connected_settings", {})
+            if not isinstance(connected_settings, dict): raise ValueError("connected_settings must be an object")
+
         except (OSError, ValueError, KeyError, TypeError) as exc:
             parser.error(f"Cannot load stage configuration: {exc}")
+    if options.flow:
+        if options.flow == "connected" and selected_stage:
+            parser.error("--stage selects one independent stage; omit it for --flow connected")
+        connected = options.flow == "connected"
+    if connected:
+        from copy import deepcopy
+        configured_stages = deepcopy(configured_stages)
+        if not options.config and options.dataset == "r65":
+            connected_settings = deepcopy(CONNECTED_SETTINGS)
+            connected_settings.setdefault("split", {}).pop("current_year", None)  # R65 Q1 derives previous-year Y0.
+
+        seed = configured_stages.get("final_action", {})
+        if not seed.get("run_date"):
+            parser.error("Connected flow requires Final Action run_date and source inputs")
+        for stage in STAGE_RUNS:
+            configured_stages.setdefault(stage, {}).setdefault("run_date", seed["run_date"])
+        # A stage's actual outputs can also supply the downstream comparison inputs.
+        for item in [*seed.get("single_files", []), *seed.get("folder_paths", [])]:
+            outputs = item.setdefault("pipeline_outputs", {})
+            for stage in ("stay", "intermediate", "final_medpar"):
+                candidates = [path for entry in [*configured_stages[stage].get("single_files", []), *configured_stages[stage].get("folder_paths", [])]
+                              if entry.get("enabled", True) for path in ([entry["actual"]] if isinstance(entry.get("actual"), str) else entry.get("actual") or [])]
+                if candidates: outputs.setdefault(stage, candidates)
+    if not connected:
+        for stage, entry in configured_stages.items():
+            if entry.get("enabled", True) and (not selected_stage or selected_stage == stage) and not entry.get("run_date"):
+                parser.error(f"Independent {stage} configuration requires run_date")
+    aws_path = Path(options.aws_config or AWS_CREDENTIALS_FILE)
+    if not aws_path.is_absolute(): aws_path = PROJECT_ROOT / aws_path
+    if options.aws_config and not aws_path.is_file():
+        parser.error("The explicit --aws-config file does not exist; copy the AWS credentials example or use your AWS profile/environment")
     print(f"Selected dataset: {'CONFIGURED' if options.config else options.dataset.upper()}", flush=True)
     print("Run mode: connected validation" if connected else "Run mode: independent stage validation", flush=True)
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
     from medpar_qa.ingestion.input_sources import InputSources, InputSourceError
-    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=Path(options.aws_config) if Path(options.aws_config).is_absolute() else PROJECT_ROOT / options.aws_config)
+    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path)
     try:
         configured_stages = sources.prepare(configured_stages, selected_stage=selected_stage, connected=connected)
     except InputSourceError as exc:
@@ -452,7 +487,7 @@ def main() -> int:
         (session.root / "review_scope.json").write_text(json.dumps({"dataset": "R65", "description": "All five supplied stage boundaries reviewed independently. Later supplied outputs are checked even when earlier stages fail. This is not a completed connected journey. Business processing date: 18 March 2025; Split Y0: 2024. No shared snapshot manifest or approved golden physical-byte outputs supplied."}, indent=2), encoding="utf-8")
     if connected:
         from medpar_qa.orchestration.connected import run_configured
-        journeys, index = run_configured(PROJECT_ROOT, session, configured_stages, CONNECTED_SETTINGS)
+        journeys, index = run_configured(PROJECT_ROOT, session, configured_stages, connected_settings)
         print(f"Connected pipeline report: {relative_display(index, project_root=PROJECT_ROOT)}")
         for payload, directory in journeys:
             print(f"{payload['source_file']}: {payload['conclusion']}")

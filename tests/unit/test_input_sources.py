@@ -154,3 +154,47 @@ def test_download_size_mismatch_is_not_used_as_input(tmp_path):
     with pytest.raises(InputSourceError,match='size differs'):
         resolver.resolve('s3://medpar-demo-bucket/a.json')
     assert not resolver.files and not list(resolver.cache.rglob('*.download'))
+
+
+def test_windows_bom_credentials_trim_values_and_ignore_placeholders(tmp_path,monkeypatch):
+    import sys
+    supplied=[]
+    class Session:
+        def __init__(self,**kwargs):supplied.append(kwargs)
+        def client(self,service):return 'mock'
+    monkeypatch.setitem(sys.modules,'boto3',SimpleNamespace(Session=Session))
+    path=tmp_path/'settings.json'
+    path.write_text(json.dumps({'region_name':' ap-south-1 ','aws_access_key_id':' YOUR_AWS_ACCESS_KEY_ID ','aws_secret_access_key':' YOUR_AWS_SECRET_ACCESS_KEY '}),encoding='utf-8-sig')
+    assert aws_client(path)=='mock' and supplied==[{'region_name':'ap-south-1'}]
+
+
+def test_expired_aws_token_has_actionable_redacted_evidence(tmp_path):
+    class Expired(Exception):response={'Error':{'Code':'ExpiredToken','Message':'private-value'}}
+    fake=FakeS3({})
+    def failed(**kwargs):raise Expired('private-value')
+    fake.head_object=failed
+    resolver=InputSources(tmp_path,tmp_path/'reports/run',client=fake)
+    with pytest.raises(InputSourceError,match='refresh access key'):
+        resolver.prepare({'final_action':{'single_files':[{'source':['s3://medpar-demo-bucket/a.json']}]}})
+    text=(tmp_path/'reports/run/input_sources.json').read_text()
+    assert 'ExpiredToken' in text and 'private-value' not in text
+
+
+def test_real_boto3_download_and_pagination_with_stubbed_aws_responses(tmp_path):
+    from botocore.stub import Stubber
+    from botocore.response import StreamingBody
+    from io import BytesIO
+    settings=tmp_path/'aws.json'
+    settings.write_text(json.dumps({'region_name':'us-east-1','aws_access_key_id':'test-key','aws_secret_access_key':'test-secret'}))
+    client=aws_client(settings)
+    content=b'{"demo": true}'
+    with Stubber(client) as stub:
+        stub.add_response('list_objects_v2',{'IsTruncated':True,'NextContinuationToken':'next-page','Contents':[{'Key':'seed/readme.txt','Size':5}]},{'Bucket':'medpar-demo-bucket','Prefix':'seed/'})
+        stub.add_response('list_objects_v2',{'IsTruncated':False,'Contents':[{'Key':'seed/year=2026/claim.json','Size':len(content)}]},{'Bucket':'medpar-demo-bucket','Prefix':'seed/','ContinuationToken':'next-page'})
+        stub.add_response('head_object',{'ContentLength':len(content)})
+        stub.add_response('get_object',{'ContentLength':len(content),'Body':StreamingBody(BytesIO(content),len(content))})
+        resolver=InputSources(tmp_path,tmp_path/'reports/run',client=client)
+        paths=resolver.resolve('s3://medpar-demo-bucket/seed/')
+        assert len(paths)==1 and (tmp_path/paths[0]).read_bytes()==content
+        assert resolver.files[paths[0]]['origin']=='s3://medpar-demo-bucket/seed/year=2026/claim.json'
+        stub.assert_no_pending_responses()

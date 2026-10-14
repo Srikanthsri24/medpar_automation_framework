@@ -83,7 +83,7 @@ def test_plain_runner_command_selects_r65_profile(tmp_path, monkeypatch, capsys)
     import sys
     import run_commands as runner
     captured = []
-    profile = {'final_action': {'enabled': True}}
+    profile = {'final_action': {'enabled': True, 'run_date': '2026-03-20'}}
     monkeypatch.setattr(runner, 'PROJECT_ROOT', tmp_path)
     monkeypatch.setattr(runner, 'REPORTS_ROOT', 'reports')
     monkeypatch.setattr(runner, 'r65_stage_runs', lambda: profile)
@@ -92,3 +92,24 @@ def test_plain_runner_command_selects_r65_profile(tmp_path, monkeypatch, capsys)
     assert runner.main() == 0
     assert captured == [profile]
     assert 'Selected dataset: R65' in capsys.readouterr().out
+
+
+def test_connected_configuration_inherits_dates_and_actual_paths(tmp_path,monkeypatch):
+    import json,sys
+    import run_commands as runner
+    import medpar_qa.ingestion.input_sources as sources
+    import medpar_qa.orchestration.connected as connected
+    captured=[]
+    class Resolver:
+        files={}
+        def __init__(self,*args,**kwargs):pass
+        def prepare(self,config,**kwargs):captured.append(config);return config
+    monkeypatch.setattr(sources,'InputSources',Resolver)
+    monkeypatch.setattr(connected,'run_configured',lambda root,session,config,settings:([],session.root/'connected/index.html'))
+    configuration={'stage_runs':{'final_action':{'run_date':'2026-04-20','single_files':[{'source':['source.json']}]},'stay':{'folder_paths':[{'actual':'s3://medpar-demo-bucket/stay/'}]}}}
+    path=tmp_path/'config.json';path.write_text(json.dumps(configuration))
+    monkeypatch.setattr(sys,'argv',['run_commands.py','--config',str(path)])
+    assert runner.main()==0
+    result=captured[0]
+    assert all(entry['run_date']=='2026-04-20' for entry in result.values())
+    assert result['final_action']['single_files'][0]['pipeline_outputs']['stay']==['s3://medpar-demo-bucket/stay/']

@@ -61,11 +61,13 @@ def s3_location(value: str) -> tuple[str, str] | None:
 
 def aws_client(config_path: Path):
     """Use filled local settings or the standard boto3 environment/profile/role chain."""
-    settings = json.loads(config_path.read_text()) if config_path.exists() else {}
+    settings = json.loads(config_path.read_text(encoding="utf-8-sig")) if config_path.exists() else {}
     allowed = {'region_name', 'profile_name', 'aws_access_key_id', 'aws_secret_access_key', 'aws_session_token'}
     if not isinstance(settings, dict) or set(settings) - allowed:
         raise InputSourceError('AWS settings contain unsupported fields; use the credentials example')
-    settings = {key: value for key, value in settings.items() if value and value not in PLACEHOLDERS}
+    if any(not isinstance(value, str) for value in settings.values()):
+        raise InputSourceError('AWS settings must contain string values')
+    settings = {key: value.strip() for key, value in settings.items() if value.strip() and value.strip() not in PLACEHOLDERS}
     if bool(settings.get('aws_access_key_id')) != bool(settings.get('aws_secret_access_key')):
         raise InputSourceError('Fill both AWS access key and secret key, or leave both empty to use an AWS profile/environment/role')
     if settings.get('aws_session_token') and not settings.get('aws_access_key_id'):
@@ -153,7 +155,7 @@ class InputSources:
         if self.client is None:
             try: self.client = aws_client(self.credentials_file)
             except InputSourceError: raise
-            except Exception as exc: raise InputSourceError('Cannot initialize AWS credentials; check the local AWS settings or profile') from exc
+            except Exception as exc: raise InputSourceError(f'Cannot initialize AWS credentials ({type(exc).__name__}); check JSON format, AWS profile and temporary session token') from exc
         uri = f's3://{bucket}/{key}'
         wildcard = next((i for i,c in enumerate(key) if c in '*?['), None)
         exact = not key.endswith('/') and wildcard is None and PurePosixPath(key).suffix.lower() in SUPPORTED
@@ -188,8 +190,20 @@ class InputSources:
         except InputSourceError: raise
         except Exception as exc:
             code = getattr(exc, 'response', {}).get('Error', {}).get('Code', type(exc).__name__)
+            advice = {
+                'NoCredentialsError': 'No usable credentials found: fill the local AWS settings, configure an AWS profile, or set AWS credential environment variables',
+                'ExpiredToken': 'Temporary AWS credentials expired: refresh access key, secret key and session token together',
+                'ExpiredTokenException': 'Temporary AWS credentials expired: refresh all three credential fields together',
+                'InvalidAccessKeyId': 'AWS rejected the access key: check the configured account credentials',
+                'SignatureDoesNotMatch': 'AWS signature mismatch: check secret key, session token, region and machine clock',
+                'AccessDenied': 'AWS denied access: the role/user needs GetObject for files and ListBucket for folder discovery; encrypted objects may require KMS decrypt permission',
+                '403': 'AWS denied access: verify the bucket policy, IAM read/list permissions and account credentials',
+                '404': 'S3 object not found: verify the bucket and exact case-sensitive object key',
+                'NoSuchBucket': 'S3 bucket not found: verify bucket name and region',
+                'NoSuchKey': 'S3 object not found: verify the exact case-sensitive object key',
+            }.get(str(code), 'Check credentials, read/list permissions, bucket, key and region')
             # No exception payloads or URL query credentials in terminal/report evidence.
-            raise InputSourceError(f'S3 input could not be read ({code}); check credentials, read/list permissions, bucket, key and region') from exc
+            raise InputSourceError(f'S3 input could not be read ({code}): {advice}') from exc
 
     def prepare(self, stage_runs, *, selected_stage=None, connected=False):
         """Resolve enabled entries including role-specific and downstream candidate paths."""

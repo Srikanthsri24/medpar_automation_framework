@@ -71,7 +71,19 @@ S3 access requires read permission for selected objects and list permission for 
 
 Open **Local/S3 input sources** from the generated report for a collapsed list of original paths, files used, byte sizes and SHA-256 fingerprints. An unreadable S3 object or empty S3 folder stops input preparation with exit code 2 and records the reason in `input_sources.html`; the runner does not silently validate a partial folder. Missing repository-local paths continue into the existing ingestion failure report.
 
-Set `connected_pipeline_enabled` to `false` for independent configured stages. For connected mode, set it to `true`, supply all five stage dates, and configure Final Action seed inputs plus `pipeline_outputs` for Stay, Intermediate and Final MEDPAR. Local/S3 paths work in those candidate lists too. Resolving sources does not change stage rules or create missing production outputs.
+Custom configurations now default to connected flow. The updated example enables it explicitly. For an older configuration with `connected_pipeline_enabled: false`, override it with:
+
+```sh
+python run_commands.py --config config/stage_runs.local.json --flow connected
+```
+
+Final Action retained records become Split input; each subsequent KEEP forwards its retained output to the next stage. FAIL/BLOCKED stops that journey; DROP stops when no records remain. Local and S3 seeds use this same path. Missing stage dates inherit the Final Action date; explicit dates override it. `connected_settings` may override stage settings; custom configurations derive Split's year from the processing date unless you supply a year override.
+
+Configure `pipeline_outputs` on the Final Action entry for Stay, Intermediate and Final MEDPAR. Those paths can be local folders or S3 prefixes. Alternatively, the runner uses configured `actual` paths from those stage entries. These are comparison outputs: the framework computes Final Action/Split decisions but requires existing pipeline outputs to validate later stages. With only starting claims, it advances through Final Action/Split and records the missing-output stop at Stay; it cannot certify absent outputs. The synthetic demo provides all three comparison outputs for a complete five-stage example.
+
+Use `--flow independent` for separate stage reviews, or `--stage final_action` for one stage. The default R65 archive review remains independent. `--flow connected` cannot be combined with `--stage`.
+
+If AWS setup fails, open the input-source evidence report. Credential JSON accepts a Windows UTF-8 BOM and trims surrounding spaces. Errors now distinguish missing credentials, expired temporary tokens, incorrect keys/signatures, access denied and missing objects. An explicitly supplied missing `--aws-config` file is rejected before running. Never share secret keys or session tokens when collecting error evidence.
 
 [Boto3 credentials reference](https://docs.aws.amazon.com/boto3/latest/guide/credentials.html) · [S3 pagination reference](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/paginator/ListObjectsV2.html)
 
