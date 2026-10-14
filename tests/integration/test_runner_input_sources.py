@@ -137,3 +137,42 @@ def test_cross_file_rule6_cancellation_is_grouped_before_forwarding(tmp_path,mon
     report=json.loads((path.parent/'final_action/report.json').read_text())
     rule=next(c for stage in report['stages'] for c in stage['rule_results'] if c['rule_id']=='FA-RULE-06')
     assert rule['status']=='PASS' and len(rule['source_files'])==2
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize('remote',[False,True],ids=['local-plan','s3-plan'])
+@pytest.mark.parametrize('start_stage',['final_action','intermediate'])
+def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,capsys,remote,start_stage):
+    from copy import deepcopy
+    import run_commands as runner
+    import medpar_qa.ingestion.input_sources as sources
+    fixture='claims.json' if start_stage=='final_action' else 'stay_candidate.json'
+    content=json.loads((runner.PROJECT_ROOT/'data/demo_connected'/fixture).read_text())
+    objects={}
+    folders=[]
+    for number in range(2):
+        row={**content[0],'hicn':f'PLAN{number}'}
+        encoded=json.dumps([row]).encode()
+        folder=tmp_path/f'folder{number}';folder.mkdir();(folder/'source.json').write_bytes(encoded)
+        folders.append(str(folder))
+        objects[f'folder{number}/source.json']=encoded
+    class FakeS3:
+        def get_paginator(self,operation):return self
+        def paginate(self,Bucket,Prefix):
+            yield {'Contents':[{'Key':key,'Size':len(value)} for key,value in objects.items() if key.startswith(Prefix)]}
+        def download_file(self,bucket,key,filename):Path(filename).write_bytes(objects[key])
+    monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
+    plan=deepcopy(runner.SOURCE_RUN);plan.update(start_stage=start_stage,source_type='s3' if remote else 'local')
+    plan['paths'][start_stage][plan['source_type']]=[f's3://medpar-demo-bucket/folder{number}/' for number in range(2)] if remote else folders
+    monkeypatch.setattr(runner,'SOURCE_RUN',plan)
+    monkeypatch.setattr(sys,'argv',['run_commands.py'])
+    assert runner.main()==0
+    output=capsys.readouterr().out
+    assert f'Automatic route: {start_stage}' in output
+    index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',output).group(1)
+    journey=json.loads(next(index.parent.glob('*/journey.json')).read_text())
+    assert journey['source_file_count']==2 and journey['start_stage']==start_stage
+    assert journey['completed']
+    selected=[step for step in journey['steps'] if step['status']!='BEFORE_START']
+    assert selected[0]['input_records']==2
+    for current,following in zip(selected,selected[1:]):assert current['output']==following['input']

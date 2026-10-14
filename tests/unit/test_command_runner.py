@@ -79,7 +79,7 @@ def test_r65_profile_uses_own_stage_boundaries_and_business_year():
     assert all(not item['require_matching_snapshot'] for config in profile.values() for item in config['folder_paths'] if item['mode'] == 'reconcile')
 
 
-def test_plain_runner_command_selects_r65_profile(tmp_path, monkeypatch, capsys):
+def test_explicit_dataset_selects_r65_profile(tmp_path, monkeypatch, capsys):
     import sys
     import run_commands as runner
     captured = []
@@ -88,7 +88,7 @@ def test_plain_runner_command_selects_r65_profile(tmp_path, monkeypatch, capsys)
     monkeypatch.setattr(runner, 'REPORTS_ROOT', 'reports')
     monkeypatch.setattr(runner, 'r65_stage_runs', lambda: profile)
     monkeypatch.setattr(runner, 'build_commands', lambda session, stages: captured.append(stages) or [])
-    monkeypatch.setattr(sys, 'argv', ['run_commands.py'])
+    monkeypatch.setattr(sys, 'argv', ['run_commands.py', '--dataset', 'r65'])
     assert runner.main() == 0
     assert captured == [profile]
     assert 'Selected dataset: R65' in capsys.readouterr().out

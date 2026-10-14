@@ -1,6 +1,6 @@
 """MEDPAR QA stage-wise command runner.
 
-Edit STAGE_RUNS below or pass --config with a stage-runs JSON file. Inputs may be
+Edit SOURCE_RUN below for automatic source-only processing, or pass --config with a stage-runs JSON file. Inputs may be
 local files/folders, wildcards, or S3 URIs/standard AWS HTTPS links. Each execution creates one timestamped folder under ``reports/``:
 
 reports/<timestamp>/
@@ -14,7 +14,8 @@ reports/<timestamp>/
 
 Within every stage you can enable individual-file runs, folder/wildcard runs, and
 pytest marker runs independently. Set ``enabled`` to False or comment out an item.
-Run everything enabled with:  python run_commands.py
+Run SOURCE_RUN automatically with: python run_commands.py
+Use --dataset r65 or --dataset q61 for legacy STAGE_RUNS archive reviews.
 """
 
 from __future__ import annotations
@@ -53,6 +54,79 @@ CONNECTED_SETTINGS: dict[str, Any] = {
 STOP_ON_FAILURE = False
 REPORTS_ROOT = "reports"  # Relative path only.
 AWS_CREDENTIALS_FILE = "config/aws_credentials.local.json"  # Copy the example; never commit real credentials.
+
+
+# =============================================================================
+# EDIT ONLY THIS SECTION FOR AUTOMATIC SOURCE-ONLY RUNS
+# =============================================================================
+# Run: python run_commands.py
+# Select ONE entry stage. Only its paths are read; generated kept outputs feed
+# every later stage. Later-stage paths below are alternatives, not comparisons.
+# Each list accepts multiple folders, files or wildcards. Local absolute paths
+# (including Windows paths) are supported. Replace S3 examples with your bucket.
+# Multiple local inputs: ["C:/MEDPAR/folder1", "C:/MEDPAR/folder2", "C:/MEDPAR/file.parquet"]
+# Multiple S3 inputs: ["s3://your-bucket/folder1/", "s3://your-bucket/folder2/", "s3://your-bucket/file.parquet"]
+# Real R65 Final Action source: ["data/production/r65/1-quarterly-claims"]
+SOURCE_RUN: dict[str, Any] = {
+    "enabled": True,
+    "source_type": "local",             # "local" or "s3"
+    "start_stage": "final_action",      # final_action / split / stay / intermediate / final_medpar
+    "run_date": "2026-04-20",            # YYYY-MM-DD; None uses today's date
+    "aws_credentials_file": "config/aws_credentials.local.json",
+    "settings": {},                     # Optional stage options / reference_feeds / approved layout
+    "paths": {
+        "final_action": {
+            "local": ["data/demo_source_only"],  # Fictitious working example; replace with claim folders/files
+            "s3": ["s3://YOUR-BUCKET/1-quarterly-claims/"],
+        },
+        "split": {
+            "local": ["data/production/r65/2-final-action-rules"],
+            "s3": ["s3://YOUR-BUCKET/2-final-action-rules/"],
+        },
+        "stay": {
+            "local": ["data/production/r65/3-4yr-window"],
+            "s3": ["s3://YOUR-BUCKET/3-4yr-window/"],
+        },
+        "intermediate": {
+            "local": ["data/production/r65/4-stay-processing"],
+            "s3": ["s3://YOUR-BUCKET/4-stay-processing/"],
+        },
+        "final_medpar": {
+            "local": ["data/production/r65/5-intermediate-processing"],
+            "s3": ["s3://YOUR-BUCKET/5-intermediate-processing/"],
+        },
+    },
+}
+
+
+def source_run_configuration(plan, *, start_stage=None, run_date=None):
+    """Select one entry-stage source list; generated downstream outputs need no paths."""
+    stage = start_stage or plan.get("start_stage")
+    stages = ("final_action", "split", "stay", "intermediate", "final_medpar")
+    if stage not in stages:
+        raise ValueError("SOURCE_RUN.start_stage must be a supported stage")
+    kind = plan.get("source_type")
+    if kind not in ("local", "s3"):
+        raise ValueError('SOURCE_RUN.source_type must be "local" or "s3"')
+    paths = plan.get("paths", {}).get(stage, {}).get(kind)
+    if not isinstance(paths, list) or not paths or any(not isinstance(path,str) or not path.strip() for path in paths):
+        raise ValueError(f"SOURCE_RUN.paths.{stage}.{kind} needs one or more file/folder paths")
+    paths = [path.strip() for path in paths]
+    from medpar_qa.ingestion.input_sources import s3_location
+    for path in paths:
+        if kind == "s3" and "YOUR-BUCKET" in path:
+            raise ValueError("Replace YOUR-BUCKET in SOURCE_RUN with your actual bucket")
+        remote = s3_location(path)
+        if (kind == "s3") != (remote is not None):
+            raise ValueError(f"{kind} source list contains a path of the wrong type")
+    business_date = run_date or plan.get("run_date") or datetime.now().date().isoformat()
+    datetime.strptime(str(business_date), "%Y-%m-%d")
+    settings = plan.get("settings", {})
+    if not isinstance(settings,dict):
+        raise ValueError("SOURCE_RUN.settings must be an object")
+    configured = {stage:{"enabled":True,"run_date":str(business_date),"single_files":[
+        {"name":f"Source processing from {stage}","source":paths}]}}
+    return stage, configured, settings
 
 
 # =============================================================================
@@ -410,7 +484,7 @@ def main() -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Run connected MEDPAR validation or one configured stage")
     parser.add_argument('--stage', choices=tuple(STAGE_RUNS), help="Validate only this configured stage independently")
-    parser.add_argument("--dataset", choices=("q61", "r65"), default=DEFAULT_DATASET, help="Dataset profile (default: R65 all-stage review; Q61 explicitly selects connected mode)")
+    parser.add_argument("--dataset", choices=("q61", "r65"), default=None, help="Explicit legacy dataset review: r65 or q61. Without this flag, use SOURCE_RUN.")
     parser.add_argument("--config", help="Stage-runs JSON configuration; overrides the dataset profile")
     parser.add_argument("--source", action="append", help="Source file/folder or S3 prefix; repeat for multiple inputs")
     parser.add_argument("--run-date", help="Business processing date YYYY-MM-DD for direct --source runs")
@@ -418,6 +492,8 @@ def main() -> int:
     parser.add_argument("--flow", choices=("connected", "independent"), help="Override the configuration: forward retained records or review stages independently")
     parser.add_argument("--aws-config", default=None, help="Local AWS credentials/profile settings JSON (not included in reports)")
     options = parser.parse_args()
+    use_source_plan = bool(SOURCE_RUN.get("enabled")) and not (options.config or options.source or options.stage or options.dataset)
+    options.dataset = options.dataset or DEFAULT_DATASET
     selected_stage = options.stage
     connected = CONNECTED_PIPELINE_ENABLED and selected_stage is None and options.dataset != "r65"
     start_stage = options.start_stage or "final_action"
@@ -447,7 +523,18 @@ def main() -> int:
 
         except (OSError, ValueError, KeyError, TypeError) as exc:
             parser.error(f"Cannot load stage configuration: {exc}")
-    if options.source:
+    if use_source_plan:
+        if options.flow == "independent": parser.error("SOURCE_RUN forwards kept outputs automatically; use --dataset for independent archive review")
+        try:
+            start_stage, configured_stages, connected_settings = source_run_configuration(SOURCE_RUN,start_stage=options.start_stage,run_date=options.run_date)
+        except (ValueError,TypeError,AttributeError) as exc:
+            parser.error(f"Cannot use SOURCE_RUN: {exc}")
+        connected=True; generate_outputs=True
+        print(f"SOURCE_RUN: {SOURCE_RUN['source_type']} inputs, starting at {start_stage}",flush=True)
+        for number,path in enumerate(configured_stages[start_stage]['single_files'][0]['source'],1):
+            print(f"  {number}. {path}",flush=True)
+        print("Automatic route: "+" -> ".join(list(STAGE_RUNS)[list(STAGE_RUNS).index(start_stage):]),flush=True)
+    elif options.source:
         if options.config or selected_stage: parser.error("Use --source with --start-stage, without --config or --stage")
         business_date = options.run_date or datetime.now().date().isoformat()
         try: datetime.strptime(business_date,"%Y-%m-%d")
@@ -466,7 +553,7 @@ def main() -> int:
     if connected:
         from copy import deepcopy
         configured_stages = deepcopy(configured_stages)
-        if not options.config and not options.source and options.dataset == "r65":
+        if not options.config and not options.source and not use_source_plan and options.dataset == "r65":
             connected_settings = deepcopy(CONNECTED_SETTINGS)
             connected_settings.setdefault("split", {}).pop("current_year", None)  # R65 Q1 derives previous-year Y0.
 
@@ -486,11 +573,11 @@ def main() -> int:
         for stage, entry in configured_stages.items():
             if entry.get("enabled", True) and (not selected_stage or selected_stage == stage) and not entry.get("run_date"):
                 parser.error(f"Independent {stage} configuration requires run_date")
-    aws_path = Path(options.aws_config or AWS_CREDENTIALS_FILE)
+    aws_path = Path(options.aws_config or (SOURCE_RUN.get("aws_credentials_file") if use_source_plan else None) or AWS_CREDENTIALS_FILE)
     if not aws_path.is_absolute(): aws_path = PROJECT_ROOT / aws_path
     if options.aws_config and not aws_path.is_file():
         parser.error("The explicit --aws-config file does not exist; copy the AWS credentials example or use your AWS profile/environment")
-    print(f"Selected dataset: {'SOURCE INPUTS' if options.source else 'CONFIGURED' if options.config else options.dataset.upper()}", flush=True)
+    print(f"Selected dataset: {'SOURCE INPUTS' if options.source or use_source_plan else 'CONFIGURED' if options.config else options.dataset.upper()}", flush=True)
     print("Run mode: connected validation" if connected else "Run mode: independent stage validation", flush=True)
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
@@ -503,7 +590,7 @@ def main() -> int:
         print(f"Input evidence: {relative_display(session.root / 'input_sources.html', project_root=PROJECT_ROOT)}", flush=True)
         return 2
     print(f"Unique resolved local/S3 files: {len(sources.files)}", flush=True)
-    if options.dataset == "r65" and not options.config and not options.source:
+    if options.dataset == "r65" and not options.config and not options.source and not use_source_plan:
         (session.root / "review_scope.json").write_text(json.dumps({"dataset": "R65", "description": "All five supplied stage boundaries reviewed independently. Later supplied outputs are checked even when earlier stages fail. This is not a completed connected journey. Business processing date: 18 March 2025; Split Y0: 2024. No shared snapshot manifest or approved golden physical-byte outputs supplied."}, indent=2), encoding="utf-8")
     if connected:
         from medpar_qa.orchestration.connected import run_configured

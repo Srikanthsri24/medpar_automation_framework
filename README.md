@@ -36,17 +36,17 @@ Run the complete synthetic five-stage example:
 python -m medpar_qa.cli --manifest config/run_manifest.all_stages.example.yaml
 ```
 
-Run the configured production stages:
+Run automatic source-only processing (the shipped default is fictitious demo input):
 
 ```sh
 python run_commands.py
 ```
 
-Edit `STAGE_RUNS` in `run_commands.py` or use `--config` to select stages, dates and inputs. The default command uses the R65 profile; `--dataset q61` selects the Q61 configuration. A `--config` file overrides either profile. Missing files, mismatched snapshots and business failures remain visible in reports.
+Edit `SOURCE_RUN` in `run_commands.py` to select the source type, starting stage, date and input paths. The default command uses the single `SOURCE_RUN` configuration. `--dataset r65` or `--dataset q61` explicitly selects a legacy archive review. A `--config` file overrides either profile. Missing files, mismatched snapshots and business failures remain visible in reports.
 
-### Local folders and AWS S3 inputs
+### Advanced configuration file (optional)
 
-Copy `config/stage_runs.example.json` to your own configuration, remove the example paths, and fill `source`, `actual`, `expected` and `dropped` with strings or lists of paths. Each list supports mixed inputs:
+For configuration-file or comparison runs, copy `config/stage_runs.example.json` to your own configuration, remove the example paths, and fill `source`, `actual`, `expected` and `dropped` with strings or lists of paths. Each list supports mixed inputs:
 
 - A local file: `data/production/claims.json` or an absolute path on your laptop.
 - One or multiple local folders: recursively discovers JSON and Parquet files.
@@ -70,6 +70,30 @@ python run_commands.py --config config/stage_runs.local.json --aws-config config
 S3 access requires read permission for selected objects and list permission for selected prefixes. The runner uses paginated discovery, excludes non-JSON/Parquet folder objects, deduplicates overlapping paths, and downloads into `data/.input_cache/<report-session>/`. External local files are copied there; repository-local files remain in place. Original directory/hive partition labels are preserved. The cache and local credentials file are excluded from Git. The runner reads S3; it does not upload reports or modify bucket objects.
 
 Open **Local/S3 input sources** from the generated report for a collapsed list of original paths, files used, byte sizes and SHA-256 fingerprints. An unreadable S3 object or empty S3 folder stops input preparation with exit code 2 and records the reason in `input_sources.html`; the runner does not silently validate a partial folder. Missing repository-local paths continue into the existing ingestion failure report.
+
+### Edit inputs in one place
+
+Edit **`SOURCE_RUN` near the top of `run_commands.py`**, then run:
+
+```sh
+python run_commands.py
+```
+
+Set `source_type` to `local` or `s3`, `start_stage` to the entry stage, and `run_date` to the business date (`None` uses today). Put all folders and individual files in `paths[start_stage][source_type]`. Multiple entries are combined before processing so related claims in separate files are evaluated together. Paths for other stages are ignored on this run; they are alternative starting inputs for a future run. Do not give downstream comparison files.
+
+| Starting stage | Input you supply | Automatic route |
+| --- | --- | --- |
+| `final_action` | Quarterly claim files | Final Action → Split → Stay → Intermediate → Final MEDPAR |
+| `split` | Retained Final Action files | Split → Stay → Intermediate → Final MEDPAR |
+| `stay` | Retained Split files | Stay → Intermediate → Final MEDPAR |
+| `intermediate` | Merged Stay files | Intermediate → Final MEDPAR |
+| `final_medpar` | Intermediate extract files | Final MEDPAR |
+
+For example, select `start_stage: "stay"`, then change that stage's `local` list to `["C:/MEDPAR/split/folder1", "C:/MEDPAR/split/folder2", "C:/MEDPAR/split/extra.parquet"]`. Use forward slashes or Python raw strings for Windows paths. To use AWS, change `source_type` to `s3` and its `s3` list to `["s3://your-bucket/split/folder1/", "s3://your-bucket/split/folder2/", "s3://your-bucket/split/extra.parquet"]`. The shipped S3 entries are examples; replace `YOUR-BUCKET` before running. These folders must contain the input for the selected stage, regardless of the bucket's naming convention.
+
+The default local Final Action entry is the fictitious `data/demo_source_only` folder. Replace it with your real claim folders/files. Other local entries point to the supplied R65 stage directories. Keep real AWS credentials in the configured local credentials file or your AWS profile/environment. Set reference feeds and approved byte-layout options in `SOURCE_RUN.settings` if available.
+
+The console prints the selected source paths and automatic stage route. Reports record file discovery and handoff evidence. Failed/blocked inputs stop; successful business drops do not move forward. Earlier stages show BEFORE_START. Final export readiness remains explicit. CLI `--source`, `--config` or `--dataset` overrides `SOURCE_RUN`; setting `SOURCE_RUN.enabled` to `False` restores the legacy default.
 
 ### Source-only processing and starting stage
 
@@ -121,7 +145,7 @@ SSI 0251 counts positive monthly overlap from admission inclusive to discharge e
 
 **Export boundary:** these writers generate supported JSON records. A complete physical MEDPAR export requires the approved copybook/field layout, and some clinical/revenue/SSI mappings and vendor DRG calculations remain unavailable. These are disclosed in generation coverage. Missing required operands stop processing; unavailable optional/reference calculations are unassessed, not fabricated as zero or marked PASS. Set Final `require_fixed_width: true` in `connected_settings` when physical output is mandatory; absence then blocks Final validation. Source-only processing does not require comparison files, but cannot replace missing external calculation definitions or reference data.
 
-Comparison mode remains available with `generate_outputs: false` plus `pipeline_outputs`. Without an explicit generation flag, configured comparison paths select comparison mode; otherwise outputs are generated from source. The updated example selects generation explicitly. Use `--flow independent` for separate stage reviews. The default R65 archive review remains independent.
+Comparison mode remains available with `generate_outputs: false` plus `pipeline_outputs`. Without an explicit generation flag, configured comparison paths select comparison mode; otherwise outputs are generated from source. The updated example selects generation explicitly. Use `--flow independent` for separate stage reviews. The explicit `--dataset r65` archive review remains independent.
 
 AWS setup errors identify missing credentials, expired tokens, access denied and missing objects. Credential JSON supports a Windows UTF-8 BOM and trims whitespace. An explicitly supplied missing `--aws-config` file is rejected before running. Share error codes, not keys or session tokens.
 
