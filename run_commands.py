@@ -313,6 +313,11 @@ def run_all_source_entries(options):
             'scope':'Separate source-only entry runs; only generated outputs within one journey establish transfers',
             'entries':entries}
     write_source_entry_overview(session,report)
+    from medpar_qa.reporting.compact import compact_reports
+    compact_reports(session.root)
+    print('Source file counts by starting stage:', flush=True)
+    for row in entries:print(f"  {row['entry_stage']}: {row['input_files']} resolved input files",flush=True)
+    print('Report HTML: one master page and one page per stage',flush=True)
     return int(any(row['return_code'] for row in entries))
 
 
@@ -450,9 +455,24 @@ def main(argv=None, *, report_session=None) -> int:
         print(f"Input evidence: {relative_display(session.root / 'input_sources.html', project_root=PROJECT_ROOT)}", flush=True)
         return 2
     print(f"Unique resolved local/S3 files: {len(sources.files)}", flush=True)
+    backends={"s3" if item["origin"].startswith("s3://") else "local" for item in sources.files.values()}
+    print("Source: "+(" / ".join(sorted(backends)) or SOURCE_RUN.get("source_type","local")),flush=True)
+    source_stages=[start_stage] if connected else [selected_stage] if selected_stage else list(configured_stages)
+    for source_stage in source_stages:
+        configured_entry=configured_stages.get(source_stage,{})
+        given=set()
+        for item in [*configured_entry.get('single_files',[]),*configured_entry.get('folder_paths',[])]:
+            if not item.get('enabled',True):continue
+            paths=item.get('source',[])
+            given.update([paths] if isinstance(paths,str) else paths or [])
+        print(f"Source input count — {source_stage}: {len(given)} resolved files",flush=True)
     if connected:
         from medpar_qa.orchestration.connected import run_configured
         journeys, index = run_configured(PROJECT_ROOT, session, configured_stages, connected_settings, **({"start_stage":start_stage} if start_stage != "final_action" else {}), **({"generate_outputs":generate_outputs} if generate_outputs is not None else {}))
+        if report_session is None:
+            from medpar_qa.reporting.compact import compact_reports
+            refresh_session_indexes(session.root)
+            index=compact_reports(session.root)
         print(f"Connected pipeline report: {relative_display(index, project_root=PROJECT_ROOT)}")
         for payload, directory in journeys:
             print(f"{payload['source_file']}: {payload['conclusion']}")
@@ -546,11 +566,13 @@ def main(argv=None, *, report_session=None) -> int:
 
     master = refresh_session_indexes(session.root, executions=executions)
     write_quality_summary(session.root, executions)
+    from medpar_qa.reporting.compact import compact_reports
+    master=compact_reports(session.root)
     print("\n" + "=" * 118)
     print(f"FINISHED. Unexpected command results: {unexpected_failures}")
     print(f"Timestamped report folder: {session_relative}")
     print(f"Master HTML report: {relative_display(master, project_root=PROJECT_ROOT)}")
-    print("Open quality_summary.html for execution overview, then master/index.html for stage details.")
+    print("Open master/index.html for the overview, stage details and evidence screens.")
     print("=" * 118)
     return 1 if unexpected_failures else 0
 

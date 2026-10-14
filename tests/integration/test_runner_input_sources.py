@@ -4,6 +4,14 @@ from pathlib import Path
 import re
 import sys
 import pytest
+import base64,gzip
+
+
+def screens(path):
+    content=path.read_text()
+    result={}
+    for encoded in re.findall(r'id="block-\d+" type="application/octet-stream">([^<]+)</script>',content):result.update(json.loads(gzip.decompress(base64.b64decode(encoded))))
+    return result
 
 
 @pytest.mark.integration
@@ -23,8 +31,9 @@ def test_s3_input_reaches_real_final_action_report(tmp_path,monkeypatch,capsys):
     assert runner.main()==0
     output=capsys.readouterr().out
     assert downloads==[('medpar-demo-bucket','claims.json')]
+    assert 'Source: s3' in output and 'Source input count — final_action: 1 resolved files' in output
     master=runner.PROJECT_ROOT/re.search(r'Master HTML report: (.+)',output).group(1)
-    assert '../input_sources.html' in master.read_text()
+    assert '../input_sources.html' in screens(master)['master/index.html']
     inventory=json.loads((master.parent.parent/'input_sources.json').read_text())
     assert inventory['resolved_files']==1
     assert inventory['files'][0]['origin']=='s3://medpar-demo-bucket/claims.json'
@@ -57,14 +66,16 @@ def test_connected_runner_forwards_same_outputs_through_all_stages(tmp_path,monk
     monkeypatch.setattr(sys,'argv',['run_commands.py','--config',str(path),'--flow','connected'])
     assert runner.main()==0
     output=capsys.readouterr().out
+    assert ('Source: s3' if remote else 'Source: local') in output
+    assert 'Source input count — final_action: 1 resolved files' in output
     index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',output).group(1)
-    journey=json.loads(next(index.parent.glob('*/journey.json')).read_text())
+    journey=json.loads(next((index.parent.parent/'connected').glob('*/journey.json')).read_text())
     assert journey['completed']
     assert [step['status'] for step in journey['steps']]==['KEEP']*5
     for current,following in zip(journey['steps'],journey['steps'][1:]):
         assert current['output']==following['input']
         assert (runner.PROJECT_ROOT/current['output']).exists()
-    assert '../input_sources.html' in index.read_text()
+    assert any('../input_sources.html' in page for page in screens(index).values())
 
 
 @pytest.mark.integration
@@ -75,7 +86,7 @@ def test_source_only_connected_flow_generates_without_comparison_files(tmp_path,
     monkeypatch.setattr(sys,'argv',['run_commands.py','--config',str(path)])
     assert runner.main()==0
     index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',capsys.readouterr().out).group(1)
-    journey=json.loads(next(index.parent.glob('*/journey.json')).read_text())
+    journey=json.loads(next((index.parent.parent/'connected').glob('*/journey.json')).read_text())
     assert [step['status'] for step in journey['steps']]==['KEEP']*5
     assert journey['steps'][0]['output']==journey['steps'][1]['input']
     assert journey['steps'][1]['output']==journey['steps'][2]['input']
@@ -105,7 +116,7 @@ def test_source_only_any_start_stage_generates_remaining_stages(tmp_path,monkeyp
     monkeypatch.setattr(sys,'argv',['run_commands.py','--source',source,'--start-stage',start_stage,'--run-date','2026-04-20'])
     assert runner.main()==0
     index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',capsys.readouterr().out).group(1)
-    path=next(index.parent.glob('*/journey.json'));journey=json.loads(path.read_text())
+    path=next((index.parent.parent/'connected').glob('*/journey.json'));journey=json.loads(path.read_text())
     order=['final_action','split','stay','intermediate','final_medpar'];start=order.index(start_stage)
     assert [s['status'] for s in journey['steps']]==['BEFORE_START']*start+['KEEP']*(5-start)
     assert journey['completed'] and journey['start_stage']==start_stage
@@ -117,7 +128,7 @@ def test_source_only_any_start_stage_generates_remaining_stages(tmp_path,monkeyp
     for stage in order[:start]:assert not (path.parent/stage/'retained.json').exists()
     final=json.loads((path.parent/'final_medpar/retained.json').read_text())
     assert 'split_year_indicator' not in final[0]
-    assert 'BEFORE_START' in index.read_text() or start==0
+    assert any('BEFORE_START' in page for page in screens(index).values()) or start==0
 
 
 @pytest.mark.integration
@@ -130,7 +141,7 @@ def test_cross_file_rule6_cancellation_is_grouped_before_forwarding(tmp_path,mon
     monkeypatch.setattr(sys,'argv',['run_commands.py','--source',str(folder),'--run-date','2026-04-20'])
     assert runner.main()==0
     index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',capsys.readouterr().out).group(1)
-    path=next(index.parent.glob('*/journey.json'));journey=json.loads(path.read_text())
+    path=next((index.parent.parent/'connected').glob('*/journey.json'));journey=json.loads(path.read_text())
     assert journey['source_file_count']==2 and journey['steps'][0]['status']=='DROP'
     assert len(json.loads((path.parent/'final_action/dropped.json').read_text()))==2
     assert all(step['status']=='NOT_REACHED' for step in journey['steps'][1:])
@@ -175,7 +186,7 @@ def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,c
     output=capsys.readouterr().out
     assert f'Automatic route: {start_stage}' in output
     index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',output).group(1)
-    journeys=[json.loads(path.read_text()) for path in index.parent.glob('*/journey.json')]
+    journeys=[json.loads(path.read_text()) for path in (index.parent.parent/'connected').glob('*/journey.json')]
     assert len({source for journey in journeys for source in journey['source_files']})==2
     assert sum(next(step['input_records'] for step in journey['steps'] if step['stage']==start_stage) for journey in journeys)==2
     for journey in journeys:
@@ -215,12 +226,14 @@ def test_all_entries_share_one_timestamp_folder_with_live_report_links(tmp_path,
     timestamps=list(report_root.iterdir());assert len(timestamps)==1
     overview=json.loads((timestamps[0]/'master/entry_reviews.json').read_text())
     assert len(overview['entries'])==5
-    master=(timestamps[0]/'master/index.html').read_text()
+    master=screens(timestamps[0]/'master/index.html')['master/index.html']
     assert 'MEDPAR QA — Master Report' in master and 'Files and records by stage' in master
     assert 'Full rule explanations and evidence' in master and 'entry_overview.html' in master
-    assert (timestamps[0]/'master/entry_overview.html').exists()
+    assert 'master/entry_overview.html' in screens(timestamps[0]/'master/index.html')
+    assert len(list(timestamps[0].rglob('*.html')))==6
     for entry in overview['entries']:
         link=(timestamps[0]/'master'/entry['report']).resolve()
-        assert link.is_file() and link.is_relative_to(timestamps[0])
+        bundle=screens(timestamps[0]/entry['entry_stage']/'index.html')
+        assert link.relative_to(timestamps[0]).as_posix() in bundle
         assert entry['input_files']==1
         assert len(list((timestamps[0]/'entries'/entry['entry_stage']/'connected').glob('*/journey.json')))==1
