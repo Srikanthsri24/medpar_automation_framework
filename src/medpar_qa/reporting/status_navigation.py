@@ -79,7 +79,8 @@ def write_volume_navigation(master, stage, checks, volume):
         if check.get('rule_id') == 'INGEST-READ-FILE' and isinstance(actual,dict) and actual.get('role') == 'source':
             for path in check.get('source_files',[]):
                 by_file_ids[str(path)].update(str(record) for record in check.get('record_ids',[]))
-    for key in ('files_in','files_passed','files_stopped','files_failed','files_blocked','records_in','kept','dropped','records_stopped'):
+    written=set()
+    for key in ('files_in','files_passed','files_stopped','files_failed','files_blocked','records_in','kept','dropped','records_stopped')+ (('files_kept','files_dropped') if 'files_kept' in volume else ()):
         if key.startswith('files_'):
             paths = volume['file_sets'][key.removeprefix('files_')]
         elif key == 'records_in':
@@ -91,7 +92,17 @@ def write_volume_navigation(master, stage, checks, volume):
         for path in sorted(paths):
             filename = stage + '_file_' + hashlib.sha256(path.encode()).hexdigest()[:20] + '.html'
             ids = by_file_ids[path]
-            selected = ids if key in ('files_in','files_passed','files_stopped','files_failed','files_blocked','records_in') else {record for record in ids if volume['decisions'].get(record) == {'kept':'KEEP','dropped':'DROP'}.get(key)} if key != 'records_stopped' else ids - volume['decisions'].keys()
+            if path in volume.get('disposition_evidence',{}) and path not in written:
+                written.add(path)
+                info=volume['disposition_evidence'][path]
+                from .path_utils import relative_link
+                linked=[check for check in checks if path in check.get('source_files',[]) or any(record in by_file_ids[path] for record in check.get('record_ids',[]))]
+                from .session_index import _render_raw_validation
+                detail='<p><strong>Original source:</strong> '+e(info['origin'])+'</p><p><strong>File disposition: '+e(info['outcome'])+'</strong></p><p>'+e(info['reason'])+'</p><p><a href="'+e(relative_link(master,info['report']))+'">Stage result and stopping/transfer proof</a></p>'
+                detail+='<p>Kept means this input contributed retained records. Dropped means all its records were removed. Stopped means the stage did not approve an output; passing individual checks do not establish a KEEP decision.</p>'
+                detail+=''.join(_render_raw_validation(check,stage,n) for n,check in enumerate(linked,1))
+                (master/filename).write_text(page('File evidence — '+info['origin'],detail),encoding='utf-8')
+            selected = ids if key.startswith('files_') or key=='records_in' else {record for record in ids if volume['decisions'].get(record) == {'kept':'KEEP','dropped':'DROP'}.get(key)} if key != 'records_stopped' else ids - volume['decisions'].keys()
             rows.append(f'<tr data-file="{e(path)}"><td><a href="{filename}">{e(path)}</a></td><td>{len(selected)}</td><td>{e(", ".join(sorted(selected)))}</td></tr>')
         body = f'<p>Selected metric: {e(key.replace("_"," "))} — {volume[key] if volume[key] is not None else "Not recorded"}. Input files only; output and reference files are excluded. Open a filename for its complete proof. Global stage discrepancies still affect acceptance.</p><label>Search filename <input type="search"></label><table><tr><th>Input file</th><th>Linked records</th><th>Record IDs</th></tr>' + ''.join(rows) + '</table>'
         (master / f'{stage}_volume_{key}.html').write_text(page(stage.replace('_',' ').title()+' — '+key.replace('_',' '),body), encoding='utf-8')

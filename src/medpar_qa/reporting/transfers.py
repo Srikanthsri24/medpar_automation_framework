@@ -83,19 +83,45 @@ def independent_transfers(master, by_stage):
 
 
 def connected_transfers(journeys, index):
-    rows = []
-    for journey, directory in journeys:
-        steps = journey['steps']
-        from .path_utils import relative_link
-        relative = relative_link(index.parent,directory)
-        for number, step in enumerate(steps):
-            following = steps[number + 1] if number + 1 < len(steps) else None
-            moved = bool(following and step.get('output') and following['status'] not in ('NOT_REACHED','BEFORE_START') and following.get('input') == step['output'])
-            status = 'Moved to next stage' if moved else 'Completed final stage' if not following and step['status'] == 'KEEP' else 'Before selected start — not executed' if step['status'] == 'BEFORE_START' else 'Not reached' if step['status'] == 'NOT_REACHED' else 'Dropped — no retained records' if step['status'] == 'DROP' else 'Stopped — not moved'
-            links = '' if step['status'] == 'NOT_REACHED' else f'<a href="{relative}/{step["stage"]}/report.html">Source stage proof</a>'
-            if moved:
-                links += f' · <a href="{relative}/{following["stage"]}/report.html">Next stage proof</a> · <a href="{relative}/{step["stage"]}/retained.json">Transferred records</a>'
-            reason = f'{step.get("retained", 0)} retained record(s) supplied as the next stage input.' if moved else step['reason']
-            proof = f'<details><summary>{e(status)}</summary><p>{e(reason)}</p><p>Output: {e(step.get("output") or "No retained output")}</p>' + (f'<p>Next input: {e(following.get("input"))}</p>' if moved else '') + f'<p>{links}</p></details>'
-            rows.append(f'<tr data-file="{e(journey["source_file"])}"><td>{e(journey["source_file"])}</td><td>{e(step["stage"].replace("_", " ").title())}</td><td>{e(following["stage"].replace("_", " ").title()) if following else "End of workflow"}</td><td>{proof}</td></tr>')
-    return number_file_tables('<details id="stage-transfers"><summary>Moved to next stage — file status</summary><p>Expand a movement status to open both stage reports and the transferred records. Movement is verified from the recorded retained output and the next executed stage’s input. A later-stage failure does not undo an earlier transfer.</p><label>Search transfer filename <input id="transfer-search" type="search" placeholder="Filename or path…"></label><div class="scroll"><table id="transfer-table"><tr><th>Original input file</th><th>From stage</th><th>To stage</th><th>Movement status — click for evidence</th></tr>' + ''.join(rows) + '</table></div></details><script>document.getElementById("transfer-search").addEventListener("input",function(){document.querySelectorAll("#transfer-table tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(this.value.toLowerCase()));});</script>')
+    """Show original inputs, new entries and verified physical handoffs separately."""
+    import json
+    from .path_utils import relative_link
+    from .stage_volume import connected_dispositions
+    rows=[]
+    for journey,directory in journeys:
+        originals=journey.get('source_files',[journey['source_file']])
+        inventory_path=directory.parent.parent/'input_sources.json'
+        inventory=json.loads(inventory_path.read_text()) if inventory_path.exists() else {}
+        origin_map={row['local_path']:row['origin'] for row in inventory.get('files',[])}
+        display_originals=[origin_map.get(path,path) for path in originals]
+        original_list=[]
+        for path,display in zip(originals,display_originals):
+            file_page=journey.get('start_stage','final_action')+'_file_'+hashlib.sha256(path.encode()).hexdigest()[:20]+'.html'
+            original_list.append('<li>'+('<a href="'+file_page+'">'+e(display)+'</a>' if (index.parent/file_page).exists() else e(display))+'</li>')
+        inventory_link='<p><a href="'+relative_link(index.parent,inventory_path.with_suffix('.html'))+'">Original locations, file sizes and SHA-256 evidence</a></p>' if inventory_path.exists() else ''
+        origin='<details><summary>'+str(len(originals))+' original input files — '+e(journey.get('start_stage','final_action').replace('_',' ').title())+' entry</summary><ol>'+''.join(original_list)+'</ol>'+inventory_link+'</details>'
+        relative=relative_link(index.parent,directory)
+        for number,step in enumerate(journey['steps']):
+            if step['status']=='BEFORE_START':continue
+            following=journey['steps'][number+1] if number+1<len(journey['steps']) else None
+            previous=journey['steps'][number-1] if number else None
+            executed=step['status']!='NOT_REACHED'
+            moved=bool(following and step.get('output') and following['status'] not in ('NOT_REACHED','BEFORE_START') and following.get('input')==step['output'] and following.get('input_records',1)>0)
+            received=bool(executed and previous and previous.get('output') and step.get('input')==previous['output'] and step.get('input_records',1)>0)
+            inputs=len(step.get('input_files',[])) if executed else 0
+            started=inputs if executed and step['stage']==journey.get('start_stage','final_action') else 0
+            counts={'files_kept':0,'files_dropped':0,'files_stopped':0}
+            path=directory/step['stage']/'report.json'
+            if executed and path.exists():
+                payload=json.loads(path.read_text());stage_payload=payload['stages'][0]
+                volume=summarize_stage_volume(stage_payload.get('rule_results',[]))
+                counts=connected_dispositions([{'entry':{'path':path,'payload':payload},'stage':stage_payload}],volume)
+            state='Moved to next stage' if moved else 'Completed final stage' if executed and not following and step['status']=='KEEP' else 'Not reached' if not executed else 'Stopped — not moved' if step['status'] in ('FAIL','BLOCKED') else 'Dropped' if step['status']=='DROP' else 'Retained — transfer not verified'
+            if executed and step['status']=='KEEP' and not following:state='Completed final stage'
+            links='<a href="'+relative+'/'+step['stage']+'/report.html">Stage rules and evidence</a>' if executed else ''
+            if moved:links+=' · <a href="'+relative+'/'+following['stage']+'/report.html">Next stage proof</a> · <a href="'+relative+'/'+step['stage']+'/retained.json">Transferred output</a>'
+            proof='<details><summary>'+e(state)+' — '+e(step['status'])+'</summary><p>'+e(step.get('reason',''))+'</p><p>'+str(step.get('input_records',0))+' records read; '+str(step.get('retained',0))+' retained record(s); '+str(step.get('dropped',0))+' dropped.</p><p>'+links+'</p></details>'
+            values=[origin,e(step['stage'].replace('_',' ').title()),e(following['stage'].replace('_',' ').title()) if following else 'End',str(started),str(int(received)),str(inputs),str(counts['files_kept']),str(counts['files_dropped']),str(counts['files_stopped']),str(int(moved)),proof]
+            rows.append('<tr data-file="'+e(' '.join(display_originals))+'">'+''.join('<td>'+value+'</td>' for value in values)+'</tr>')
+    headings=['Original source files','From stage','To stage','Started here','Received from previous','Input files','Kept','Dropped','Stopped','Files moved','Evidence']
+    return number_file_tables('<details id="stage-transfers"><summary>Moved to next stage — file status</summary><p>All counts in this table are physical files. Started here counts supplied source files; Received counts generated files from the previous stage. A generated output may combine many source files: one transferred file can contain many retained records. Kept means at least one record survives; Dropped means all records were dropped; Stopped means no stage output was approved. File disposition counts add up to input files. Open original sources for filenames, then the movement evidence for stage reports and record counts.</p><label>Search original filename <input id="transfer-search" type="search"></label><div class="scroll"><table id="transfer-table"><tr>'+''.join('<th>'+e(h)+'</th>' for h in headings)+'</tr>'+''.join(rows)+'</table></div></details><script>document.getElementById("transfer-search").addEventListener("input",function(){document.querySelectorAll("#transfer-table tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(this.value.toLowerCase()));});</script>')

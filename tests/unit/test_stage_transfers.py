@@ -39,3 +39,16 @@ def test_validation_pass_alone_cannot_establish_transfer(tmp_path):
     item = dict(entry=dict(payload=dict(context={})), stage=dict(rule_results=[]))
     text = independent_transfers(tmp_path, {'final_action': [item]})
     assert 'No retained-output handoff recorded' in text
+
+
+def test_transfer_uses_original_s3_origin_instead_of_generated_batch_label(tmp_path):
+    import json
+    root=tmp_path/'entry';directory=root/'connected'/'batch';directory.mkdir(parents=True)
+    (root/'input_sources.json').write_text(json.dumps({'files':[{'local_path':'cache.json','origin':'s3://demo-bucket/claims/original.parquet'}]}))
+    (root/'input_sources.html').write_text('source fingerprint proof')
+    step=dict(stage='final_action',status='FAIL',input='source_batch.json',input_files=['cache.json'],input_records=1,retained=0,dropped=0,reason='Schema failed')
+    journey=dict(source_file='source_batch.json',source_files=['cache.json'],start_stage='final_action',steps=[step])
+    text=connected_transfers([(journey,directory)],tmp_path/'master/index.html')
+    assert 's3://demo-bucket/claims/original.parquet' in text
+    assert 'source_batch.json' not in text and 'cache.json' not in text
+    assert 'SHA-256 evidence' in text and 'Started here' in text and 'Files moved' in text

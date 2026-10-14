@@ -45,6 +45,12 @@ def summarize_stage_volume(checks, decisions=()):
 def volume_strip(volume, href=None):
     """Render the two metric groups from the lead's reference, with honest missing counts."""
     cells = []
+    if 'files_kept' in volume:
+        keys=[('files_in','Input files'),('files_kept','Kept'),('files_dropped','Dropped'),('files_stopped','Stopped')]
+        for key,label in keys:
+            value=str(volume[key]);value=f'<a href="{html.escape(href(key),quote=True)}" onclick="event.stopPropagation()">{value}</a>' if href else value
+            cells.append(f'<span class="volume-cell"><span>{label}</span><strong>{value}</strong></span>')
+        return '<span class="volume-strip">'+''.join(cells)+'</span>'
     file_cells = [('files_in', 'Input files'), ('files_passed', 'Files passed')] + ([('files_failed', 'Files failed'), ('files_blocked', 'Files blocked')] if 'files_failed' in volume else [('files_stopped', 'Files stopped')])
     for key, label in file_cells + [('records_in','Records in'),('kept','Kept'),('dropped','Dropped'),('records_stopped','Stopped')]:
         value = volume[key]
@@ -53,3 +59,43 @@ def volume_strip(volume, href=None):
             text = f'<a href="{html.escape(href(key),quote=True)}" onclick="event.stopPropagation()">{text}</a>'
         cells.append(f'<span class="volume-cell"><span>{label}</span><strong>{text}</strong></span>')
     return '<span class="volume-strip">' + ''.join(cells) + '</span>'
+
+
+def connected_dispositions(items, volume):
+    """Classify physical inputs by executed handoff, not by isolated passing checks.
+
+    Files containing both kept and dropped records count as kept. Only files whose
+    entire input was dropped count as dropped. A gated stage stop stops all inputs.
+    """
+    import json
+    kept,dropped,stopped=set(),set(),set()
+    explanations={}
+    for item in items:
+        entry=item['entry'];step=entry['payload'].get('context',{}).get('handoff')
+        if not step:continue
+        inputs=summarize_stage_volume(item['stage'].get('rule_results',[]))['file_sets']['in']
+        ids={}
+        for check in item['stage'].get('rule_results',[]):
+            if check.get('rule_id')=='INGEST-READ-FILE':
+                for path in check.get('source_files',[]):ids.setdefault(path,set()).update(check.get('record_ids',[]))
+        inventory_path=entry['path'].parents[3]/'input_sources.json' if len(entry['path'].parents)>3 else entry['path'].parent/'input_sources.json'
+        inventory=json.loads(inventory_path.read_text()) if inventory_path.exists() else {}
+        origins={row['local_path']:row['origin'] for row in inventory.get('files',[])}
+        drop_ids={d['record_id'] for d in item['stage'].get('decisions',[]) if d.get('decision')=='DROP'}
+        drop_file=entry['path'].parent/'dropped.json'
+        if drop_file.exists():
+            drop_ids.update(row.get('source_record_id') for row in json.loads(drop_file.read_text()) if row.get('source_record_id'))
+        for path in inputs:
+            status=step['status']
+            if status in ('FAIL','BLOCKED'):
+                stopped.add(path);outcome='Stopped'
+            elif status=='DROP' or ids.get(path) and ids[path]<=drop_ids:
+                dropped.add(path);outcome='Dropped'
+            else:
+                kept.add(path);outcome='Kept'
+            explanations[path]={'outcome':outcome,'reason':step.get('reason',''), 'origin':origins.get(path,path), 'report':entry['path'].parent/'report.html'}
+    # A file reviewed multiple times has a conservative single outcome.
+    kept-=stopped;dropped-=stopped;kept-=dropped
+    volume.update(files_kept=len(kept),files_dropped=len(dropped),files_stopped=len(stopped),disposition_evidence=explanations)
+    volume['file_sets'].update(kept=kept,dropped=dropped,stopped=stopped)
+    return volume
