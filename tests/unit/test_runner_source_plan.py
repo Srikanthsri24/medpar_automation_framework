@@ -1,50 +1,60 @@
-"""One editable path list selects the entry stage; downstream inputs are generated."""
+"""The selected backend supports explicit files, folders, or both in one stage entry."""
 from copy import deepcopy
+from datetime import datetime
 import pytest
 import run_commands as runner
 
 
-def test_source_plan_uses_one_list_for_multiple_files_and_folders():
+def plan_for(stage='stay',source_type='local',files=None,folders=None):
     plan=deepcopy(runner.SOURCE_RUN)
-    plan.update(start_stage='stay',source_paths=['C:/MEDPAR/folder1','C:/MEDPAR/folder2','C:/MEDPAR/file.parquet'])
+    plan.update(start_stage=stage,source_type=source_type)
+    plan['source_paths'][stage]={'files':files or [],'folders':folders or []}
+    return plan
+
+
+@pytest.mark.parametrize('source_type',['local','s3'])
+@pytest.mark.parametrize('kind',['files','folders','both'])
+def test_selected_backend_accepts_files_folders_and_both(source_type,kind):
+    file='C:/MEDPAR/file.parquet' if source_type=='local' else 's3://medpar-demo-bucket/file.parquet'
+    folder='C:/MEDPAR/folder' if source_type=='local' else 's3://medpar-demo-bucket/input/'
+    plan=plan_for(source_type=source_type,files=[file] if kind!='folders' else [],folders=[folder] if kind!='files' else [])
     stage,configured,settings=runner.source_run_configuration(plan)
-    assert stage=='stay' and list(configured)==['stay']
-    item=configured['stay']['single_files'][0]
-    assert item['source']==plan['source_paths']
-    assert 'pipeline_outputs' not in item and settings=={}
+    assert configured[stage]['single_files'][0]['source']==([file] if kind!='folders' else [])+([folder] if kind!='files' else [])
+    assert list(configured)==['stay'] and settings=={}
+
+
+@pytest.mark.parametrize('source_type,path',[('local','s3://medpar-demo-bucket/input/'),('s3','C:/MEDPAR/input')])
+def test_wrong_backend_path_is_rejected(source_type,path):
+    with pytest.raises(ValueError,match='does not match selected source_type'):
+        runner.source_run_configuration(plan_for(source_type=source_type,folders=[path]))
 
 
 @pytest.mark.parametrize('change,message',[
     ({'start_stage':'unknown'},'start_stage'),
+    ({'source_type':'other'},'source_type'),
     ({'run_date':'not-a-date'},'time data'),
-    ({'source_paths':['s3://YOUR-BUCKET/input/']},'YOUR-BUCKET'),
-    ({'source_paths':[]},'one or more'),
     ({'settings':[]},'settings'),
 ])
 def test_invalid_source_plan_is_rejected(change,message):
-    plan=deepcopy(runner.SOURCE_RUN);plan['start_stage']='final_action';plan.update(change)
+    plan=plan_for(folders=['input']);plan.update(change)
     with pytest.raises(ValueError,match=message):runner.source_run_configuration(plan)
 
 
-def test_same_list_accepts_local_and_s3_paths():
-    plan=deepcopy(runner.SOURCE_RUN)
-    plan['start_stage']='final_action'
-    plan['source_paths']=['/tmp/claims','s3://medpar-demo-bucket/input/']
-    _,configured,_=runner.source_run_configuration(plan)
-    assert configured['final_action']['single_files'][0]['source']==plan['source_paths']
+def test_empty_lists_and_incorrect_existing_local_type_are_rejected(tmp_path):
+    with pytest.raises(ValueError,match='one or more'):runner.source_run_configuration(plan_for())
+    with pytest.raises(ValueError,match='not a file'):runner.source_run_configuration(plan_for(files=[str(tmp_path)]))
+    file=tmp_path/'input.json';file.write_text('[]')
+    with pytest.raises(ValueError,match='not a folder'):runner.source_run_configuration(plan_for(folders=[str(file)]))
 
 
-def test_stage_map_selects_only_the_requested_entry():
-    plan=deepcopy(runner.SOURCE_RUN)
-    stage,configured,_=runner.source_run_configuration(plan,start_stage='final_medpar')
-    assert configured[stage]['single_files'][0]['source']==['data/production/r65/5-intermediate-processing']
-    stage,configured,_=runner.source_run_configuration(plan,start_stage='stay')
-    assert configured[stage]['single_files'][0]['source']==['data/production/q61/3-4yr-window-parquet']
+def test_s3_object_cannot_be_a_folder_or_dummy_bucket():
+    with pytest.raises(ValueError,match='not a folder'):
+        runner.source_run_configuration(plan_for(source_type='s3',files=['s3://medpar-demo-bucket/input/']))
+    with pytest.raises(ValueError,match='YOUR-BUCKET'):
+        runner.source_run_configuration(plan_for(source_type='s3',folders=['s3://YOUR-BUCKET/input/']))
 
 
-def test_none_business_date_uses_current_local_date():
-    from datetime import datetime
-    plan=deepcopy(runner.SOURCE_RUN)
-    plan['source_paths']=['input'];plan['run_date']=None
-    _,configured,_=runner.source_run_configuration(plan,start_stage='final_action')
-    assert configured['final_action']['run_date']==datetime.now().date().isoformat()
+def test_stage_selection_and_automatic_current_date():
+    stage,config,_=runner.source_run_configuration(runner.SOURCE_RUN,start_stage='final_medpar')
+    assert config[stage]['single_files'][0]['source']==['data/production/r65/5-intermediate-processing']
+    assert config[stage]['run_date']==datetime.now().date().isoformat()

@@ -2,7 +2,7 @@
 
 Validate Final Action, Four-Year Split, Stay, Intermediate and Final MEDPAR using JSON or Parquet inputs. The framework compares production outputs with source rules and approved expected outputs, and produces reports explaining every recorded result.
 
-**Current verification:** 522 automated tests passed on 15 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
+**Current verification:** 534 automated tests passed on 15 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
 
 For your team demo, start with [how one run works](#how-one-run-works), [stage logic](#stage-logic-to-explain-first), [common questions](#questions-your-team-is-likely-to-ask) and [Python concepts](#python-concepts-used-here). Use the expandable [file/function reference](#every-python-file-class-and-function) for coding questions and the [rule reference](#rule-explanation-reference) for validation questions. Search the exact function or file name to jump to its detailed explanation.
 
@@ -50,19 +50,26 @@ Edit only `SOURCE_RUN` near the top of `run_commands.py`:
 
 ```python
 SOURCE_RUN = {
-    "start_stage": "final_action",
-    "run_date": None,
-    "source_paths": [
-        "C:/MEDPAR/input/folder1",
-        "C:/MEDPAR/input/folder2",
-        "C:/MEDPAR/input/extra.parquet",
-    ],
+    "source_type": "local",  # local or s3
+    "start_stage": "all",   # all entry reviews, or one stage
+    "run_date": None,        # today's local date
+    "source_paths": {
+        "final_action": {"files": [], "folders": ["data/production/q61/1-quarterly-claims-parquet"]},
+        "split": {"files": [], "folders": ["data/production/q61/2-final-action-rules-parquet"]},
+        "stay": {"files": [], "folders": ["data/production/q61/3-4yr-window-parquet"]},
+        "intermediate": {"files": [], "folders": ["data/production/q61/4-stay-processing"]},
+        "final_medpar": {"files": [], "folders": ["data/production/r65/5-intermediate-processing"]},
+    },
     "aws_credentials_file": "config/aws_credentials.local.json",
     "settings": {},
 }
 ```
 
-Then run `python run_commands.py`. For AWS, replace the same `source_paths` entries with your `s3://bucket/prefix/` folders or `s3://bucket/file.parquet` files. A mixture of local and S3 paths is supported automatically. No source-type switch, production root, dataset selector or second path table is needed. Windows paths should use forward slashes or Python raw strings. Set `run_date` to the business date, or `None` for today. Real AWS credentials belong in the configured local credentials file or your AWS profile/environment, not this script.
+Then run `python run_commands.py`. Select `source_type: "local"` for local paths or `source_type: "s3"` for AWS links. For each selected stage, fill `files` with individual JSON/Parquet paths and `folders` with directories or S3 prefixes. Files only: leave `folders` empty. Folders only: leave `files` empty. Both: populate both lists. Multiple entries are supported; overlapping discoveries are deduplicated. At least one list must contain an input. There is no second production root or path preset.
+
+For S3, replace the paths in this same configuration with `s3://your-bucket/claim.json` under `files`, and `s3://your-bucket/claim-folder/` under `folders`. The selected source type and paths must agree; choosing S3 with local paths produces an explicit configuration error. Files and folders from one run use the same selected backend. Windows local paths should use forward slashes or Python raw strings. Real AWS credentials belong in the configured local credentials file or your AWS profile/environment. Setting `source_type` does not itself configure bucket credentials.
+
+Example stage input using both options: `"stay": {"files": ["C:/MEDPAR/split/extra.parquet"], "folders": ["C:/MEDPAR/split/folder1", "C:/MEDPAR/split/folder2"]}`. For AWS, select `s3` and use `"stay": {"files": ["s3://your-bucket/split/extra.parquet"], "folders": ["s3://your-bucket/split/folder1/", "s3://your-bucket/split/folder2/"]}`. No comparison paths are required.
 
 | `start_stage` | What your source paths must contain | Automatic remaining stages |
 | --- | --- | --- |
@@ -74,7 +81,7 @@ Then run `python run_commands.py`. For AWS, replace the same `source_paths` entr
 
 All supplied folders/files are discovered and combined before stage rules run, preserving cross-file claim grouping. Outputs are generated under the timestamped report folder and become the next stage's inputs. You do not configure downstream folders. Failures or missing prerequisites stop progression; business drops are recorded and only kept records continue. Reports show original file counts, generated record counts, handoff evidence and final export readiness.
 
-The shipped production paths are configured together under `SOURCE_RUN.source_paths`: Q61 quarterly claims for Final Action, Q61 retained Final Action claims for Split, Q61 retained Split bills for Stay, Q61 merged Stay records for Intermediate, and R65 Intermediate extracts for Final MEDPAR. `start_stage: "all"` runs each entry separately and creates one overview linking their connected reports. Q61 and R65 are separate datasets: a supplied later-stage input is never reported as a verified handoff from a different dataset. To run one connected route, set `start_stage` to that stage. Each run forwards only its generated kept records. A plain list is still accepted for a single-entry configuration.
+The shipped production paths are configured together under `SOURCE_RUN.source_paths`: Q61 quarterly claims for Final Action, Q61 retained Final Action claims for Split, Q61 retained Split bills for Stay, Q61 merged Stay records for Intermediate, and R65 Intermediate extracts for Final MEDPAR. `start_stage: "all"` runs each entry separately and creates one overview linking their connected reports. Q61 and R65 are separate datasets: a supplied later-stage input is never reported as a verified handoff from a different dataset. To run one connected route, set `start_stage` to that stage. Each run forwards only its generated kept records. Each stage uses the same files/folders format regardless of the chosen entry point.
 
 Set `run_date` to `None` for automatic execution-day business dates. The all-entry review resolves this date once so all its stages use the same date. The report also records execution date, time and UTC offset separately; date-based business rules receive the date, not a timestamp.
 
@@ -12993,7 +13000,7 @@ The `FA-RULE-06-COVERAGE` report entry shows eligible episode counts, actual eva
 
 ### Connected pipeline mode
 
-`python run_commands.py` reads the single `SOURCE_RUN.source_paths` list. All source records are grouped before processing. Generated retained output feeds each subsequent stage in order. Source discovery, rule outcomes, drops and stage transfers have evidence links in the connected report. The final export readiness section distinguishes draft JSON from complete physical output.
+`python run_commands.py` reads the selected stage's files and folders from `SOURCE_RUN.source_paths`. All source records are grouped before processing. Generated retained output feeds each subsequent stage in order. Source discovery, rule outcomes, drops and stage transfers have evidence links in the connected report. The final export readiness section distinguishes draft JSON from complete physical output.
 
 ### Current connected starting folder
 

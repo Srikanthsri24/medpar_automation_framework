@@ -37,20 +37,22 @@ STAGE_ORDER = ("final_action", "split", "stay", "intermediate", "final_medpar")
 # =============================================================================
 # ONLY EDIT THIS INPUT CONFIGURATION
 # =============================================================================
-# source_paths: multiple local folders/files, S3 folders/files, or a mixture.
+# Choose source_type: local or s3. Each stage accepts files, folders, or both.
+# For s3, replace paths with your s3://bucket/key files and s3://bucket/prefix/ folders.
 # Use forward slashes for Windows paths, e.g. C:/MEDPAR/input.
 # Start with final_action for raw claims; split for retained Final Action claims;
 # stay for retained Split bills; intermediate for merged Stay records;
 # final_medpar for Intermediate extracts. Generated outputs feed later stages.
 SOURCE_RUN: dict[str, Any] = {
+    "source_type": "local",  # "local" or "s3"; paths below must match this choice.
     "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
     "run_date": None,  # Resolve today's local business date once at execution.
     "source_paths": {
-        "final_action": ["data/production/q61/1-quarterly-claims-parquet"],
-        "split": ["data/production/q61/2-final-action-rules-parquet"],
-        "stay": ["data/production/q61/3-4yr-window-parquet"],
-        "intermediate": ["data/production/q61/4-stay-processing"],
-        "final_medpar": ["data/production/r65/5-intermediate-processing"],
+        "final_action": {"files": [], "folders": ["data/production/q61/1-quarterly-claims-parquet"]},
+        "split": {"files": [], "folders": ["data/production/q61/2-final-action-rules-parquet"]},
+        "stay": {"files": [], "folders": ["data/production/q61/3-4yr-window-parquet"]},
+        "intermediate": {"files": [], "folders": ["data/production/q61/4-stay-processing"]},
+        "final_medpar": {"files": [], "folders": ["data/production/r65/5-intermediate-processing"]},
     },
     "aws_credentials_file": "config/aws_credentials.local.json",
     "settings": {},  # Optional reference feeds and approved calculation/layout options.
@@ -63,17 +65,36 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
     stages = STAGE_ORDER
     if stage not in stages:
         raise ValueError("SOURCE_RUN.start_stage must be a supported stage")
-    paths = plan.get("source_paths")
-    if isinstance(paths,dict):
-        paths = paths.get(stage)
-    if not isinstance(paths, list) or not paths or any(not isinstance(path,str) or not path.strip() for path in paths):
-        raise ValueError("SOURCE_RUN.source_paths needs one or more file/folder paths")
-    paths = [path.strip() for path in paths]
+    source_type = plan.get('source_type')
+    if source_type not in ('local','s3'):
+        raise ValueError('SOURCE_RUN.source_type must be "local" or "s3"')
+    entry = plan.get('source_paths',{}).get(stage) if isinstance(plan.get('source_paths'),dict) else None
+    if not isinstance(entry,dict):
+        raise ValueError(f'SOURCE_RUN.source_paths.{stage} must contain files and folders lists')
     from medpar_qa.ingestion.input_sources import s3_location
-    for path in paths:
-        if "YOUR-BUCKET" in path:
-            raise ValueError("Replace YOUR-BUCKET with your actual bucket")
-        s3_location(path)  # Validate AWS links; local paths need no source-type switch.
+    paths=[]
+    for role in ('files','folders'):
+        values=entry.get(role,[])
+        if not isinstance(values,list) or any(not isinstance(value,str) or not value.strip() for value in values):
+            raise ValueError(f'SOURCE_RUN.source_paths.{stage}.{role} must be a list of nonempty paths')
+        for value in values:
+            path=value.strip()
+            if 'YOUR-BUCKET' in path:
+                raise ValueError('Replace YOUR-BUCKET with your actual bucket')
+            remote=s3_location(path)
+            if (source_type=='s3') != (remote is not None):
+                raise ValueError(f'{stage}.{role}: path does not match selected source_type {source_type}')
+            if remote and role=='files' and (not remote[1] or remote[1].endswith('/')):
+                raise ValueError(f'{stage}.files: S3 file must identify an object, not a folder')
+            if not remote:
+                local=Path(path)
+                if not local.is_absolute():local=PROJECT_ROOT/local
+                if local.exists() and ((role=='files' and not local.is_file()) or (role=='folders' and not local.is_dir())):
+                    raise ValueError(f'{stage}.{role}: existing path is not a {"file" if role=="files" else "folder"}')
+            paths.append(path)
+    if not paths:
+        raise ValueError(f'SOURCE_RUN.source_paths.{stage} needs one or more files or folders')
+    paths=list(dict.fromkeys(paths))
     business_date = run_date or plan.get("run_date") or datetime.now().date().isoformat()
     datetime.strptime(str(business_date), "%Y-%m-%d")
     settings = plan.get("settings", {})
@@ -357,7 +378,7 @@ def main(argv=None) -> int:
         except (ValueError,TypeError,AttributeError) as exc:
             parser.error(f"Cannot use SOURCE_RUN: {exc}")
         connected=selected_stage is None; generate_outputs=True
-        print(f"SOURCE_RUN: starting at {start_stage}",flush=True)
+        print(f"SOURCE_RUN: {SOURCE_RUN['source_type']} source, starting at {start_stage}",flush=True)
         for number,path in enumerate(configured_stages[start_stage]['single_files'][0]['source'],1):
             print(f"  {number}. {path}",flush=True)
         print("Automatic route: "+" -> ".join(list(STAGE_ORDER)[list(STAGE_ORDER).index(start_stage):]),flush=True)

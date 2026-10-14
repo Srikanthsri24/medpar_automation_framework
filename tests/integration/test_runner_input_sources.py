@@ -140,9 +140,10 @@ def test_cross_file_rule6_cancellation_is_grouped_before_forwarding(tmp_path,mon
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize('remote',['local','s3','mixed'])
+@pytest.mark.parametrize('remote',['local','s3'])
+@pytest.mark.parametrize('input_kind',['files','folders','both'])
 @pytest.mark.parametrize('start_stage',['final_action','intermediate'])
-def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,capsys,remote,start_stage):
+def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,capsys,remote,start_stage,input_kind):
     from copy import deepcopy
     import run_commands as runner
     import medpar_qa.ingestion.input_sources as sources
@@ -157,13 +158,17 @@ def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,c
         folders.append(str(folder))
         objects[f'folder{number}/source.json']=encoded
     class FakeS3:
+        def head_object(self,Bucket,Key):return {'ContentLength':len(objects[Key])}
         def get_paginator(self,operation):return self
         def paginate(self,Bucket,Prefix):
             yield {'Contents':[{'Key':key,'Size':len(value)} for key,value in objects.items() if key.startswith(Prefix)]}
         def download_file(self,bucket,key,filename):Path(filename).write_bytes(objects[key])
     monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
     plan=deepcopy(runner.SOURCE_RUN);plan.update(start_stage=start_stage)
-    plan['source_paths']=[f's3://medpar-demo-bucket/folder{number}/' for number in range(2)] if remote=='s3' else [folders[0],'s3://medpar-demo-bucket/folder1/'] if remote=='mixed' else folders
+    plan['source_type']=remote
+    file_paths=[f's3://medpar-demo-bucket/folder{number}/source.json' for number in range(2)] if remote=='s3' else [str(Path(folder)/'source.json') for folder in folders]
+    folder_paths=[f's3://medpar-demo-bucket/folder{number}/' for number in range(2)] if remote=='s3' else folders
+    plan['source_paths'][start_stage]={'files':file_paths if input_kind=='files' else [file_paths[1]] if input_kind=='both' else [],'folders':folder_paths if input_kind=='folders' else [folder_paths[0]] if input_kind=='both' else []}
     monkeypatch.setattr(runner,'SOURCE_RUN',plan)
     monkeypatch.setattr(sys,'argv',['run_commands.py'])
     assert runner.main()==0
