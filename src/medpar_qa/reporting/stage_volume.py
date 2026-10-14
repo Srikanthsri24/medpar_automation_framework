@@ -36,7 +36,7 @@ def summarize_stage_volume(checks, decisions=()):
     input_ids = set().union(*ids_by_file.values()) if ids_by_file else set()
     undecided = input_ids - decisions_by_id.keys()
     return dict(files_failed=len(failed), files_blocked=len(blocked), files_in=len(inputs), files_passed=len(passed), files_stopped=len(stopped),
-                records_in=sum(inputs.values()), kept=counts['KEEP'] if decisions else None,
+                records_in=sum(len(ids_by_file[path]) or count for path,count in inputs.items()), kept=counts['KEEP'] if decisions else None,
                 dropped=counts['DROP'] if decisions else None,
                 records_stopped=len(undecided) if decisions else None,
                 file_sets={'in':set(inputs), 'passed':passed, 'stopped':stopped, 'failed':failed, 'blocked':blocked}, decisions=decisions_by_id)
@@ -69,7 +69,7 @@ def connected_dispositions(items, volume):
     """
     import json
     kept,dropped,stopped=set(),set(),set()
-    explanations={}
+    explanations={};reports_by_file={}
     for item in items:
         entry=item['entry'];step=entry['payload'].get('context',{}).get('handoff')
         if not step:continue
@@ -93,9 +93,16 @@ def connected_dispositions(items, volume):
                 dropped.add(path);outcome='Dropped'
             else:
                 kept.add(path);outcome='Kept'
+            reports_by_file.setdefault(path,[]).append(entry['path'].parent/'report.html')
             explanations[path]={'outcome':outcome,'reason':step.get('reason',''), 'origin':origins.get(path,path), 'report':entry['path'].parent/'report.html'}
-    # A file reviewed multiple times has a conservative single outcome.
-    kept-=stopped;dropped-=stopped;kept-=dropped
+    # Count each physical file once; any retained group establishes forwarding.
+    stopped-=kept;dropped-=kept;dropped-=stopped
+    for path in kept:
+        explanations[path]['outcome']='Kept'
+        explanations[path]['reason']='At least one related group produced retained output. Other groups from this file may have been dropped or stopped; consult all linked rules and stage reports.'
+    for path in stopped:explanations[path]['outcome']='Stopped'
+    for path in dropped:explanations[path]['outcome']='Dropped'
+    for path in explanations:explanations[path]['reports']=reports_by_file[path]
     volume.update(files_kept=len(kept),files_dropped=len(dropped),files_stopped=len(stopped),disposition_evidence=explanations)
     volume['file_sets'].update(kept=kept,dropped=dropped,stopped=stopped)
     return volume

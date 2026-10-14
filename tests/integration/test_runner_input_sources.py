@@ -175,12 +175,13 @@ def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,c
     output=capsys.readouterr().out
     assert f'Automatic route: {start_stage}' in output
     index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',output).group(1)
-    journey=json.loads(next(index.parent.glob('*/journey.json')).read_text())
-    assert journey['source_file_count']==2 and journey['start_stage']==start_stage
-    assert journey['completed']
-    selected=[step for step in journey['steps'] if step['status']!='BEFORE_START']
-    assert selected[0]['input_records']==2
-    for current,following in zip(selected,selected[1:]):assert current['output']==following['input']
+    journeys=[json.loads(path.read_text()) for path in index.parent.glob('*/journey.json')]
+    assert len({source for journey in journeys for source in journey['source_files']})==2
+    assert sum(next(step['input_records'] for step in journey['steps'] if step['stage']==start_stage) for journey in journeys)==2
+    for journey in journeys:
+        assert journey['completed'] and journey['start_stage']==start_stage
+        selected=[step for step in journey['steps'] if step['status']!='BEFORE_START']
+        for current,following in zip(selected,selected[1:]):assert current['output']==following['input']
 
 
 @pytest.mark.integration

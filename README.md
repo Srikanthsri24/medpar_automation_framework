@@ -13083,3 +13083,7 @@ Large full reports keep a searchable file index and link to complete per-file pr
 ### Stage transfer evidence
 
 Reports include a searchable “Moved to next stage” table. Connected journeys mark movement only when a retained output matches the next executed stage’s input; expand the status for both stage reports and transferred records. Dropped, stopped, not reached and final completion have separate explanations. Independent archive reviews link every input file’s full evidence and the next stage’s supplied-input report, but explicitly report transfer as unverified because those runs did not perform a connected handoff.
+
+### Independent business groups
+
+Source files are read together and related claims stay together for Final Action and Stay processing. A failed group stops with its evidence; unrelated eligible groups continue through the remaining stages. File totals count each physical source once. A file is kept when at least one group produces retained output; its detailed evidence includes every group, including any dropped or stopped groups. Missing required source values are reported rather than invented.

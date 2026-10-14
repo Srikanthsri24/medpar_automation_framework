@@ -141,8 +141,13 @@ def intermediate(records,processor):
                 codes=[];versions=[];extras=[]
                 for line in lines[:25]:
                     code=line_value(line,'code','procedureCode','diagnosisCode')
+                    nested_diagnosis=line.get('diagnosisCode') if isinstance(line,dict) else None
+                    if isinstance(nested_diagnosis,dict):code=nested_diagnosis.get('code')
                     if not code: continue
-                    version=line_value(line,'version','codeVersion','icdVersion')
+                    version=line_value(line,'version','codeVersion','icdVersion','procedureVersionCode')
+                    if isinstance(nested_diagnosis,dict):version=nested_diagnosis.get('version',version)
+                    if isinstance(code,dict):
+                        version=code.get('version',version);code=code.get('code')
                     extra=line_value(line,'date','procedureDate','surgeryDate') if collection=='procedure_lines' else line_value(line,'poa','presentOnAdmission','poaIndicator')
                     if version in (None,'') or extra in (None,''):raise GenerationBlocked('Clinical code requires source version and aligned date/POA: '+str(code))
                     codes.append(code);versions.append(version);extras.append(parse_date(extra).strftime('%Y%j') if collection=='procedure_lines' else extra)

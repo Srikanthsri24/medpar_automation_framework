@@ -111,3 +111,11 @@ def test_hicn_generation_preserves_separate_eq_bic_component(resolver):
     assert data['hicn']=='000000001A'
     assert data['claimCanNchEquatable']=='A'
     assert data['claimCan']=='000000001'
+
+
+def test_production_clinical_code_shapes_are_read_without_fabricating_versions(resolver,make_record):
+    source=make_record(bill(procedureLines=[{'procedureCode':'0ABC','procedureVersionCode':'0','procedureDate':'20260102'}],diagnosisLines=[{'diagnosisCode':{'code':'I10','version':'0'},'presentOnAdmission':'Y'}]),stage=Stage.INTERMEDIATE)
+    rows,_=writers.intermediate([source],IntermediateProcessor(resolver,date(2026,4,20)))
+    assert rows[0]['medpar_srgcl_prcdr_vrsn_cd']==['0']
+    assert rows[0]['medpar_diag_code_0492']==['I10']
+    assert rows[0]['medpar_dgns_vrsn_cd']==['0']

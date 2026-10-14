@@ -132,7 +132,7 @@ class ConnectedPipeline:
         self.resolver = resolver or FieldResolver.from_yaml(self.root / 'config/field_aliases.yaml')
         self.settings = settings or {}
 
-    def run_file(self, source, run_dates, outputs=None, *, start_stage="final_action", generate_outputs=None, original_inputs=None):
+    def run_file(self, source, run_dates, outputs=None, *, start_stage="final_action", generate_outputs=None, original_inputs=None, initial_records=None):
         """One input file owns a five-stage journey; failure never forwards its data."""
         source = relative_display(Path(source), project_root=self.root)
         identity = slugify(Path(source).stem)[:60] + '-' + hashlib.sha256(source.encode()).hexdigest()[:10]
@@ -167,7 +167,7 @@ class ConnectedPipeline:
                 source_records, candidate = [], []
                 generation_notes, generated_dropped = [], []
                 try:
-                    source_records = _read(original_inputs if stage_index==start_index else [current], stage, FileRole.SOURCE, self.root)
+                    source_records = initial_records if stage_index==start_index and initial_records is not None else _read(original_inputs if stage_index==start_index else [current], stage, FileRole.SOURCE, self.root)
                     if not source_records:
                         raise ValueError('Input file contains no records')
                     if manifest.settings.get('reference_feeds'):
@@ -339,6 +339,32 @@ class ConnectedPipeline:
         return payload, directory
 
 
+def processing_components(records,resolver,start_stage,settings):
+    """Connect claims by FA identity and Stay identity; isolate unrelated processing failures."""
+    from medpar_qa.stages.common import record_identity
+    from medpar_qa.stages.final_action.processor import FinalActionProcessor
+    from medpar_qa.stages.final_action.settings import FinalActionSettings
+    parents=list(range(len(records)));owners={}
+    def find(i):
+        while parents[i]!=i:
+            parents[i]=parents[parents[i]];i=parents[i]
+        return i
+    fa=FinalActionProcessor(resolver,FinalActionSettings.from_mapping((settings or {}).get('final_action',{})))
+    for i,record in enumerate(records):
+        keys=[]
+        stay=record_identity(record,resolver,('hicn','provider_id','admission_date'))
+        if all(value not in (None,'') for value in stay):keys.append(('stay',stay))
+        if start_stage=='final_action':
+            try:keys.append(('fa',fa.group_key(record)))
+            except (ValueError,TypeError,KeyError):pass
+        for key in keys:
+            if key in owners:parents[find(i)]=find(owners[key])
+            else:owners[key]=i
+    components={}
+    for i,record in enumerate(records):components.setdefault(find(i),[]).append(record)
+    return list(components.values())
+
+
 def run_configured(root, session, stage_runs, settings=None, *, start_stage="final_action", generate_outputs=None):
     pipeline = ConnectedPipeline(root, session, settings=settings)
     dates = {s.value: stage_runs[s.value]['run_date'] for s in STAGES}
@@ -363,7 +389,18 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
                 except Exception: rows=[]  # run_file repeats original reads and records the precise failure.
                 _dump(working,rows)
                 _dump(working.with_name('ingestion.json'),{'source_files':files,'source_file_count':len(files),'working_record_count':len(rows),'purpose':'Aggregate before rule grouping: related claims and bills can span physical files'})
-            journeys.append(pipeline.run_file(working,dates,start_stage=start_stage,generate_outputs=True,original_inputs=files))
+            try: source_records=_read(files,Stage(start_stage),FileRole.SOURCE,root)
+            except Exception: source_records=None
+            components=processing_components(source_records,pipeline.resolver,start_stage,settings) if source_records else []
+            if len(components)>1:
+                _dump(session.root/'connected_inputs'/'components.json',{'source_files':files,'components':len(components),'purpose':'A failure stops only related claims/bills; cross-file FA and Stay identities remain connected'})
+                for number,group in enumerate(components,1):
+                    group_path=session.root/'connected_inputs'/f'group_{number:05}.json'
+                    _dump(group_path,[record.data for record in group])
+                    originals=list(dict.fromkeys(record.source.file_path for record in group))
+                    journeys.append(pipeline.run_file(group_path,dates,start_stage=start_stage,generate_outputs=True,original_inputs=originals,initial_records=group))
+            else:
+                journeys.append(pipeline.run_file(working,dates,start_stage=start_stage,generate_outputs=True,original_inputs=files))
     else:
         seen = set()
         for item in [*seed.get('single_files', []), *seed.get('folder_paths', [])]:
@@ -381,7 +418,7 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
     if not journeys:
         raise ValueError('No connected input files are configured')
     index = session.root / 'connected' / 'index.html'
-    source_file_total=sum(payload.get('source_file_count',1) for payload,_ in journeys)
+    source_file_total=len({path for payload,_ in journeys for path in payload.get('source_files',[payload['source_file']])})
     completed = sum(payload['completed'] for payload, _ in journeys)
     stopped = len(journeys) - completed
     generated = datetime.now().astimezone().strftime('%d %B %Y, %I:%M:%S %p %Z (%z)')

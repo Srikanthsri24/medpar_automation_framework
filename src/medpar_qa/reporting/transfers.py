@@ -157,6 +157,12 @@ def connected_transfers(journeys, index):
             count_cells=[transfer_count_link(index,step['stage'],key,events[key],str(directory)) for key in ('started','received','inputs','kept','dropped','stopped','moved')]
             values=[origin,e(step['stage'].replace('_',' ').title()),e(following['stage'].replace('_',' ').title()) if following else 'End',*count_cells,proof]
             rows.append('<tr data-file="'+e(' '.join(display_originals))+'">'+''.join('<td>'+value+'</td>' for value in values)+'</tr>')
+    for stage,metrics in metric_files.items():
+        for key,events in metrics.items():metrics[key]=list({event[0]:event for event in events}.values())
+        kept_labels={event[0] for event in metrics['kept']}
+        metrics['stopped']=[event for event in metrics['stopped'] if event[0] not in kept_labels]
+        stopped_labels={event[0] for event in metrics['stopped']}
+        metrics['dropped']=[event for event in metrics['dropped'] if event[0] not in kept_labels|stopped_labels]
     overview=[]
     for stage,values in totals.items():
         number=STAGES.index(stage);next_stage=STAGES[number+1].replace('_',' ').title() if number+1<len(STAGES) else 'End of workflow'

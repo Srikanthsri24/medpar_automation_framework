@@ -298,10 +298,12 @@ def run_all_source_entries(options):
         row={'entry_stage':stage,'return_code':code,'input_files':0,'steps':[]}
         if matched:
             index=PROJECT_ROOT/matched.group(1)
-            journey_path=next(index.parent.glob('*/journey.json'))
-            journey=json.loads(journey_path.read_text())
-            row.update(input_files=journey['source_file_count'],conclusion=journey['conclusion'],
-                       steps=journey['steps'],report=os.path.relpath(index,session.master_directory).replace(os.sep,'/'))
+            journeys=[json.loads(path.read_text()) for path in index.parent.glob('*/journey.json')]
+            completed=sum(journey.get('completed',False) for journey in journeys)
+            row.update(input_files=len({path for journey in journeys for path in journey.get('source_files',[journey.get('source_file','')])}),
+                       conclusion=f'{completed} of {len(journeys)} independent business groups completed. Open evidence for retained, dropped and exception groups.',
+                       steps=[step for journey in journeys for step in journey['steps']],
+                       report=os.path.relpath(index,session.master_directory).replace(os.sep,'/'))
         else:
             row['conclusion']='Input preparation failed; see input evidence'
             evidence=re.search(r'Input evidence: (.+)',stream.getvalue())
@@ -325,7 +327,7 @@ def write_source_entry_overview(session,report):
         for step in row['steps']:
             if step['status'] in ('BEFORE_START','NOT_REACHED'):continue
             next_position=STAGE_ORDER.index(step['stage'])+1
-            next_step=next((item for item in row['steps'] if next_position<len(STAGE_ORDER) and item['stage']==STAGE_ORDER[next_position]),None)
+            next_step=next((item for item in row['steps'] if next_position<len(STAGE_ORDER) and item['stage']==STAGE_ORDER[next_position] and item.get('input')==step.get('output')),None)
             transferred=bool(step.get('output') and next_step and next_step.get('input')==step['output'])
             transfer_note=("1 generated file received by "+next_step['stage']) if transferred else ("Final output: 1 generated file; no later stage" if step.get('output') and step['stage']=='final_medpar' else "0 files forwarded")
             movements.append(f"{step['stage']}: {len(step.get('input_files',[]))} files received, {step['input_records']} records read, {step['retained']} kept, {step['dropped']} dropped; {step['status']}. {transfer_note}")
