@@ -140,7 +140,7 @@ def test_cross_file_rule6_cancellation_is_grouped_before_forwarding(tmp_path,mon
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize('remote',[False,True],ids=['local-plan','s3-plan'])
+@pytest.mark.parametrize('remote',['local','s3','mixed'])
 @pytest.mark.parametrize('start_stage',['final_action','intermediate'])
 def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,capsys,remote,start_stage):
     from copy import deepcopy
@@ -162,8 +162,8 @@ def test_single_editable_source_plan_runs_multiple_inputs(tmp_path,monkeypatch,c
             yield {'Contents':[{'Key':key,'Size':len(value)} for key,value in objects.items() if key.startswith(Prefix)]}
         def download_file(self,bucket,key,filename):Path(filename).write_bytes(objects[key])
     monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
-    plan=deepcopy(runner.SOURCE_RUN);plan.update(start_stage=start_stage,source_type='s3' if remote else 'local')
-    plan['paths'][start_stage][plan['source_type']]=[f's3://medpar-demo-bucket/folder{number}/' for number in range(2)] if remote else folders
+    plan=deepcopy(runner.SOURCE_RUN);plan.update(start_stage=start_stage)
+    plan['source_paths']=[f's3://medpar-demo-bucket/folder{number}/' for number in range(2)] if remote=='s3' else [folders[0],'s3://medpar-demo-bucket/folder1/'] if remote=='mixed' else folders
     monkeypatch.setattr(runner,'SOURCE_RUN',plan)
     monkeypatch.setattr(sys,'argv',['run_commands.py'])
     assert runner.main()==0

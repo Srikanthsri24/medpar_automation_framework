@@ -1,21 +1,7 @@
-"""MEDPAR QA stage-wise command runner.
+"""Automatic source-only MEDPAR runner.
 
-Edit SOURCE_RUN below for automatic source-only processing, or pass --config with a stage-runs JSON file. Inputs may be
-local files/folders, wildcards, or S3 URIs/standard AWS HTTPS links. Each execution creates one timestamped folder under ``reports/``:
-
-reports/<timestamp>/
-    master/index.html
-    final_action/<command>/report.html
-    split/<command>/report.html
-    stay/<command>/report.html
-    intermediate/<command>/report.html
-    final_medpar/<command>/report.html
-    pytest/<command>/report.html
-
-Within every stage you can enable individual-file runs, folder/wildcard runs, and
-pytest marker runs independently. Set ``enabled`` to False or comment out an item.
-Run SOURCE_RUN automatically with: python run_commands.py
-Use --dataset r65 or --dataset q61 for legacy STAGE_RUNS archive reviews.
+Edit SOURCE_RUN only, then run python run_commands.py. The selected starting
+stage reads the source paths; generated kept outputs feed all later stages.
 """
 
 from __future__ import annotations
@@ -44,81 +30,44 @@ from medpar_qa.reporting.run_layout import ReportSession  # noqa: E402
 from medpar_qa.reporting.session_index import refresh_session_indexes  # noqa: E402
 
 PYTHON = sys.executable
-DEFAULT_DATASET = "r65"  # Team demonstration: all supplied R65 stages.
-CONNECTED_PIPELINE_ENABLED = True  # False restores independent STAGE_RUNS validation.
-CONNECTED_SETTINGS: dict[str, Any] = {
-    "split": {"current_year": 2025},
-    "intermediate": {"deduplicate_filename_exports": True},
-    "final_action": {"enforce_single_service_year": False, "enforce_legacy_table_limits": False},
-}  # Optional stage settings; no code-domain overrides by default.
+REPORTS_ROOT = "reports"
 STOP_ON_FAILURE = False
-REPORTS_ROOT = "reports"  # Relative path only.
-AWS_CREDENTIALS_FILE = "config/aws_credentials.local.json"  # Copy the example; never commit real credentials.
-
+STAGE_ORDER = ("final_action", "split", "stay", "intermediate", "final_medpar")
 
 # =============================================================================
-# EDIT ONLY THIS SECTION FOR AUTOMATIC SOURCE-ONLY RUNS
+# ONLY EDIT THIS INPUT CONFIGURATION
 # =============================================================================
-# Run: python run_commands.py
-# Select ONE entry stage. Only its paths are read; generated kept outputs feed
-# every later stage. Later-stage paths below are alternatives, not comparisons.
-# Each list accepts multiple folders, files or wildcards. Local absolute paths
-# (including Windows paths) are supported. Replace S3 examples with your bucket.
-# Multiple local inputs: ["C:/MEDPAR/folder1", "C:/MEDPAR/folder2", "C:/MEDPAR/file.parquet"]
-# Multiple S3 inputs: ["s3://your-bucket/folder1/", "s3://your-bucket/folder2/", "s3://your-bucket/file.parquet"]
-# Real R65 Final Action source: ["data/production/r65/1-quarterly-claims"]
+# source_paths: multiple local folders/files, S3 folders/files, or a mixture.
+# Use forward slashes for Windows paths, e.g. C:/MEDPAR/input.
+# Start with final_action for raw claims; split for retained Final Action claims;
+# stay for retained Split bills; intermediate for merged Stay records;
+# final_medpar for Intermediate extracts. Generated outputs feed later stages.
 SOURCE_RUN: dict[str, Any] = {
-    "enabled": True,
-    "source_type": "local",             # "local" or "s3"
-    "start_stage": "final_action",      # final_action / split / stay / intermediate / final_medpar
-    "run_date": "2026-04-20",            # YYYY-MM-DD; None uses today's date
+    "start_stage": "final_action",
+    "run_date": "2026-04-20",  # Business date YYYY-MM-DD; None uses today.
+    "source_paths": [
+        "data/demo_source_only",  # Fictitious default: replace with your input folders/files.
+    ],
     "aws_credentials_file": "config/aws_credentials.local.json",
-    "settings": {},                     # Optional stage options / reference_feeds / approved layout
-    "paths": {
-        "final_action": {
-            "local": ["data/demo_source_only"],  # Fictitious working example; replace with claim folders/files
-            "s3": ["s3://YOUR-BUCKET/1-quarterly-claims/"],
-        },
-        "split": {
-            "local": ["data/production/r65/2-final-action-rules"],
-            "s3": ["s3://YOUR-BUCKET/2-final-action-rules/"],
-        },
-        "stay": {
-            "local": ["data/production/r65/3-4yr-window"],
-            "s3": ["s3://YOUR-BUCKET/3-4yr-window/"],
-        },
-        "intermediate": {
-            "local": ["data/production/r65/4-stay-processing"],
-            "s3": ["s3://YOUR-BUCKET/4-stay-processing/"],
-        },
-        "final_medpar": {
-            "local": ["data/production/r65/5-intermediate-processing"],
-            "s3": ["s3://YOUR-BUCKET/5-intermediate-processing/"],
-        },
-    },
+    "settings": {},  # Optional reference feeds and approved calculation/layout options.
 }
 
 
 def source_run_configuration(plan, *, start_stage=None, run_date=None):
     """Select one entry-stage source list; generated downstream outputs need no paths."""
     stage = start_stage or plan.get("start_stage")
-    stages = ("final_action", "split", "stay", "intermediate", "final_medpar")
+    stages = STAGE_ORDER
     if stage not in stages:
         raise ValueError("SOURCE_RUN.start_stage must be a supported stage")
-    kind = plan.get("source_type")
-    if kind not in ("local", "s3"):
-        raise ValueError('SOURCE_RUN.source_type must be "local" or "s3"')
-    paths = plan.get("paths", {}).get(stage, {}).get(kind)
+    paths = plan.get("source_paths")
     if not isinstance(paths, list) or not paths or any(not isinstance(path,str) or not path.strip() for path in paths):
-        raise ValueError(f"SOURCE_RUN.paths.{stage}.{kind} needs one or more file/folder paths")
+        raise ValueError("SOURCE_RUN.source_paths needs one or more file/folder paths")
     paths = [path.strip() for path in paths]
     from medpar_qa.ingestion.input_sources import s3_location
     for path in paths:
-        if kind == "s3" and "YOUR-BUCKET" in path:
-            raise ValueError("Replace YOUR-BUCKET in SOURCE_RUN with your actual bucket")
-        remote = s3_location(path)
-        if (kind == "s3") != (remote is not None):
-            raise ValueError(f"{kind} source list contains a path of the wrong type")
+        if "YOUR-BUCKET" in path:
+            raise ValueError("Replace YOUR-BUCKET with your actual bucket")
+        s3_location(path)  # Validate AWS links; local paths need no source-type switch.
     business_date = run_date or plan.get("run_date") or datetime.now().date().isoformat()
     datetime.strptime(str(business_date), "%Y-%m-%d")
     settings = plan.get("settings", {})
@@ -127,174 +76,6 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
     configured = {stage:{"enabled":True,"run_date":str(business_date),"single_files":[
         {"name":f"Source processing from {stage}","source":paths}]}}
     return stage, configured, settings
-
-
-# =============================================================================
-# 1. STAGE-WISE BUSINESS FILE RUNS
-# =============================================================================
-# Each stage has two clear lists:
-#   single_files: run named individual files
-#   folder_paths: run complete folders/wildcards
-# Paths may be JSON/Parquet files, local folders or S3 prefixes.
-# Repeat local/S3 paths in source/actual/expected/dropped lists; mixing is supported.
-
-# Production data must be copied under PROJECT_ROOT/data/production/q61.
-# Never commit it. Paths remain relative as required by the runner.
-PRODUCTION_ROOT = Path("data/production/q61")
-
-
-def _production_paths(*folders: str, suffixes: tuple[str, ...] = (".json", ".parquet"), data_root: Path = PRODUCTION_ROOT) -> list[str]:
-    """Discover all nested stage files; deterministic and project-relative."""
-    result: list[str] = []
-    for folder in folders:
-        directory = PROJECT_ROOT / data_root / folder
-        if directory.is_dir():
-            result.extend(
-                path.relative_to(PROJECT_ROOT).as_posix()
-                for path in directory.rglob("*")
-                if path.is_file() and path.suffix.lower() in suffixes
-            )
-    return sorted(set(result))
-
-
-def _production_run(name: str, folders: tuple[str, ...], *, enabled: bool = True,
-                    suffixes: tuple[str, ...] = (".json", ".parquet"),
-                    actual_folders: tuple[str, ...] = (), data_root: Path = PRODUCTION_ROOT) -> dict[str, Any]:
-    """Create the configuration entry for a named production run, with its source/output paths and
-    enabled flag.
-    """
-    paths = _production_paths(*folders, suffixes=suffixes, data_root=data_root)
-    actual_paths = _production_paths(*actual_folders, suffixes=suffixes, data_root=data_root)
-    return {
-        "name": f"{name} ({len(paths)} files)",
-        "enabled": enabled and bool(paths),
-        "mode": "reconcile" if actual_folders else "calculate",
-        "require_matching_snapshot": bool(actual_folders),
-        "source": paths,
-        "actual": actual_paths,
-        "expected": [],
-        "expected_exit_codes": (0,),
-    }
-
-
-STAGE_RUNS: dict[str, dict[str, Any]] = {
-    "final_action": {
-        "enabled": True,
-        "run_date": "2026-03-20",
-        "single_files": [],
-        "folder_paths": [
-            _production_run("Final Action - quarterly claims to retained output", ("1-quarterly-claims-parquet",), actual_folders=("2-final-action-rules-parquet",), enabled=False),
-            {
-                **_production_run("Final Action - retained files as connected starting input", ("2-final-action-rules-parquet",)),
-                "pipeline_outputs": {
-                    "stay": _production_paths("4-stay-processing", suffixes=(".json",)),
-                    "intermediate": _production_paths("5-intermediate-processing", suffixes=(".json",)),
-                    "final_medpar": _production_paths("6-final-processing", suffixes=(".json",), data_root=Path("data/production/r65")),
-                },
-            },
-            _production_run("Final Action - dropped output structural checks", ("2-final-action-rules-dropped",), enabled=False),
-        ],
-    },
-    "split": {
-        "enabled": True,
-        "run_date": "2026-03-20",
-        "single_files": [],
-        "folder_paths": [
-            _production_run("Split - retained Final Action to 4-year output", ("2-final-action-rules-parquet",), actual_folders=("3-4yr-window-parquet",)),
-            _production_run("Split - retained 4-year window structural checks", ("3-4yr-window-parquet",), enabled=False),
-            _production_run("Split - dropped 4-year window structural checks", ("3-4yr-window-parquet-dropped",), enabled=False),
-        ],
-    },
-    "stay": {
-        "enabled": True,
-        "run_date": "2026-05-14",
-        "single_files": [],
-        "folder_paths": [
-            _production_run("Stay - split bills to merged JSON output", ("3-4yr-window-parquet",), actual_folders=("4-stay-processing",)),
-            _production_run("Stay - output Parquet structural checks", ("4-stay-processing-parquet",), enabled=False),
-        ],
-    },
-    "intermediate": {
-        "enabled": True,
-        "run_date": "2026-05-14",
-        "single_files": [],
-        "folder_paths": [
-            _production_run("Intermediate - merged Stay to extracted JSON output", ("4-stay-processing",), actual_folders=("5-intermediate-processing",)),
-            _production_run("Intermediate - output Parquet structural checks", ("5-intermediate-processing-parquet",), enabled=False),
-        ],
-    },
-    "final_medpar": {
-        "enabled": True,  # R65 contains extracted Final MEDPAR SS/SNF JSON outputs.
-        "run_date": "2026-05-14",
-        "single_files": [],
-        "folder_paths": [
-            _production_run("Final MEDPAR - R65 short-stay extracted output checks", ("6-final-processing/MEDPAR_FINAL_SS_FILES",), suffixes=(".json",), data_root=Path("data/production/r65")),
-            _production_run("Final MEDPAR - R65 SNF extracted output checks", ("6-final-processing/MEDPAR_FINAL_SNF_FILES",), suffixes=(".json",), data_root=Path("data/production/r65")),
-        ],
-    },
-}
-
-
-def r65_stage_runs() -> dict[str, dict[str, Any]]:
-    """Review every supplied R65 stage independently using its actual stage boundary."""
-    root = Path("data/production/r65")
-    boundaries = {
-        "final_action": ("1-quarterly-claims", "2-final-action-rules"),
-        "split": ("2-final-action-rules", "3-4yr-window"),
-        "stay": ("3-4yr-window", "4-stay-processing"),
-        "intermediate": ("4-stay-processing", "5-intermediate-processing"),
-    }
-    profile = {}
-    for stage, (source, actual) in boundaries.items():
-        item = _production_run(f"R65 {stage.replace('_', ' ').title()} - input/output reconciliation", (source,), actual_folders=(actual,), data_root=root)
-        # R65 is a development export with no shared snapshot manifest. Check the
-        # supplied records; disclose archive completeness independently in the audit.
-        item["require_matching_snapshot"] = False
-        item["split_current_year"] = 2024
-        item["modern_final_action"] = stage == "final_action"
-        if stage == "final_action":
-            item["dropped"] = [p.as_posix() for p in sorted((root / "2-final-action-dropped").rglob("*.json"))]
-        profile[stage] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [item]}
-    profile["final_medpar"] = {"enabled": True, "run_date": "2025-03-18", "single_files": [], "folder_paths": [
-        _production_run("R65 Final MEDPAR short-stay output checks", ("6-final-processing/MEDPAR_FINAL_SS_FILES",), suffixes=(".json",), data_root=root),
-        _production_run("R65 Final MEDPAR SNF output checks", ("6-final-processing/MEDPAR_FINAL_SNF_FILES",), suffixes=(".json",), data_root=root),
-    ]}
-    return profile
-
-
-
-# =============================================================================
-# 2. ALL-STAGE MANIFEST RUNS
-# =============================================================================
-ALL_STAGE_RUNS = [
-    {
-        "name": "All five stages - complete example manifest",
-        "enabled": False,
-        "manifest": "config/run_manifest.all_stages.example.yaml",
-        "expected_exit_codes": (0,),
-    },
-    {
-        "name": "All five stages - user paths template",
-        "enabled": False,
-        "manifest": "config/runs/all_5_stages_user_template.yaml",
-        "expected_exit_codes": (0,),
-    },
-]
-
-
-# =============================================================================
-# 3. PYTEST RUNS — STAGE WISE OR COMPLETE
-# =============================================================================
-PYTEST_RUNS = [
-    {"name": "Pytest - Final Action", "enabled": False, "marker": "final_action"},
-    {"name": "Pytest - Split", "enabled": False, "marker": "split"},
-    {"name": "Pytest - Stay", "enabled": False, "marker": "stay"},
-    {"name": "Pytest - Intermediate", "enabled": False, "marker": "intermediate"},
-    {"name": "Pytest - Final MEDPAR", "enabled": False, "marker": "final_medpar"},
-    {"name": "Pytest - Uploaded input data", "enabled": False, "marker": "input_data"},
-    {"name": "Pytest - Complete regression", "enabled": False, "marker": "regression"},
-    {"name": "Pytest - Complete project", "enabled": False, "marker": None},
-]
 
 
 @dataclass(frozen=True)
@@ -359,12 +140,12 @@ def _stage_command(stage: str, run_date: str, item: dict[str, Any], report_sessi
 
 
 def build_commands(report_session: str = "reports/_configured_preview", stage_runs=None) -> list[Command]:
-    """Expand enabled STAGE_RUNS entries into business command definitions and append requested
-    pytest commands.
-    """
+    """Build independent commands from explicit configuration, without stored input paths."""
     ensure_relative_user_path(report_session, "report_session")
     commands: list[Command] = []
-    for stage, stage_config in (STAGE_RUNS if stage_runs is None else stage_runs).items():
+    if stage_runs is None:
+        _, stage_runs, _ = source_run_configuration(SOURCE_RUN)
+    for stage, stage_config in stage_runs.items():
         if not stage_config.get("enabled", True):
             continue
         run_date = str(stage_config["run_date"])
@@ -372,36 +153,7 @@ def build_commands(report_session: str = "reports/_configured_preview", stage_ru
             for item in stage_config.get(list_name, []):
                 commands.append(_stage_command(stage, run_date, item, report_session))
 
-    for item in ALL_STAGE_RUNS:
-        manifest = str(item["manifest"])
-        ensure_relative_user_path(manifest, "manifest")
-        name = str(item["name"])
-        command_id = slugify(name)
-        commands.append(
-            Command(
-                name=name,
-                stage="master",
-                command_id=command_id,
-                args=[PYTHON, "-m", "medpar_qa.cli", "--manifest", manifest, "--report-session", report_session, "--command-id", command_id],
-                enabled=bool(item.get("enabled", True)),
-                expected_exit_codes=tuple(item.get("expected_exit_codes", (0,))),
-            )
-        )
-
-    for item in PYTEST_RUNS:
-        name = str(item["name"])
-        command_id = slugify(name)
-        marker = item.get("marker")
-        args = [PYTHON, "-m", "pytest", "-v"]
-        if marker:
-            args.extend(["-m", str(marker)])
-        args.extend(["--medpar-report-session", report_session, "--medpar-report-name", command_id])
-        commands.append(Command(name, str(marker or "pytest"), command_id, args, bool(item.get("enabled", True)), (0,)))
     return commands
-
-
-# Kept for inspection/tests. main() builds a fresh list using the real timestamp session.
-COMMANDS = build_commands()
 
 
 def _command_text(args: list[str]) -> str:
@@ -478,33 +230,31 @@ def execution_args(command: Command, session: ReportSession) -> list[str]:
 
 def main() -> int:
     """Run this script command-line workflow and return its process exit status. The team entry
-    point. STAGE_RUNS selects enabled business runs, paths, dates and validation options;
+    point. SOURCE_RUN selects the source paths, starting stage and business date;
     commands run sequentially and their reports are combined into a session.
     """
     import argparse
     parser = argparse.ArgumentParser(description="Run connected MEDPAR validation or one configured stage")
-    parser.add_argument('--stage', choices=tuple(STAGE_RUNS), help="Validate only this configured stage independently")
-    parser.add_argument("--dataset", choices=("q61", "r65"), default=None, help="Explicit legacy dataset review: r65 or q61. Without this flag, use SOURCE_RUN.")
-    parser.add_argument("--config", help="Stage-runs JSON configuration; overrides the dataset profile")
+    parser.add_argument('--stage', choices=STAGE_ORDER, help="Validate only this configured stage independently")
+    parser.add_argument("--config", help="Optional explicit validation configuration; overrides SOURCE_RUN")
     parser.add_argument("--source", action="append", help="Source file/folder or S3 prefix; repeat for multiple inputs")
     parser.add_argument("--run-date", help="Business processing date YYYY-MM-DD for direct --source runs")
-    parser.add_argument("--start-stage", choices=tuple(STAGE_RUNS), help="Connected entry stage; stages before it are not executed")
+    parser.add_argument("--start-stage", choices=STAGE_ORDER, help="Connected entry stage; stages before it are not executed")
     parser.add_argument("--flow", choices=("connected", "independent"), help="Override the configuration: forward retained records or review stages independently")
     parser.add_argument("--aws-config", default=None, help="Local AWS credentials/profile settings JSON (not included in reports)")
     options = parser.parse_args()
-    use_source_plan = bool(SOURCE_RUN.get("enabled")) and not (options.config or options.source or options.stage or options.dataset)
-    options.dataset = options.dataset or DEFAULT_DATASET
+    use_source_plan = not (options.config or options.source)
     selected_stage = options.stage
-    connected = CONNECTED_PIPELINE_ENABLED and selected_stage is None and options.dataset != "r65"
+    connected = selected_stage is None
     start_stage = options.start_stage or "final_action"
     generate_outputs = None
-    connected_settings = CONNECTED_SETTINGS
-    configured_stages = r65_stage_runs() if options.dataset == "r65" else STAGE_RUNS
+    connected_settings = {}
+    configured_stages = {}
     if options.config:
         try:
             configuration = json.loads(Path(options.config).read_text(encoding="utf-8-sig"))
             configured_stages = configuration["stage_runs"]
-            if not isinstance(configured_stages, dict) or set(configured_stages) - set(STAGE_RUNS):
+            if not isinstance(configured_stages, dict) or set(configured_stages) - set(STAGE_ORDER):
                 raise ValueError("stage_runs must map supported stage names to configurations")
             for stage, entry in configured_stages.items():
                 if not isinstance(entry, dict): raise ValueError(f"{stage} configuration must be an object")
@@ -516,7 +266,7 @@ def main() -> int:
                             raise ValueError(f"{stage}.{list_name} must contain configuration objects")
             connected = bool(configuration.get("connected_pipeline_enabled", True)) and selected_stage is None
             start_stage = options.start_stage or configuration.get("start_stage") or next((stage for stage,entry in configured_stages.items() if entry.get("enabled",True) and (entry.get("single_files") or entry.get("folder_paths"))), "final_action")
-            if start_stage not in STAGE_RUNS: raise ValueError("Invalid start_stage")
+            if start_stage not in STAGE_ORDER: raise ValueError("Invalid start_stage")
             generate_outputs = configuration.get("generate_outputs")
             connected_settings = configuration.get("connected_settings", {})
             if not isinstance(connected_settings, dict): raise ValueError("connected_settings must be an object")
@@ -524,16 +274,15 @@ def main() -> int:
         except (OSError, ValueError, KeyError, TypeError) as exc:
             parser.error(f"Cannot load stage configuration: {exc}")
     if use_source_plan:
-        if options.flow == "independent": parser.error("SOURCE_RUN forwards kept outputs automatically; use --dataset for independent archive review")
         try:
-            start_stage, configured_stages, connected_settings = source_run_configuration(SOURCE_RUN,start_stage=options.start_stage,run_date=options.run_date)
+            start_stage, configured_stages, connected_settings = source_run_configuration(SOURCE_RUN,start_stage=options.start_stage or selected_stage,run_date=options.run_date)
         except (ValueError,TypeError,AttributeError) as exc:
             parser.error(f"Cannot use SOURCE_RUN: {exc}")
-        connected=True; generate_outputs=True
-        print(f"SOURCE_RUN: {SOURCE_RUN['source_type']} inputs, starting at {start_stage}",flush=True)
+        connected=selected_stage is None; generate_outputs=True
+        print(f"SOURCE_RUN: starting at {start_stage}",flush=True)
         for number,path in enumerate(configured_stages[start_stage]['single_files'][0]['source'],1):
             print(f"  {number}. {path}",flush=True)
-        print("Automatic route: "+" -> ".join(list(STAGE_RUNS)[list(STAGE_RUNS).index(start_stage):]),flush=True)
+        print("Automatic route: "+" -> ".join(list(STAGE_ORDER)[list(STAGE_ORDER).index(start_stage):]),flush=True)
     elif options.source:
         if options.config or selected_stage: parser.error("Use --source with --start-stage, without --config or --stage")
         business_date = options.run_date or datetime.now().date().isoformat()
@@ -553,14 +302,10 @@ def main() -> int:
     if connected:
         from copy import deepcopy
         configured_stages = deepcopy(configured_stages)
-        if not options.config and not options.source and not use_source_plan and options.dataset == "r65":
-            connected_settings = deepcopy(CONNECTED_SETTINGS)
-            connected_settings.setdefault("split", {}).pop("current_year", None)  # R65 Q1 derives previous-year Y0.
-
         seed = configured_stages.get(start_stage, {})
         if not seed.get("run_date"):
             parser.error(f"Connected flow requires {start_stage} run_date and source inputs")
-        for stage in STAGE_RUNS:
+        for stage in STAGE_ORDER:
             configured_stages.setdefault(stage, {}).setdefault("run_date", seed["run_date"])
         # A stage's actual outputs can also supply the downstream comparison inputs.
         for item in [*seed.get("single_files", []), *seed.get("folder_paths", [])]:
@@ -573,11 +318,11 @@ def main() -> int:
         for stage, entry in configured_stages.items():
             if entry.get("enabled", True) and (not selected_stage or selected_stage == stage) and not entry.get("run_date"):
                 parser.error(f"Independent {stage} configuration requires run_date")
-    aws_path = Path(options.aws_config or (SOURCE_RUN.get("aws_credentials_file") if use_source_plan else None) or AWS_CREDENTIALS_FILE)
+    aws_path = Path(options.aws_config or SOURCE_RUN["aws_credentials_file"])
     if not aws_path.is_absolute(): aws_path = PROJECT_ROOT / aws_path
     if options.aws_config and not aws_path.is_file():
         parser.error("The explicit --aws-config file does not exist; copy the AWS credentials example or use your AWS profile/environment")
-    print(f"Selected dataset: {'SOURCE INPUTS' if options.source or use_source_plan else 'CONFIGURED' if options.config else options.dataset.upper()}", flush=True)
+    print(f"Selected dataset: {'CONFIGURED' if options.config else 'SOURCE INPUTS'}", flush=True)
     print("Run mode: connected validation" if connected else "Run mode: independent stage validation", flush=True)
     session = ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
@@ -590,8 +335,6 @@ def main() -> int:
         print(f"Input evidence: {relative_display(session.root / 'input_sources.html', project_root=PROJECT_ROOT)}", flush=True)
         return 2
     print(f"Unique resolved local/S3 files: {len(sources.files)}", flush=True)
-    if options.dataset == "r65" and not options.config and not options.source and not use_source_plan:
-        (session.root / "review_scope.json").write_text(json.dumps({"dataset": "R65", "description": "All five supplied stage boundaries reviewed independently. Later supplied outputs are checked even when earlier stages fail. This is not a completed connected journey. Business processing date: 18 March 2025; Split Y0: 2024. No shared snapshot manifest or approved golden physical-byte outputs supplied."}, indent=2), encoding="utf-8")
     if connected:
         from medpar_qa.orchestration.connected import run_configured
         journeys, index = run_configured(PROJECT_ROOT, session, configured_stages, connected_settings, **({"start_stage":start_stage} if start_stage != "final_action" else {}), **({"generate_outputs":generate_outputs} if generate_outputs is not None else {}))
@@ -686,17 +429,6 @@ def main() -> int:
         if unexpected_failures and STOP_ON_FAILURE:
             break
 
-    if not options.config and not options.source and (selected_stage == "final_medpar" or options.dataset == "r65" and selected_stage is None) and (PROJECT_ROOT / "data/production/r65").is_dir():
-        from scripts.run_r65_audit import run_audit
-        audit = run_audit(session)
-        audit_code = 0 if audit.passed else 1
-        unexpected_failures += int(not audit.passed)
-        executions.append({"name": "R65 Final lineage, routing and reconciliation audit", "stage": "final_medpar",
-            "command": "python scripts/run_r65_audit.py",
-            "returncode": audit_code, "expected_exit_codes": (0,), "expected": audit.passed,
-            "outcome": "COMPLETED AS EXPECTED" if audit.passed else "BUSINESS FAIL / BLOCKED",
-            "output": f"Archive validation counts: {audit.status_counts}",
-            "report_files": [relative_display(session.root / "final_medpar/r65_lineage_routing_reconciliation" / name, project_root=PROJECT_ROOT) for name in ("report.html", "report.json")]})
     master = refresh_session_indexes(session.root, executions=executions)
     write_quality_summary(session.root, executions)
     print("\n" + "=" * 118)

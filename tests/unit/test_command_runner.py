@@ -20,15 +20,10 @@ def test_run_commands_file_loads_and_has_all_five_stages():
     what this test proves for its fixtures.
     """
     namespace = runpy.run_path("run_commands.py", run_name="run_commands_test")
-    commands = namespace["COMMANDS"]
-    stages = {
-        command.args[command.args.index("--stage") + 1]
-        for command in commands
-        if "--stage" in command.args
-    }
-    configured = namespace["STAGE_RUNS"]
-    assert set(configured) == {"final_action", "split", "stay", "intermediate", "final_medpar"}
-    assert stages == {stage for stage,item in configured.items() if item.get("enabled", True)}
+    assert namespace["STAGE_ORDER"] == ("final_action", "split", "stay", "intermediate", "final_medpar")
+    assert "STAGE_RUNS" not in namespace and "PRODUCTION_ROOT" not in namespace
+    stage,configured,_ = namespace["source_run_configuration"](namespace["SOURCE_RUN"])
+    assert list(configured)==[stage]
 
 
 def test_long_stage_command_round_trips_through_arguments_file(tmp_path, monkeypatch):
@@ -66,32 +61,12 @@ def test_non_stage_commands_keep_their_arguments(tmp_path):
     assert runner.execution_args(command, SimpleNamespace(root=tmp_path)) == command.args
 
 
-def test_r65_profile_uses_own_stage_boundaries_and_business_year():
+def test_runner_has_no_hidden_dataset_configuration():
     import run_commands as runner
-    profile = runner.r65_stage_runs()
-    commands = [c for c in runner.build_commands('reports/test', profile) if c.enabled]
-    assert {c.stage for c in commands} == set(profile)
-    assert all('q61' not in ' '.join(c.args) for c in commands)
-    assert '--modern-final-action' in next(c for c in commands if c.stage == 'final_action').args
-    split = next(c for c in commands if c.stage == 'split')
-    assert split.args[split.args.index('--split-current-year') + 1] == '2024'
-    assert all(item['run_date'] == '2025-03-18' for item in profile.values())
-    assert all(not item['require_matching_snapshot'] for config in profile.values() for item in config['folder_paths'] if item['mode'] == 'reconcile')
-
-
-def test_explicit_dataset_selects_r65_profile(tmp_path, monkeypatch, capsys):
-    import sys
-    import run_commands as runner
-    captured = []
-    profile = {'final_action': {'enabled': True, 'run_date': '2026-03-20'}}
-    monkeypatch.setattr(runner, 'PROJECT_ROOT', tmp_path)
-    monkeypatch.setattr(runner, 'REPORTS_ROOT', 'reports')
-    monkeypatch.setattr(runner, 'r65_stage_runs', lambda: profile)
-    monkeypatch.setattr(runner, 'build_commands', lambda session, stages: captured.append(stages) or [])
-    monkeypatch.setattr(sys, 'argv', ['run_commands.py', '--dataset', 'r65'])
-    assert runner.main() == 0
-    assert captured == [profile]
-    assert 'Selected dataset: R65' in capsys.readouterr().out
+    assert not hasattr(runner,'r65_stage_runs')
+    assert not hasattr(runner,'_production_paths')
+    assert not hasattr(runner,'ALL_STAGE_RUNS')
+    assert not hasattr(runner,'PYTEST_RUNS')
 
 
 def test_connected_configuration_inherits_dates_and_actual_paths(tmp_path,monkeypatch):

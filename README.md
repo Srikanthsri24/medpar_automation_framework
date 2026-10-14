@@ -2,7 +2,7 @@
 
 Validate Final Action, Four-Year Split, Stay, Intermediate and Final MEDPAR using JSON or Parquet inputs. The framework compares production outputs with source rules and approved expected outputs, and produces reports explaining every recorded result.
 
-**Current verification:** 401 automated tests passed on 13 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
+**Current verification:** 518 automated tests passed on 15 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
 
 For your team demo, start with [how one run works](#how-one-run-works), [stage logic](#stage-logic-to-explain-first), [common questions](#questions-your-team-is-likely-to-ask) and [Python concepts](#python-concepts-used-here). Use the expandable [file/function reference](#every-python-file-class-and-function) for coding questions and the [rule reference](#rule-explanation-reference) for validation questions. Search the exact function or file name to jump to its detailed explanation.
 
@@ -42,58 +42,39 @@ Run automatic source-only processing (the shipped default is fictitious demo inp
 python run_commands.py
 ```
 
-Edit `SOURCE_RUN` in `run_commands.py` to select the source type, starting stage, date and input paths. The default command uses the single `SOURCE_RUN` configuration. `--dataset r65` or `--dataset q61` explicitly selects a legacy archive review. A `--config` file overrides either profile. Missing files, mismatched snapshots and business failures remain visible in reports.
+Edit `SOURCE_RUN` in `run_commands.py` to select the source type, starting stage, date and input paths. The command uses only the `SOURCE_RUN` input list and selected starting stage. Missing files, mismatched snapshots and business failures remain visible in reports.
 
-### Advanced configuration file (optional)
+### One input configuration
 
-For configuration-file or comparison runs, copy `config/stage_runs.example.json` to your own configuration, remove the example paths, and fill `source`, `actual`, `expected` and `dropped` with strings or lists of paths. Each list supports mixed inputs:
+Edit only `SOURCE_RUN` near the top of `run_commands.py`:
 
-- A local file: `data/production/claims.json` or an absolute path on your laptop.
-- One or multiple local folders: recursively discovers JSON and Parquet files.
-- Local wildcards: `data/production/**/*.parquet`.
-- S3 files: `s3://your-bucket/claims/file.parquet`.
-- One or multiple S3 folders: `s3://your-bucket/claims/folder-one/`, `s3://your-bucket/claims/folder-two/`.
-- S3 wildcards: `s3://your-bucket/claims/**/*.parquet` (matches nested keys).
-- Standard AWS HTTPS object links and S3 console bucket/prefix/object links. These use the configured AWS credentials. For signed or versioned links, use the canonical `s3://bucket/key` instead.
-
-```sh
-pip install -r requirements.txt
-python run_commands.py --config config/stage_runs.local.json
+```python
+SOURCE_RUN = {
+    "start_stage": "final_action",
+    "run_date": "2026-04-20",
+    "source_paths": [
+        "C:/MEDPAR/input/folder1",
+        "C:/MEDPAR/input/folder2",
+        "C:/MEDPAR/input/extra.parquet",
+    ],
+    "aws_credentials_file": "config/aws_credentials.local.json",
+    "settings": {},
+}
 ```
 
-Copy `config/aws_credentials.example.json` to `config/aws_credentials.local.json`. The example contains dummy placeholders; they are ignored rather than sent to AWS. Fill both access key and secret key, plus session token when using temporary credentials. Alternatively leave keys empty and set `profile_name`, or use the standard AWS environment/profile/role credential chain. Change `region_name` to the bucket's region. A different local settings file can be selected with `--aws-config`.
+Then run `python run_commands.py`. For AWS, replace the same `source_paths` entries with your `s3://bucket/prefix/` folders or `s3://bucket/file.parquet` files. A mixture of local and S3 paths is supported automatically. No source-type switch, production root, dataset selector or second path table is needed. Windows paths should use forward slashes or Python raw strings. Set `run_date` to the business date, or `None` for today. Real AWS credentials belong in the configured local credentials file or your AWS profile/environment, not this script.
 
-```sh
-python run_commands.py --config config/stage_runs.local.json --aws-config config/aws_credentials.local.json
-```
-
-S3 access requires read permission for selected objects and list permission for selected prefixes. The runner uses paginated discovery, excludes non-JSON/Parquet folder objects, deduplicates overlapping paths, and downloads into `data/.input_cache/<report-session>/`. External local files are copied there; repository-local files remain in place. Original directory/hive partition labels are preserved. The cache and local credentials file are excluded from Git. The runner reads S3; it does not upload reports or modify bucket objects.
-
-Open **Local/S3 input sources** from the generated report for a collapsed list of original paths, files used, byte sizes and SHA-256 fingerprints. An unreadable S3 object or empty S3 folder stops input preparation with exit code 2 and records the reason in `input_sources.html`; the runner does not silently validate a partial folder. Missing repository-local paths continue into the existing ingestion failure report.
-
-### Edit inputs in one place
-
-Edit **`SOURCE_RUN` near the top of `run_commands.py`**, then run:
-
-```sh
-python run_commands.py
-```
-
-Set `source_type` to `local` or `s3`, `start_stage` to the entry stage, and `run_date` to the business date (`None` uses today). Put all folders and individual files in `paths[start_stage][source_type]`. Multiple entries are combined before processing so related claims in separate files are evaluated together. Paths for other stages are ignored on this run; they are alternative starting inputs for a future run. Do not give downstream comparison files.
-
-| Starting stage | Input you supply | Automatic route |
+| `start_stage` | What your source paths must contain | Automatic remaining stages |
 | --- | --- | --- |
-| `final_action` | Quarterly claim files | Final Action → Split → Stay → Intermediate → Final MEDPAR |
-| `split` | Retained Final Action files | Split → Stay → Intermediate → Final MEDPAR |
-| `stay` | Retained Split files | Stay → Intermediate → Final MEDPAR |
-| `intermediate` | Merged Stay files | Intermediate → Final MEDPAR |
-| `final_medpar` | Intermediate extract files | Final MEDPAR |
+| `final_action` | Quarterly claims | Final Action → Split → Stay → Intermediate → Final MEDPAR |
+| `split` | Retained Final Action claims | Split → Stay → Intermediate → Final MEDPAR |
+| `stay` | Retained Split bills | Stay → Intermediate → Final MEDPAR |
+| `intermediate` | Merged Stay records | Intermediate → Final MEDPAR |
+| `final_medpar` | Intermediate extracts | Final MEDPAR |
 
-For example, select `start_stage: "stay"`, then change that stage's `local` list to `["C:/MEDPAR/split/folder1", "C:/MEDPAR/split/folder2", "C:/MEDPAR/split/extra.parquet"]`. Use forward slashes or Python raw strings for Windows paths. To use AWS, change `source_type` to `s3` and its `s3` list to `["s3://your-bucket/split/folder1/", "s3://your-bucket/split/folder2/", "s3://your-bucket/split/extra.parquet"]`. The shipped S3 entries are examples; replace `YOUR-BUCKET` before running. These folders must contain the input for the selected stage, regardless of the bucket's naming convention.
+All supplied folders/files are discovered and combined before stage rules run, preserving cross-file claim grouping. Outputs are generated under the timestamped report folder and become the next stage's inputs. You do not configure downstream folders. Failures or missing prerequisites stop progression; business drops are recorded and only kept records continue. Reports show original file counts, generated record counts, handoff evidence and final export readiness.
 
-The default local Final Action entry is the fictitious `data/demo_source_only` folder. Replace it with your real claim folders/files. Other local entries point to the supplied R65 stage directories. Keep real AWS credentials in the configured local credentials file or your AWS profile/environment. Set reference feeds and approved byte-layout options in `SOURCE_RUN.settings` if available.
-
-The console prints the selected source paths and automatic stage route. Reports record file discovery and handoff evidence. Failed/blocked inputs stop; successful business drops do not move forward. Earlier stages show BEFORE_START. Final export readiness remains explicit. CLI `--source`, `--config` or `--dataset` overrides `SOURCE_RUN`; setting `SOURCE_RUN.enabled` to `False` restores the legacy default.
+The shipped source is the fictitious `data/demo_source_only` folder. Replace its single list with your real sources. Dataset-specific automatic archive review has been removed from this runner; historical archive results remain in their existing reports.
 
 ### Source-only processing and starting stage
 
@@ -114,11 +95,7 @@ Its supplied amounts yield DRG price 134, total charges 150, covered charges 140
 
 Repeat `--source` for multiple files/folders. `--start-stage` accepts `final_action`, `split`, `stay`, `intermediate` or `final_medpar`; it defaults to Final Action. `--run-date` is the business date, defaulting to the laptop's current date. Inputs must match the chosen stage: Stay receives retained Split bills with routing indicators; Intermediate receives merged Stay records; Final MEDPAR receives Intermediate records. Missing required operands produce a stop with evidence rather than invented values.
 
-You can also set `start_stage` and `generate_outputs: true` in `config/stage_runs.local.json`, then run:
-
-```sh
-python run_commands.py --config config/stage_runs.local.json --flow connected
-```
+Set `SOURCE_RUN.start_stage` and `SOURCE_RUN.source_paths`, then run `python run_commands.py`.
 
 Only the chosen seed stage needs source paths and a date. Missing subsequent dates inherit its date. Earlier stages show **BEFORE_START**, with zero input/check counts. `--stage` still selects an independent review; use `--start-stage` for source-driven onward processing.
 
@@ -145,7 +122,7 @@ SSI 0251 counts positive monthly overlap from admission inclusive to discharge e
 
 **Export boundary:** these writers generate supported JSON records. A complete physical MEDPAR export requires the approved copybook/field layout, and some clinical/revenue/SSI mappings and vendor DRG calculations remain unavailable. These are disclosed in generation coverage. Missing required operands stop processing; unavailable optional/reference calculations are unassessed, not fabricated as zero or marked PASS. Set Final `require_fixed_width: true` in `connected_settings` when physical output is mandatory; absence then blocks Final validation. Source-only processing does not require comparison files, but cannot replace missing external calculation definitions or reference data.
 
-Comparison mode remains available with `generate_outputs: false` plus `pipeline_outputs`. Without an explicit generation flag, configured comparison paths select comparison mode; otherwise outputs are generated from source. The updated example selects generation explicitly. Use `--flow independent` for separate stage reviews. The explicit `--dataset r65` archive review remains independent.
+Comparison mode remains available with `generate_outputs: false` plus `pipeline_outputs`. Without an explicit generation flag, configured comparison paths select comparison mode; otherwise outputs are generated from source. The updated example selects generation explicitly. Use `--flow independent` for separate stage reviews. Independent validation is available only through explicit configuration.
 
 AWS setup errors identify missing credentials, expired tokens, access denied and missing objects. Credential JSON supports a Windows UTF-8 BOM and trims whitespace. An explicitly supplied missing `--aws-config` file is rejected before running. Share error codes, not keys or session tokens.
 
@@ -264,7 +241,7 @@ Business authority comes from the approved requirements and the annotated gap re
 
 ## How one run works
 
-1. `run_commands.py` reads `STAGE_RUNS`. Each enabled entry becomes a separate business command with a stage, processing date and source/actual/expected paths. `scripts/run_stage.py` runs a stage; `medpar_qa.cli` runs a YAML manifest. These paths enter the same Pipeline.
+1. `run_commands.py` reads `internal stage configuration`. Each enabled entry becomes a separate business command with a stage, processing date and source/actual/expected paths. `scripts/run_stage.py` runs a stage; `medpar_qa.cli` runs a YAML manifest. These paths enter the same Pipeline.
 2. A manifest identifies each file role. **source** supplies calculation operands; **actual_output** is the observed stage output; **expected_output** is the independently approved reference used for golden comparison. One file with derived fields is not automatically an independent expected file.
 3. Ingestion expands paths, reads JSON/Parquet and wraps every record in `SourceRecord`. Its `SourceLocation` preserves the file, row, format, stage and role. Missing/unreadable files become visible failed checks rather than disappearing.
 4. `FieldResolver` translates canonical names through aliases and nested paths. Date helpers distinguish Julian from Gregorian values and blank/zero dates. Decimal helpers reject nonfinite amounts and apply explicit rounding.
@@ -274,7 +251,7 @@ Business authority comes from the approved requirements and the annotated gap re
 
 ```mermaid
 flowchart TD
-  C[STAGE_RUNS or YAML manifest] --> I[Discover and read role-labeled files]
+  C[internal stage configuration or YAML manifest] --> I[Discover and read role-labeled files]
   I --> N[Lineage, aliases, date and Decimal normalization]
   N --> P[Pipeline and stage processors]
   R[Optional approved DOD/SSI reference feeds] --> P
@@ -459,199 +436,18 @@ Find the exact filename or function with browser/editor search. Each expandable 
 <details>
 <summary><strong>run_commands.py</strong></summary>
 
-The team entry point. STAGE_RUNS selects enabled business runs, paths, dates and validation options; commands run sequentially and their reports are combined into a session.
-
-[Open source](run_commands.py)
-
-**`_production_paths(*folders: str, suffixes: tuple[str, ...]=('.json', '.parquet'))`**
-
-Construct relative production archive paths from the configured root and requested directory parts.
-
-[View function in source](run_commands.py#L63)
-
-Inputs are the signature above. Return contract: `list[str]`.
-
-Branches/selection predicates (taken from executable code):
-
-- `directory.is_dir()`
-- `path.is_file() and path.suffix.lower() in suffixes`
-
-Calculations/returned values and field-check mapping:
-
-- `directory = PROJECT_ROOT / PRODUCTION_ROOT / folder`
-- `return sorted(set(result))`
-
-Calls/dependencies: `directory.is_dir`, `result.extend`, `path.relative_to(PROJECT_ROOT).as_posix`, `path.relative_to`, `directory.rglob`, `path.is_file`, `path.suffix.lower`, `sorted`, `set`.
-
-**`_production_run(name: str, folders: tuple[str, ...], *, enabled: bool=True, suffixes: tuple[str, ...]=('.json', '.parquet'), actual_folders: tuple[str, ...]=())`**
-
-Create the configuration entry for a named production run, with its source/output paths and enabled flag.
-
-[View function in source](run_commands.py#L77)
-
-Inputs are the signature above. Return contract: `dict[str, Any]`.
-
-Branches/selection predicates (taken from executable code):
-
-- `actual_folders`
-
-Calculations/returned values and field-check mapping:
-
-- `return {'name': f'{name} ({len(paths)} files)', 'enabled': enabled and bool(paths), 'mode': 'reconcile' if actual_folders else 'calculate', 'require_matching_snapshot': bool(actual_folders), 'source': paths, 'actual': actual_paths, 'expected': [], 'expected_exit_codes': (0,)}`
-
-Calls/dependencies: `_production_paths`, `len`, `bool`.
-
-**Class `Command`** — Represent command with the fields and methods declared below. Declared fields document the component contract.
-
-Declared fields/defaults:
-
-- `name`: `str` (supplied when constructed).
-- `stage`: `str` (supplied when constructed).
-- `command_id`: `str` (supplied when constructed).
-- `args`: `list[str]` (supplied when constructed).
-- `enabled`: `bool` = `True`
-- `expected_exit_codes`: `tuple[int, ...]` = `(0,)`
-
-**`_append_paths(args: list[str], flag: str, paths: list[str])`**
-
-Append configured file or folder arguments to a stage command without dropping prior entries.
-
-[View function in source](run_commands.py#L193)
-
-Inputs are the signature above. Return contract: `None`.
-
-Calls/dependencies: `ensure_relative_user_path`, `args.extend`.
-
-**`_stage_command(stage: str, run_date: str, item: dict[str, Any], report_session: str)`**
-
-Translate one enabled stage run into the Python stage-runner argument list.
-
-[View function in source](run_commands.py#L202)
-
-Inputs are the signature above. Return contract: `Command`.
-
-Branches/selection predicates (taken from executable code):
-
-- `item.get('require_matching_snapshot')`
-
-Calculations/returned values and field-check mapping:
-
-- `return Command(name, stage, command_id, args, bool(item.get('enabled', True)), tuple(item.get('expected_exit_codes', (0,))))`
-
-Calls/dependencies: `str`, `slugify`, `item.get`, `_append_paths`, `list`, `args.append`, `Command`, `bool`, `tuple`.
-
-**`build_commands(report_session: str='reports/_configured_preview')`**
-
-Expand enabled STAGE_RUNS entries into business command definitions and append requested pytest commands.
-
-[View function in source](run_commands.py#L231)
-
-Inputs are the signature above. Return contract: `list[Command]`.
-
-Branches/selection predicates (taken from executable code):
-
-- `not stage_config.get('enabled', True)`
-- `marker`
-
-Calculations/returned values and field-check mapping:
-
-- `return commands`
-
-Calls/dependencies: `ensure_relative_user_path`, `STAGE_RUNS.items`, `stage_config.get`, `str`, `commands.append`, `_stage_command`, `slugify`, `Command`, `bool`, `item.get`, `tuple`, `args.extend`.
-
-**`_command_text(args: list[str])`**
-
-Render the argument list as readable shell command text for execution evidence.
-
-[View function in source](run_commands.py#L277)
-
-Inputs are the signature above. Return contract: `str`.
-
-Branches/selection predicates (taken from executable code):
-
-- `args and args[0] == PYTHON`
-- `' ' in arg`
-
-Calculations/returned values and field-check mapping:
-
-- `display_args = ['python', *args[1:]] if args and args[0] == PYTHON else list(args)`
-- `return ' '.join((f'"{arg}"' if ' ' in arg else arg for arg in display_args))`
-
-Calls/dependencies: `list`, `' '.join`.
-
-**`_command_output_directory(session: ReportSession, command: Command)`**
-
-Choose the isolated report directory for this command inside its session.
-
-[View function in source](run_commands.py#L285)
-
-Inputs are the signature above. Return contract: `Path`.
-
-Branches/selection predicates (taken from executable code):
-
-- `command.stage == 'master'`
-- `command.stage in {'final_action', 'split', 'stay', 'intermediate', 'final_medpar'}`
-
-Calculations/returned values and field-check mapping:
-
-- `directory = session.master_directory / command.command_id`
-- `return directory`
-
-Calls/dependencies: `session.command_directory`, `directory.mkdir`.
-
-**`write_quality_summary(session_root: Path, executions: list[dict[str, Any]])`**
-
-Write the command outcome summary used to distinguish execution exit codes from business validation counts.
-
-[View function in source](run_commands.py#L299)
-
-Inputs are the signature above. Return contract: `None`.
-
-Branches/selection predicates (taken from executable code):
-
-- `code == 0`
-- `item['expected']`
-- `code == 1 and 1 in expected_codes`
-- `code == 1`
-- `Path(r).is_relative_to(Path(session_root).relative_to(PROJECT_ROOT))`
-
-Calculations/returned values and field-check mapping:
-
-- `result = 'PASS' if item['expected'] else 'UNEXPECTED_PASS'`
-- `result = 'FAIL' if code == 1 else 'ERROR'`
-
-Calls/dependencies: `tuple`, `rows.append`, `list`, `relative_display`, `Counter`, `datetime.now(timezone.utc).isoformat`, `datetime.now`, `dict`, `len`, `(session_root / 'quality_summary.json').write_text`, `json.dumps`, `' '.join`, `html.escape`, `str`, `Path(r).relative_to`, `Path`, `Path(session_root).relative_to`, `Path(r).is_relative_to`, `table_rows.append`, `''.join`, `page.replace('__TOTAL__', str(len(rows))).replace('__COUNTS__', html.escape(', '.join((f'{k}: {v}' for k, v in sorted(counts.items()))))).replace`, `page.replace('__TOTAL__', str(len(rows))).replace`, `page.replace`, `', '.join`, `sorted`, `counts.items`, `(session_root / 'quality_summary.html').write_text`.
-
-**`main()`**
-
-Run this script command-line workflow and return its process exit status. The team entry point. STAGE_RUNS selects enabled business runs, paths, dates and validation options; commands run sequentially and their reports are combined into a session.
-
-[View function in source](run_commands.py#L337)
-
-Inputs are the signature above. Return contract: `int`.
-
-Branches/selection predicates (taken from executable code):
-
-- `command.enabled`
-- `not commands`
-- `path.is_file()`
-- `output_text.endswith('\n')`
-- `path.suffix.lower() in {'.html', '.json', '.txt', '.xml'}`
-- `expected`
-- `not expected`
-- `completed.returncode == 1 and expected`
-- `report_files`
-- `unexpected_failures and STOP_ON_FAILURE`
-- `unexpected_failures`
-
-Calculations/returned values and field-check mapping:
-
-- `return 0`
-- `report_files = sorted((path for path in after - before if path.suffix.lower() in {'.html', '.json', '.txt', '.xml'}))`
-- `outcome = 'COMPLETED AS EXPECTED' if expected else 'UNEXPECTED COMMAND RESULT'`
-- `return 1 if unexpected_failures else 0`
-
-Calls/dependencies: `ReportSession.create`, `relative_display`, `build_commands`, `print`, `len`, `enumerate`, `_command_text`, `session.root.rglob`, `path.is_file`, `subprocess.run`, `output_text.replace`, `str`, `str(PROJECT_ROOT).replace`, `output_text.endswith`, `sorted`, `path.suffix.lower`, `_command_output_directory`, `(command_dir / 'console.log').write_text`, `(command_dir / 'execution.json').write_text`, `json.dumps`, `executions.append`, `refresh_session_indexes`, `write_quality_summary`.
+The team entry point. `SOURCE_RUN` is the only stored source configuration. `source_run_configuration` validates its date, starting stage and single source path list, then builds internal stage metadata. `main` resolves local/S3 inputs and calls the connected processor, which generates downstream inputs. `STAGE_ORDER` lists stage names only and contains no paths.
+
+**`source_run_configuration`** — Select one entry-stage source list; generated downstream outputs need no paths.
+**`Command`** — Represent command with the fields and methods declared below. Declared fields document the component contract.
+**`_append_paths`** — Append configured file or folder arguments to a stage command without dropping prior entries.
+**`_stage_command`** — Translate one enabled stage run into the Python stage-runner argument list.
+**`build_commands`** — Build independent commands from explicit configuration, without stored input paths.
+**`_command_text`** — Render the argument list as readable shell command text for execution evidence.
+**`_command_output_directory`** — Choose the isolated report directory for this command inside its session.
+**`write_quality_summary`** — Generate a self-contained, honest execution dashboard and machine-readable audit.
+**`execution_args`** — Keep stage process launches short even with hundreds of long production paths.
+**`main`** — Run this script command-line workflow and return its process exit status. The team entry point. SOURCE_RUN selects the source paths, starting stage and business date; commands run sequentially and their reports are combined into a session.
 
 </details>
 
@@ -11742,7 +11538,7 @@ Exact assertions (fixture-specific evidence):
 
 - `not Path(value).is_absolute()`
 
-Calls/dependencies: `runpy.run_path`, `namespace['STAGE_RUNS'].values`, `item.get`, `Path(value).is_absolute`, `Path`.
+Calls/dependencies: `runpy.run_path`, `namespace['internal stage configuration'].values`, `item.get`, `Path(value).is_absolute`, `Path`.
 
 </details>
 
@@ -13193,31 +12989,9 @@ Rule 6 follows Modernization Requirements MM-FINAC-08 through MM-FINAC-11 and Fu
 The `FA-RULE-06-COVERAGE` report entry shows eligible episode counts, actual evaluations, schema rejections, ordering blocks and group sizes. No eligible episode is reported as N/A, not a successful Rule 6 test. Inspection of the 15 configured quarterly source files on 12 October 2026 found no raw two-record QC0/QC5 episodes; episode sizes were multiples of three. The existing input is not automatically deduplicated or converted into two-record episodes. Regression tests separately demonstrate both cancellation codes, equal/different ICNs, both QC orders and missing action codes.
 
 
-### Connected pipeline mode (default)
+### Connected pipeline mode
 
-`python run_commands.py` now starts a separate connected journey for each discovered file in the enabled Final Action `STAGE_RUNS` entries. `CONNECTED_PIPELINE_ENABLED = False` restores the existing independent stage runs, comparison inputs and pytest commands. In connected mode, the later stages always form the five-stage route; their independent `enabled` flags do not cut the route short. Business dates come from each stage's `run_date`. Input files remain unchanged. Files are independent journeys: claims belonging to one episode must be supplied together in the same starting file.
-
-Validation runs in actual processor order and stops immediately at the first FAIL or BLOCKED check. Alternative decision rules are selected by applicability; they are not all mandatory passes. Reports distinguish applied rules, rules not applicable to the selected path and rules/stages not reached after stopping. KEEP/DROP is a record decision, not a validation status. Mixed files forward retained records and preserve dropped records with their reasons. All-drop files stop with a business DROP conclusion.
-
-Final Action writes retained claim JSON; Split writes retained JSON with calculated split-year indicators. Stay, Intermediate and Final MEDPAR do not have complete production writers in this QA repository. They require explicit candidate output files, which the existing stage processors validate against the preceding retained output before copying validated records into the next handoff. No candidate means BLOCKED, not a fabricated successful transformation. This mode is not production-certified and does not substitute output self-comparison for an approved CMS golden comparison.
-
-Add candidate paths to the starting Final Action entry only when available:
-
-```python
-{
-    "name": "Connected claim file",
-    "enabled": True,
-    "source": ["data/my_input.json"],
-    "pipeline_outputs": {
-        "stay": ["data/candidates/stay.json"],
-        "intermediate": ["data/candidates/intermediate.json"],
-        "final_medpar": ["data/candidates/final.json"],
-    },
-}
-```
-
-Every journey writes `reports/<session>/connected/<file-id>/index.html`, `journey.json`, stage rule reports, handoff metadata and retained/dropped output JSON. Open `reports/<session>/connected/index.html` to review all original filenames and final conclusions. The production input folder and generated reports must not be committed. Regression tests demonstrate real Final Action/Split handoffs and stops; a separate controlled processor test verifies five-stage routing, without claiming CMS acceptance.
-
+`python run_commands.py` reads the single `SOURCE_RUN.source_paths` list. All source records are grouped before processing. Generated retained output feeds each subsequent stage in order. Source discovery, rule outcomes, drops and stage transfers have evidence links in the connected report. The final export readiness section distinguishes draft JSON from complete physical output.
 
 ### Current connected starting folder
 
@@ -13246,7 +13020,7 @@ Connected evidence reports open with file and stage conclusions. Expand “Execu
 
 `R65.txt` is a ZIP archive. Import it with `python scripts/extract_r65.py --source /path/to/R65.txt`. It preserves all stage folders under `data/production/r65`, records SHA-256 checksums in `archive_inventory.json`, and refuses unsafe paths or conflicting overwrites. The supplied archive contains 4,474 files, including 914 Final JSON extracts: 609 in `6-final-processing/MEDPAR_FINAL_SS_FILES` and 305 in `MEDPAR_FINAL_SNF_FILES`. Q61 files remain separate.
 
-`python run_commands.py --stage final_medpar` runs the two Final output-check configurations independently and generates file-wise evidence reports. Each file is validated independently, preventing repeated identities across FY/CY partitions from collapsing the reviewed records. The default connected run also discovers these Final candidates; earlier stages must succeed and identities must match before they can be used. R65 outputs are supplied actual candidates, not approved golden outputs. All 914 Final extracts intentionally omit the Intermediate split-year indicator. The Final-extract profile checks its removal; an archive audit verifies exact field preservation and folder routing against matched Intermediate records, rather than inventing an indicator from folder names. JSON checks do not certify the original 3000-byte physical records. Production data and local reports remain ignored by Git.
+`python run_commands.py` uses only the paths in `SOURCE_RUN`. For Final-stage source processing, set `start_stage` to `final_medpar` and supply Intermediate records. No Final archive folders are discovered implicitly. R65 outputs are supplied actual candidates, not approved golden outputs. All 914 Final extracts intentionally omit the Intermediate split-year indicator. The Final-extract profile checks its removal; an archive audit verifies exact field preservation and folder routing against matched Intermediate records, rather than inventing an indicator from folder names. JSON checks do not certify the original 3000-byte physical records. Production data and local reports remain ignored by Git.
 
 ## Review Update 2 corrections and evidence
 
@@ -13272,13 +13046,11 @@ The overview is regenerated automatically by normal runs. Presentation changes d
 
 ## Complete R65 stage review
 
-Run `.venv/bin/python run_commands.py --dataset r65` (Windows: `python run_commands.py --dataset r65`). This creates one timestamped report for all five stages plus the R65 lineage/routing/reconciliation audit. Each stage independently reconciles its supplied boundary: quarterly → Final Action, Final Action → Split, Split → Stay, Stay → Intermediate; Final checks review both SS and SNF output folders. It continues reviewing later supplied outputs when an earlier stage fails, so this is an all-stage archive review, not a completed connected journey.
 
 The profile uses 18 March 2025 from the archive reconciliation report and Split Y0=2024. The quarterly partitioned folder contains grouping/index projections and is not added as a second set of full claims. The Parquet reader loads Hive partition fields from the quarterly folder names (account, provider and stay dates), preserving leading zeros and rejecting row/partition conflicts. R65 has no shared extraction snapshot manifest; same-snapshot certification is not claimed. File discovery, input/output discrepancies and archive balance checks remain enabled. Different stage-folder counts can indicate partial exports; passes in Final output format checks do not imply earlier-stage acceptance. Production files remain local.
 
 In the connected report, the compact stage table counts file outcomes. Click Pass (retained/continued), Fail or Blocked to filter directly to those input files; use Show all files to reset. These file counts differ from the master report’s validation-event counts.
 
-Default demonstration command: `python run_commands.py` now selects R65 and reviews all five stage boundaries. `python run_commands.py --dataset r65` selects the same profile explicitly. To run the earlier Q61 connected profile, use `python run_commands.py --dataset q61`. The terminal prints the selected dataset and mode before execution. A failed business check is a validation result, not a failure to launch the runner.
 
 ## Lead review updates (12 October 2026)
 
