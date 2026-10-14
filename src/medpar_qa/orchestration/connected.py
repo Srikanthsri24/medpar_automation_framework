@@ -295,9 +295,34 @@ class ConnectedPipeline:
             _dump(stage_dir / 'handoff.json', {'original_input': source, **step})
             results.append(result)
             history.append(step)
+        coverage_gaps = sorted({note for step in history for note in step.get('generation_notes', [])})
+        export_ready = False
+        export_path = None
+        physical_evidence = None
+        final_step = history[-1]
+        if generate_outputs and final_step.get('output'):
+            final_rows = json.loads((self.root / final_step['output']).read_text())
+            physical = [self.resolver.get(row, 'fixed_width_record') for row in final_rows]
+            export_encoding = self.settings.get('final_medpar', {}).get('encoding', 'ascii')
+            if physical and all(isinstance(row, str) and len(row.encode(export_encoding)) == 3000 for row in physical):
+                export_file = directory / 'final_medpar' / 'medpar.draft.dat'
+                # Fixed-length records have no added newline delimiters.
+                export_file.write_bytes(b''.join(row.encode(export_encoding) for row in physical))
+                export_path = relative_display(export_file, project_root=self.root)
+                physical_evidence = {'encoding':export_encoding,'records':len(physical),'bytes_per_record':3000,'expected_bytes':len(physical)*3000,
+                                     'observed_bytes':export_file.stat().st_size,'sha256':hashlib.sha256(export_file.read_bytes()).hexdigest()}
+                export_ready = not coverage_gaps
+            else:
+                coverage_gaps.append('Final records do not have complete 3000-byte physical payloads')
+        readiness = {'status': 'EXPORT_READY' if export_ready else 'DRAFT_ONLY' if final_step.get('output') else 'NO_FINAL_OUTPUT',
+                     'physical_file': export_path, 'physical_evidence':physical_evidence, 'unresolved_requirements': sorted(set(coverage_gaps)),
+                     'acceptance': 'Independent approved golden comparison has not been performed'}
+        _dump(directory / 'export_readiness.json', readiness)
         payload = {'source_file': source, 'steps': history, 'conclusion': stop_reason or ('All five stages completed' if start_stage=='final_action' else f'All requested stages completed from {start_stage}'),
-                   'source_files':original_inputs,'source_file_count':len(original_inputs),'start_stage':start_stage, 'production_certified':False, 'processing_mode':'source_generated' if generate_outputs else 'candidate_validation',
+                   'source_files':original_inputs,'source_file_count':len(original_inputs),'start_stage':start_stage, 'production_certified':False, 'processing_mode':'source_generated' if generate_outputs else 'candidate_validation', 'export_readiness':readiness,
                    'completed': all(s['status'] == 'KEEP' for s in history[start_index:])}
+        if generate_outputs and payload['completed'] and not export_ready:
+            payload['conclusion'] = 'Stage processing completed; Final MEDPAR remains a draft. Open export readiness for missing definitions and reference calculations.'
         _dump(directory / 'journey.json', payload)
         rows = ''.join('<tr>' + ''.join(f'<td>{html.escape(str(s[k]))}</td>' for k in
                        ('stage', 'status', 'input_records', 'retained', 'dropped', 'reason')) +
@@ -362,7 +387,7 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
     generated = datetime.now().astimezone().strftime('%d %B %Y, %I:%M:%S %p %Z (%z)')
     links = ''.join(
         f'<tr><td><a href="{html.escape(relative_link(index.parent,directory / "index.html"),quote=True)}">{html.escape(payload["source_file"])}</a></td>'
-        f'<td>{"COMPLETED" if payload["completed"] else next((s["status"] for s in payload["steps"] if s["status"] != "KEEP"), "STOPPED")}</td>'
+        f'<td>{"COMPLETED" if payload["completed"] else next((s["status"] for s in payload["steps"] if s["status"] not in ("KEEP","BEFORE_START")), "STOPPED")}</td>'
         f'<td>{html.escape(payload["conclusion"])}</td></tr>' for payload,directory in journeys)
     index.write_text('<!doctype html><meta charset="utf-8"><title>MEDPAR connected pipelines</title>'
         '<style>body{font:16px Arial;margin:40px;background:#f3f6fa;color:#142b43}header{background:#173b5c;color:white;padding:30px;border-radius:12px}'

@@ -85,3 +85,21 @@ def test_source_demo_calculates_financial_fields_without_expected_files(resolver
     assert Decimal(rows[0]['medpar_tot_acc_chrg_0430'])==100
     assert Decimal(rows[0]['medpar_ssi_data_0251'])==4
     assert rows[0]['medpar_no_diag_codes_0491']==1
+
+
+@pytest.mark.parametrize('available,matched,flags,expected',[
+    (True,True,{'2026-01':1},'1'),
+    (True,True,{'2026-01':0},'0'),
+    (True,False,{},'0'),
+])
+def test_ssi_0253_uses_matched_month_flags(resolver,make_record,available,matched,flags,expected):
+    source=make_record(bill(ssi_reference_available=available,ssi_reference_matched=matched,ssi_month_flags=flags),stage=Stage.INTERMEDIATE)
+    rows,_=writers.intermediate([source],IntermediateProcessor(resolver,date(2026,4,20)))
+    assert rows[0]['medpar_ssi_data_0253']==expected
+
+
+def test_missing_ssi_feed_does_not_generate_a_negative_match(resolver,make_record):
+    source=make_record(bill(ssi_reference_matched=False),stage=Stage.INTERMEDIATE)
+    rows,notes=writers.intermediate([source],IntermediateProcessor(resolver,date(2026,4,20)))
+    assert 'medpar_ssi_data_0252' not in rows[0] and 'medpar_ssi_data_0253' not in rows[0]
+    assert any('0253: SSI reference feed not supplied' in note for note in notes)

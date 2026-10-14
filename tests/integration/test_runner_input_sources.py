@@ -109,6 +109,10 @@ def test_source_only_any_start_stage_generates_remaining_stages(tmp_path,monkeyp
     order=['final_action','split','stay','intermediate','final_medpar'];start=order.index(start_stage)
     assert [s['status'] for s in journey['steps']]==['BEFORE_START']*start+['KEEP']*(5-start)
     assert journey['completed'] and journey['start_stage']==start_stage
+    assert journey['export_readiness']['status']=='DRAFT_ONLY'
+    assert journey['export_readiness']['unresolved_requirements']
+    assert 'remains a draft' in journey['conclusion']
+    assert (path.parent/'export_readiness.json').exists()
     for stage in order[start:]:assert (path.parent/stage/'retained.json').exists()
     for stage in order[:start]:assert not (path.parent/stage/'retained.json').exists()
     final=json.loads((path.parent/'final_medpar/retained.json').read_text())

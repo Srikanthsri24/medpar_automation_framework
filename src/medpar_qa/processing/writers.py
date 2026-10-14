@@ -120,7 +120,7 @@ def stay(records, processor):
 
 def intermediate(records,processor):
     from medpar_qa.stages.intermediate.business_rules import validate_business_rules
-    output=[];notes=['0531: approved external DRG grouper is not executed','0483/0484/0488/0850/0470/0253/1620: complete approved mapping definitions remain unavailable'];resolver=processor.resolver
+    output=[];notes=['0531: approved external DRG grouper is not executed','0483/0484/0488/0850/0470/1620: complete approved mapping definitions remain unavailable'];resolver=processor.resolver
     for source in records:
         row=deepcopy(source.data)
         def calculation(field,value,error):
@@ -173,7 +173,7 @@ def intermediate(records,processor):
 
 def final_medpar(records,processor):
     from medpar_qa.stages.final_medpar.business_rules import bypass_required
-    resolver=processor.resolver;output=[];dropped=[];notes=[]
+    resolver=processor.resolver;output=[];dropped=[];notes=['Source-only export has no verified vendor DRG execution or complete revenue mapping acceptance evidence']
     for record in records:
         if bypass_required(record,resolver):
             dropped.append({'record':record.data,'reason':'Covered days exceed LOS / WI04 bypass','source_record_id':record.record_id});continue
@@ -183,12 +183,21 @@ def final_medpar(records,processor):
             encoded=raw if isinstance(raw,bytes) else str(raw).encode(processor.settings.encoding)
             if len(encoded)!=3050:raise GenerationBlocked('Final generation needs a 3050-byte Intermediate record before removing the 50-byte trailer')
             put(row,'fixed_width_record',encoded[:3000].decode(processor.settings.encoding),resolver)
-        else:notes.append('JSON output generated; approved 3050-to-3000 layout/copybook absent, physical bytes not certified')
+        elif processor.settings.field_layout:
+            from medpar_qa.processing.physical_export import encode_record
+            # Encode after final classification and routing-field removal below.
+        else:notes.append('Physical export unavailable: approved complete MPRRECL layout absent')
         provider=resolver.get(row,'medpar_prvdr_full_num_1660') or resolver.get(row,'provider_id')
         if provider is None or len(str(provider))!=6:raise GenerationBlocked('Final classification requires the original six-character provider number')
         char=str(provider)[2]
         put(row,'medpar_ss_ls_snf_ind_0140','N' if char in '56UWYZ' else 'S' if char in '01STMR' else 'L',resolver)
         if not processor.settings.split_indicator_in_output:
             for field in ['split_year_indicator',*resolver.aliases.get('split_year_indicator',[])]:row.pop(field,None)
+        if raw is None and processor.settings.field_layout:
+            try:
+                put(row,'fixed_width_record',encode_record(row,resolver,processor.settings.field_layout,
+                    expected_bytes=processor.settings.expected_bytes,encoding=processor.settings.encoding),resolver)
+            except (ValueError,KeyError,UnicodeError) as exc:
+                raise GenerationBlocked(str(exc)) from exc
         output.append(row)
     return output,notes,dropped

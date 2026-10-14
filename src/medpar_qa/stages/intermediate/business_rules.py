@@ -372,7 +372,14 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
             raise LookupError("SSI calculation applies to inpatient stays only")
         return ssi_days(admission(),thru(),get("ssi_month_flags") or {})
     check("INT-SSI-DAYS", "medpar_ssi_data_0251", ssi_count, True)
-    check("INT-SSI-MATCH-INDICATOR", "medpar_ssi_data_0252", lambda: "Y" if required("ssi_reference_matched") else "N")
+    def ssi_match():
+        if not get("ssi_reference_available"):
+            raise LookupError("SSI reference feed not supplied")
+        return required("ssi_reference_matched")
+    check("INT-SSI-MATCH-INDICATOR", "medpar_ssi_data_0252", lambda: "Y" if ssi_match() else "N")
+    # Byte-by-Byte p5: duplicate SSNs merge monthly flags; any positive flag => 1.
+    check("INT-SSI-ELIGIBILITY-INDICATOR", "medpar_ssi_data_0253",
+          lambda: "1" if ssi_match() and any(to_decimal(v) > 0 for v in (get("ssi_month_flags") or {}).values()) else "0")
     def revenue_codes() -> list[str]:
         """Read the required source revenue-line codes and normalize them to four characters."""
         return [code.zfill(4) for code in codes(required("revenue_lines"), "revenueCode", "revCntrCd", "REV-CNTR-CD")]
