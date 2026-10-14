@@ -107,6 +107,7 @@ def connected_transfers(journeys, index):
     rows=[]
     metric_files={stage:{key:[] for key in ('started','received','inputs','kept','dropped','stopped','moved','outputs')} for stage in STAGES}
     totals={stage:{key:0 for key in ('started','received','inputs','kept','dropped','stopped','moved','outputs')} for stage in STAGES}
+    lineage_files={stage:{key:[] for key in ('started','received','inputs','kept','dropped','stopped','moved')} for stage in STAGES}
     for journey,directory in journeys:
         originals=journey.get('source_files',[journey['source_file']])
         inventory_path=directory.parent.parent/'input_sources.json'
@@ -120,6 +121,7 @@ def connected_transfers(journeys, index):
         inventory_link='<p><a href="'+relative_link(index.parent,inventory_path.with_suffix('.html'))+'">Original locations, file sizes and SHA-256 evidence</a></p>' if inventory_path.exists() else ''
         origin='<details><summary>'+str(len(originals))+' original input files — '+e(journey.get('start_stage','final_action').replace('_',' ').title())+' entry</summary><ol>'+''.join(original_list)+'</ol>'+inventory_link+'</details>'
         relative=relative_link(index.parent,directory)
+        active_originals=list(originals)
         for number,step in enumerate(journey['steps']):
             if step['status'] in ('BEFORE_START','NOT_REACHED'):continue
             following=journey['steps'][number+1] if number+1<len(journey['steps']) else None
@@ -154,12 +156,29 @@ def connected_transfers(journeys, index):
                     if path in counts.get('file_sets',{}).get(key,set()):events[key].append(event)
                 if moved and path in counts.get('file_sets',{}).get('kept',set()):
                     events['moved'].append((origin_map.get(path,path),file_page if file_page.exists() else report_file,directory/following['stage']/'report.html'))
+            # Main overview follows source-file lineage, not internal group JSON files.
+            lineage=lineage_files[step['stage']]
+            survivors=[]
+            for original in active_originals:
+                label=origin_map.get(original,original)+' ['+journey.get('start_stage','final_action').replace('_',' ').title()+' entry]'
+                event=(label,report_file,directory/previous['stage']/'report.html' if received else None)
+                lineage['inputs'].append(event)
+                lineage['started' if started else 'received'].append(event)
+                if started:
+                    outcome=next((key for key in ('kept','stopped','dropped') if original in counts.get('file_sets',{}).get(key,set())), 'stopped' if step['status'] in ('FAIL','BLOCKED') else 'dropped' if step['status']=='DROP' else 'kept')
+                else:
+                    outcome='stopped' if step['status'] in ('FAIL','BLOCKED') else 'dropped' if step['status']=='DROP' else 'kept'
+                lineage[outcome].append(event)
+                if outcome=='kept':
+                    survivors.append(original)
+                    if moved:lineage['moved'].append((label,report_file,directory/following['stage']/'report.html'))
+            active_originals=survivors if moved else []
             if moved:events['outputs'].append((step['output'],directory/following['stage']/'report.html',directory/step['stage']/'retained.json'))
             for key in events:metric_files[step['stage']][key]+=events[key]
             count_cells=[transfer_count_link(index,step['stage'],key,events[key],str(directory)) for key in ('started','received','inputs','kept','dropped','stopped','moved','outputs')]
             values=[origin,e(step['stage'].replace('_',' ').title()),e(following['stage'].replace('_',' ').title()) if following else 'End',*count_cells,proof]
             rows.append('<tr data-file="'+e(' '.join(display_originals))+'">'+''.join('<td>'+value+'</td>' for value in values)+'</tr>')
-    for stage,metrics in metric_files.items():
+    for stage,metrics in lineage_files.items():
         for key,events in metrics.items():metrics[key]=list({event[0]:event for event in events}.values())
         kept_labels={event[0] for event in metrics['kept']}
         metrics['stopped']=[event for event in metrics['stopped'] if event[0] not in kept_labels]
@@ -169,7 +188,7 @@ def connected_transfers(journeys, index):
     for stage,values in totals.items():
         number=STAGES.index(stage);next_stage=STAGES[number+1].replace('_',' ').title() if number+1<len(STAGES) else 'End of workflow'
         stage_link='#stage-'+stage if index.parent.name=='master' else next((relative_link(index.parent,directory/stage/'report.html') for journey,directory in journeys if any(step['stage']==stage and step['status'] not in ('BEFORE_START','NOT_REACHED') for step in journey['steps'])), '#transfer-detail')
-        overview.append('<tr><td>'+e(stage.replace('_',' ').title())+'</td><td>'+e(next_stage)+'</td>'+''.join('<td>'+transfer_count_link(index,stage,key,metric_files[stage][key])+'</td>' for key in ('started','received','inputs','kept','dropped','stopped','moved','outputs'))+'<td><a href="'+e(stage_link)+'">Stage file evidence</a> · <a href="#transfer-detail">Journey evidence</a></td></tr>')
-    summary='<table><tr>'+''.join('<th>'+e(label)+'</th>' for label in ('From stage','To stage','Started here','Received from previous','Input files','Kept','Dropped','Stopped','Files moved','Generated outputs transferred','Evidence'))+'</tr>'+''.join(overview)+'</table>'
+        overview.append('<tr><td>'+e(stage.replace('_',' ').title())+'</td><td>'+e(next_stage)+'</td>'+''.join('<td>'+transfer_count_link(index,stage,key,lineage_files[stage][key])+'</td>' for key in ('started','received','inputs','kept','dropped','stopped','moved'))+'<td><a href="'+e(stage_link)+'">Stage file evidence</a> · <a href="#transfer-detail">Journey evidence</a></td></tr>')
+    summary='<table><tr>'+''.join('<th>'+e(label)+'</th>' for label in ('From stage','To stage','Started here','Received from previous','Input files','Kept','Dropped','Stopped','Files moved','Evidence'))+'</tr>'+''.join(overview)+'</table>'
     headings=['Original source files','From stage','To stage','Started here','Received from previous','Input files','Kept','Dropped','Stopped','Files moved','Generated outputs transferred','Evidence']
-    return number_file_tables('<details id="stage-transfers"><summary>Moved to next stage — file status</summary><p>Input and disposition counts refer to physical input files. Files moved counts input files whose retained records reached the next stage. Generated outputs transferred counts the new group output files received by that stage. Started here counts supplied source files; Received counts generated files from the previous stage. Processing separates independent business groups: one input file can produce several generated outputs, and a group can combine records from multiple inputs. Therefore Files moved may differ from Generated outputs transferred. The next stage’s Received from previous equals the preceding stage’s Generated outputs transferred. Kept means at least one record survives; Dropped means all records were dropped; Stopped means no stage output was approved. File disposition counts add up to input files. Open original sources for filenames, then the movement evidence for stage reports and record counts.</p>'+summary+'<details id="transfer-detail"><summary>Individual input journeys and original-source evidence</summary><label>Search original filename <input id="transfer-search" type="search"></label><div class="scroll"><table id="transfer-table"><tr>'+''.join('<th>'+e(h)+'</th>' for h in headings)+'</tr>'+''.join(rows)+'</table></div></details></details><script>document.getElementById("transfer-search").addEventListener("input",function(){document.querySelectorAll("#transfer-table tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(this.value.toLowerCase()));});</script>')
+    return number_file_tables('<details id="stage-transfers"><summary>Moved to next stage — file status</summary><p>The summary counts original source files by their entry stage, following their retained records through the workflow. Received from previous equals the preceding stage’s Files moved. Started here plus Received equals Input files; Kept plus Dropped plus Stopped equals Input files. A source is kept when at least one related group survives; its other groups can still stop or drop. Internal generated group files are shown only in individual journey evidence and do not increase these summary counts. A final-stage kept file has completed processing and has no next stage.</p>'+summary+'<details id="transfer-detail"><summary>Individual input journeys and original-source evidence</summary><label>Search original filename <input id="transfer-search" type="search"></label><div class="scroll"><table id="transfer-table"><tr>'+''.join('<th>'+e(h)+'</th>' for h in headings)+'</tr>'+''.join(rows)+'</table></div></details></details><script>document.getElementById("transfer-search").addEventListener("input",function(){document.querySelectorAll("#transfer-table tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(this.value.toLowerCase()));});</script>')

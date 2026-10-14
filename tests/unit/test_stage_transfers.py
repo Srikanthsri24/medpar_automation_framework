@@ -115,7 +115,8 @@ def test_one_input_producing_multiple_groups_counts_input_once(tmp_path,monkeypa
     html=connected_transfers(journeys,tmp_path/'index.html')
     first=re.search(r'<tr><td>Final Action</td>(.*?)</tr>',html).group(1)
     numbers=re.findall(r'>(\d+)</a>',first)
-    assert numbers==['1','0','1','1','0','0','1','3']
+    assert numbers==['1','0','1','1','0','0','1']
     assert 'Generated outputs transferred' in html
     assert '1 physical file event(s)' in (tmp_path/'final_action_movement_moved.html').read_text()
-    assert '3 physical file event(s)' in (tmp_path/'final_action_movement_outputs.html').read_text()
+    second=re.search(r'<tr><td>Split</td>(.*?)</tr>',html).group(1)
+    assert re.findall(r'>(\d+)</a>',second)==['0','1','1','0','0','1','0']

@@ -13087,3 +13087,5 @@ Reports include a searchable “Moved to next stage” table. Connected journeys
 ### Independent business groups
 
 Source files are read together and related claims stay together for Final Action and Stay processing. A failed group stops with its evidence; unrelated eligible groups continue through the remaining stages. File totals count each physical source once. A file is kept when at least one group produces retained output; its detailed evidence includes every group, including any dropped or stopped groups. Missing required source values are reported rather than invented.
+
+The stage movement summary follows original source files within each configured entry. Its received count equals the previous stage’s moved count; generated group JSON files do not inflate this summary. Individual journey evidence shows the physical generated outputs separately. Source-file acceptance is partial when only some groups survive.
