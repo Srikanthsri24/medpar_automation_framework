@@ -100,6 +100,8 @@ def write_volume_navigation(master, stage, checks, volume):
                 from .session_index import _render_raw_validation
                 detail='<p><strong>Original source:</strong> '+e(info['origin'])+'</p><p><strong>File disposition: '+e(info['outcome'])+'</strong></p><p>'+e(info['reason'])+'</p><p><a href="'+e(relative_link(master,info['report']))+'">Stage result and stopping/transfer proof</a></p>'
                 detail+='<p>Kept means this input contributed retained records. Dropped means all its records were removed. Stopped means the stage did not approve an output; passing individual checks do not establish a KEEP decision.</p>'
+                result_counts=Counter(check.get('status') for check in linked)
+                detail+='<p><strong>Distinct rules/check types: '+str(len({check.get('rule_id') for check in linked}))+'; validation events linked to this file: '+str(len(linked))+'</strong>. '+e(' · '.join(str(result_counts.get(status,0))+' '+status for status in ('PASS','FAIL','BLOCKED','NOT_APPLICABLE','KNOWN_DIFFERENCE')))+'</p><p>These are check counts, not file counts. Expand each rule below for its requirement, expected/observed result and explanation.</p>'
                 detail+=''.join(_render_raw_validation(check,stage,n) for n,check in enumerate(linked,1))
                 (master/filename).write_text(page('File evidence — '+info['origin'],detail),encoding='utf-8')
             selected = ids if key.startswith('files_') or key=='records_in' else {record for record in ids if volume['decisions'].get(record) == {'kept':'KEEP','dropped':'DROP'}.get(key)} if key != 'records_stopped' else ids - volume['decisions'].keys()

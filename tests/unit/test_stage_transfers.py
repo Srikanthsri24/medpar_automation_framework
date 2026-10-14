@@ -77,3 +77,21 @@ def test_each_configured_entry_counts_as_started_at_its_own_stage(tmp_path):
     parser=Summary();parser.feed(connected_transfers(journeys,tmp_path/'index.html'))
     assert [int(row[2]) for row in parser.rows[:5]]==list(counts.values())  # stage,to,started
     assert all(int(row[3])==0 for row in parser.rows[:5])
+
+
+def test_started_number_links_to_exact_original_file_list(tmp_path):
+    from html.parser import HTMLParser
+    class Links(HTMLParser):
+        def __init__(self):super().__init__();self.paths=[]
+        def handle_starttag(self,t,a):
+            if t=='a':self.paths.extend(v for k,v in a if k=='href' and 'split_movement_started' in v)
+    files=['one.parquet','two.parquet']
+    journey=dict(source_file='batch.json',source_files=files,start_stage='split',steps=[dict(stage='split',status='FAIL',input_files=files,input_records=2,reason='Rejected',retained=0,dropped=0)])
+    text=connected_transfers([(journey,tmp_path/'batch')],tmp_path/'index.html')
+    parser=Links();parser.feed(text)
+    assert parser.paths
+    for href in parser.paths:
+        proof=(tmp_path/href).read_text()
+        assert '2 physical file event(s)' in proof and 'one.parquet' in proof and 'two.parquet' in proof
+    assert (tmp_path/'split_movement_moved.html').is_file()
+    assert 'No files match this count' in (tmp_path/'split_movement_moved.html').read_text()

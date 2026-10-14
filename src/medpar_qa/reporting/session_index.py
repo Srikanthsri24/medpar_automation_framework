@@ -217,6 +217,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
 
     disposition_totals=Counter()
     stage_blocks = {}
+    file_conclusions = {}
     for stage in sorted(by_stage, key=lambda name: ['final_action', 'split', 'stay', 'intermediate', 'final_medpar'].index(name) if name in ['final_action', 'split', 'stay', 'intermediate', 'final_medpar'] else 99):
         items = by_stage[stage]
         command_sections: list[str] = []
@@ -236,9 +237,14 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
             inline_files = f"<p><a href='{stage}_pass_files.html'>Passed-check files</a> · <a href='{stage}_fail_files.html'>Failed-check files</a> · <a href='{stage}_blocked_files.html'>Blocked-check files</a></p>" + (file_review(stage, validations, stage + '-' + str(command_index)) if len(validations) < 1000 else '')
             if len(validations) >= 1000:
                 cards = f"<a href='{_esc(report_link)}'>Open complete original rule report</a> — or use the file links above for individual file proof."
+            connected_step=entry['payload'].get('context',{}).get('handoff')
+            if connected_step:
+                cards=f"<a href='{_esc(report_link)}'>Open rule counts, expected/observed results and full evidence</a>"
+                inline_files=f"<p><a href='{stage}_volume_files_in.html'>Input-file evidence</a> · <a href='{stage}_volume_files_kept.html'>Kept files</a> · <a href='{stage}_volume_files_dropped.html'>Dropped files</a> · <a href='{stage}_volume_files_stopped.html'>Stopped files</a></p>"
+            count_label=f"{summarize_stage_volume(validations)['files_in']} input files" if connected_step else f"{len(validations)} validations"
             run_info = f"<p><strong>Business processing date:</strong> {_esc(entry['payload'].get('run_date', 'Not recorded'))} · <strong>Validation generated:</strong> {_esc(readable_time(entry['payload'].get('generated_at', 'Not recorded')))}</p>"
             command_sections.append(
-                f"<details class='command-report'><summary>{_esc(command_name)} — {'PASS' if stage_payload.get('passed') else 'FAIL / BLOCKED'} · {len(validations)} validations</summary><p><a href='{_esc(report_link)}'>Open full report</a></p>{run_info}{inline_files}<details><summary>Full rule explanations and evidence — open any rule link above</summary>{cards}</details></details>"
+                f"<details class='command-report'><summary>{_esc(command_name)} — {'PASS' if stage_payload.get('passed') else 'FAIL / BLOCKED'} · {count_label}</summary><p><a href='{_esc(report_link)}'>Open full report</a></p>{run_info}{inline_files}<details><summary>Full rule explanations and evidence — open any rule link above</summary>{cards}</details></details>"
             )
         from .status_navigation import write_status_navigation
         all_stage_checks = [c for item in items for c in item['stage'].get('rule_results', [])]
@@ -252,8 +258,12 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
         stage_volume_strip = volume_strip(volume, lambda key: f'{stage}_volume_{key}.html')
         from .status_navigation import write_volume_navigation
         write_volume_navigation(master, stage, all_stage_checks, volume)
+        if 'files_kept' in volume:
+            file_conclusions[stage]=f"<section class='stage-conclusion'><h3>File conclusion — {_esc(stage.replace('_',' ').title())}</h3><p>{volume['files_in']} input files: {volume['files_kept']} kept, {volume['files_dropped']} dropped, {volume['files_stopped']} stopped. Open a count above for the corresponding filenames and each file's rule results.</p></section>"
+        else:
+            file_conclusions[stage]=stage_conclusion(stage,all_stage_checks)
         stage_blocks[stage] = (
-            f"<details id='stage-{_esc(stage)}' class='stage'><summary><span class='stage-title'>{_esc(stage.replace('_',' ').title())}</span>{stage_volume_strip}</summary><p><a href='{_esc(stage_index_link)}'>Open stage report index</a></p>{''.join(command_sections)}{stage_conclusion(stage, all_stage_checks)}</details>"
+            f"<details id='stage-{_esc(stage)}' class='stage'><summary><span class='stage-title'>{_esc(stage.replace('_',' ').title())}</span>{stage_volume_strip}</summary><p><a href='{_esc(stage_index_link)}'>Open stage report index</a></p>{''.join(command_sections)}{file_conclusions[stage]}</details>"
         )
 
     stage_overview_conclusion=''
@@ -268,7 +278,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
         transfer_table=connected_transfers([(_read_json(path),path.parent) for path in journey_paths],master/'index.html')
     else:
         transfer_table = independent_transfers(master, by_stage)
-    overall_conclusions = ''.join(stage_conclusion(stage, [c for item in items for c in item['stage'].get('rule_results', [])]) for stage, items in by_stage.items())
+    overall_conclusions = ''.join(file_conclusions.values())
     missing_stages = [stage for stage in ['final_action', 'split', 'stay', 'intermediate', 'final_medpar'] if stage not in by_stage]
     missing_stage_notes = ''.join(f"<p><strong>{_esc(stage.replace('_', ' ').title())}: NOT RUN / NO RESULT.</strong> No stage validation report was included in this session; acceptance cannot be established.</p>" for stage in missing_stages)
     overall_state = 'FAIL' if totals['fail'] else 'BLOCKED' if totals['blocked'] else 'WITH KNOWN DIFFERENCES' if totals['known_difference'] else 'PASS' if totals['pass'] else 'NOT ESTABLISHED'
