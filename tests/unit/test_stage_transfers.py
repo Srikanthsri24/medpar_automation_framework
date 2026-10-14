@@ -95,3 +95,27 @@ def test_started_number_links_to_exact_original_file_list(tmp_path):
         assert '2 physical file event(s)' in proof and 'one.parquet' in proof and 'two.parquet' in proof
     assert (tmp_path/'split_movement_moved.html').is_file()
     assert 'No files match this count' in (tmp_path/'split_movement_moved.html').read_text()
+
+
+def test_one_input_producing_multiple_groups_counts_input_once(tmp_path,monkeypatch):
+    import json,re
+    import medpar_qa.reporting.stage_volume as volume
+    def dispositions(items,counts):
+        files=set(items[0]['entry']['payload']['context']['source_paths'])
+        return dict(files_kept=len(files),files_dropped=0,files_stopped=0,file_sets={'kept':files})
+    monkeypatch.setattr(volume,'connected_dispositions',dispositions)
+    journeys=[]
+    for i in range(3):
+        directory=tmp_path/f'group{i}'
+        (directory/'final_action').mkdir(parents=True)
+        (directory/'final_action/report.json').write_text(json.dumps({'context':{'source_paths':['one.parquet']},'stages':[{'rule_results':[]}]}))
+        output=f'output{i}.json'
+        steps=[dict(stage='final_action',status='KEEP',input_files=['one.parquet'],input_records=1,output=output,retained=1,dropped=0),dict(stage='split',status='FAIL',input=output,input_files=[output],input_records=1,retained=0,dropped=0)]
+        journeys.append((dict(source_file='one.parquet',source_files=['one.parquet'],steps=steps),directory))
+    html=connected_transfers(journeys,tmp_path/'index.html')
+    first=re.search(r'<tr><td>Final Action</td>(.*?)</tr>',html).group(1)
+    numbers=re.findall(r'>(\d+)</a>',first)
+    assert numbers==['1','0','1','1','0','0','1','3']
+    assert 'Generated outputs transferred' in html
+    assert '1 physical file event(s)' in (tmp_path/'final_action_movement_moved.html').read_text()
+    assert '3 physical file event(s)' in (tmp_path/'final_action_movement_outputs.html').read_text()
