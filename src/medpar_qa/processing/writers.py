@@ -27,7 +27,12 @@ def put(data, field, value, resolver):
             parents=[child for parent in parents for key,child in parent.items() if _key_form(key)==_key_form(part) and isinstance(child,dict)]
         for parent in parents:
             for key in list(parent):
-                if _key_form(key)==_key_form(parts[-1]):parent[key]=deepcopy(value)
+                if _key_form(key)==_key_form(parts[-1]):
+                    # EQ-BIC may be one/two characters, while hicn is CAN + EQ-BIC.
+                    # Preserve the original component; these are not interchangeable values.
+                    if field=='hicn' and _key_form(key)=='claimcannchequatable' and len(str(parent[key]).strip()) in (1,2):
+                        continue
+                    parent[key]=deepcopy(value)
     data[field]=deepcopy(value)
 
 

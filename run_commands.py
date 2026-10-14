@@ -43,11 +43,15 @@ STAGE_ORDER = ("final_action", "split", "stay", "intermediate", "final_medpar")
 # stay for retained Split bills; intermediate for merged Stay records;
 # final_medpar for Intermediate extracts. Generated outputs feed later stages.
 SOURCE_RUN: dict[str, Any] = {
-    "start_stage": "final_action",
-    "run_date": "2026-04-20",  # Business date YYYY-MM-DD; None uses today.
-    "source_paths": [
-        "data/demo_source_only",  # Fictitious default: replace with your input folders/files.
-    ],
+    "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
+    "run_date": None,  # Resolve today's local business date once at execution.
+    "source_paths": {
+        "final_action": ["data/production/q61/1-quarterly-claims-parquet"],
+        "split": ["data/production/q61/2-final-action-rules-parquet"],
+        "stay": ["data/production/q61/3-4yr-window-parquet"],
+        "intermediate": ["data/production/q61/4-stay-processing"],
+        "final_medpar": ["data/production/r65/5-intermediate-processing"],
+    },
     "aws_credentials_file": "config/aws_credentials.local.json",
     "settings": {},  # Optional reference feeds and approved calculation/layout options.
 }
@@ -60,6 +64,8 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
     if stage not in stages:
         raise ValueError("SOURCE_RUN.start_stage must be a supported stage")
     paths = plan.get("source_paths")
+    if isinstance(paths,dict):
+        paths = paths.get(stage)
     if not isinstance(paths, list) or not paths or any(not isinstance(path,str) or not path.strip() for path in paths):
         raise ValueError("SOURCE_RUN.source_paths needs one or more file/folder paths")
     paths = [path.strip() for path in paths]
@@ -144,7 +150,11 @@ def build_commands(report_session: str = "reports/_configured_preview", stage_ru
     ensure_relative_user_path(report_session, "report_session")
     commands: list[Command] = []
     if stage_runs is None:
-        _, stage_runs, _ = source_run_configuration(SOURCE_RUN)
+        stages = STAGE_ORDER if SOURCE_RUN.get('start_stage')=='all' else (SOURCE_RUN.get('start_stage'),)
+        stage_runs = {}
+        for stage in stages:
+            _, configuration, _ = source_run_configuration(SOURCE_RUN,start_stage=stage)
+            stage_runs.update(configuration)
     for stage, stage_config in stage_runs.items():
         if not stage_config.get("enabled", True):
             continue
@@ -228,7 +238,73 @@ def execution_args(command: Command, session: ReportSession) -> list[str]:
             relative_display(path, project_root=PROJECT_ROOT)]
 
 
-def main() -> int:
+def run_all_source_entries(options):
+    """Review configured entry points separately; never pretend datasets share a handoff."""
+    import io
+    import re
+    import os
+    from contextlib import redirect_stdout
+    session = ReportSession.create(REPORTS_ROOT,project_root=PROJECT_ROOT)
+    moment = datetime.now().astimezone()
+    business_date = options.run_date or SOURCE_RUN.get('run_date') or moment.date().isoformat()
+    entries=[]
+    destination=sys.stdout
+    class Tee(io.StringIO):
+        def write(self,value):
+            destination.write(value)
+            return super().write(value)
+        def flush(self):destination.flush()
+    for stage in STAGE_ORDER:
+        print(f"Production entry review: {stage}",flush=True)
+        args=['--start-stage',stage,'--run-date',str(business_date)]
+        if options.aws_config:args.extend(['--aws-config',options.aws_config])
+        stream=Tee()
+        with redirect_stdout(stream):
+            code=main(args)
+        matched=re.search(r'Connected pipeline report: (.+)',stream.getvalue())
+        row={'entry_stage':stage,'return_code':code,'input_files':0,'steps':[]}
+        if matched:
+            index=PROJECT_ROOT/matched.group(1)
+            journey_path=next(index.parent.glob('*/journey.json'))
+            journey=json.loads(journey_path.read_text())
+            row.update(input_files=journey['source_file_count'],conclusion=journey['conclusion'],
+                       steps=journey['steps'],report=os.path.relpath(index,session.master_directory).replace(os.sep,'/'))
+        else:
+            row['conclusion']='Input preparation failed; see input evidence'
+            evidence=re.search(r'Input evidence: (.+)',stream.getvalue())
+            if evidence:row['report']=os.path.relpath(PROJECT_ROOT/evidence.group(1),session.master_directory).replace(os.sep,'/')
+        entries.append(row)
+    report={'business_run_date':str(business_date),'generated_at':moment.isoformat(),
+            'scope':'Separate source-only entry runs; only generated outputs within one journey establish transfers',
+            'entries':entries}
+    write_source_entry_overview(session,report)
+    return int(any(row['return_code'] for row in entries))
+
+
+def write_source_entry_overview(session,report):
+    """Render verified child journeys; file counts stay separate from record counts."""
+    entries=report['entries']
+    business_date=report['business_run_date']
+    (session.master_directory/'entry_reviews.json').write_text(json.dumps(report,indent=2))
+    rows=[]
+    for number,row in enumerate(entries,1):
+        movements=[]
+        for step in row['steps']:
+            if step['status'] in ('BEFORE_START','NOT_REACHED'):continue
+            next_position=STAGE_ORDER.index(step['stage'])+1
+            next_step=next((item for item in row['steps'] if next_position<len(STAGE_ORDER) and item['stage']==STAGE_ORDER[next_position]),None)
+            transferred=bool(step.get('output') and next_step and next_step.get('input')==step['output'])
+            transfer_note=("1 generated file received by "+next_step['stage']) if transferred else ("Final output: 1 generated file; no later stage" if step.get('output') and step['stage']=='final_medpar' else "0 files forwarded")
+            movements.append(f"{step['stage']}: {len(step.get('input_files',[]))} files received, {step['input_records']} records read, {step['retained']} kept, {step['dropped']} dropped; {step['status']}. {transfer_note}")
+        link=f'<a href="{html.escape(row.get("report",""),quote=True)}">Files, rules and transfer evidence</a>' if row.get('report') else 'No report produced'
+        rows.append('<tr>'+''.join('<td>'+html.escape(str(value))+'</td>' for value in (number,row['entry_stage'],row['input_files'],row['conclusion']))+f'<td>{link}<details><summary>Executed stage counts</summary><ul>'+''.join('<li>'+html.escape(item)+'</li>' for item in movements)+'</ul></details></td></tr>')
+    index=session.master_directory/'index.html'
+    index.write_text('<!doctype html><html><meta charset="utf-8"><title>Production source entry reviews</title><style>body{font:16px system-ui;background:#f3f6fa;color:#19344e;margin:32px}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #ccd6e0;padding:14px;text-align:left;vertical-align:top}summary{cursor:pointer}a{color:#195da2}</style><h1>MEDPAR production source entry reviews</h1><p>Business date: '+html.escape(str(business_date))+' · Execution started: '+html.escape(report['generated_at'])+'</p><p>These are separate entry runs. Q61 inputs and R65 inputs are not evidence of a shared transfer. Open a report for actual generated handoffs, numbered original files and validation evidence. File counts are original physical input files; record counts are separate.</p><table><tr><th>#</th><th>Starting stage</th><th>Input files</th><th>Conclusion</th><th>Evidence</th></tr>'+''.join(rows)+'</table><p><a href="entry_reviews.json">Machine-readable counts and proof</a></p></html>')
+    print('Production entry summary: '+relative_display(index,project_root=PROJECT_ROOT),flush=True)
+    return index
+
+
+def main(argv=None) -> int:
     """Run this script command-line workflow and return its process exit status. The team entry
     point. SOURCE_RUN selects the source paths, starting stage and business date;
     commands run sequentially and their reports are combined into a session.
@@ -242,8 +318,10 @@ def main() -> int:
     parser.add_argument("--start-stage", choices=STAGE_ORDER, help="Connected entry stage; stages before it are not executed")
     parser.add_argument("--flow", choices=("connected", "independent"), help="Override the configuration: forward retained records or review stages independently")
     parser.add_argument("--aws-config", default=None, help="Local AWS credentials/profile settings JSON (not included in reports)")
-    options = parser.parse_args()
+    options = parser.parse_args(argv)
     use_source_plan = not (options.config or options.source)
+    if use_source_plan and not options.start_stage and not options.stage and SOURCE_RUN.get('start_stage')=='all':
+        return run_all_source_entries(options)
     selected_stage = options.stage
     connected = selected_stage is None
     start_stage = options.start_stage or "final_action"

@@ -22,12 +22,29 @@ def test_source_plan_uses_one_list_for_multiple_files_and_folders():
     ({'settings':[]},'settings'),
 ])
 def test_invalid_source_plan_is_rejected(change,message):
-    plan=deepcopy(runner.SOURCE_RUN);plan.update(change)
+    plan=deepcopy(runner.SOURCE_RUN);plan['start_stage']='final_action';plan.update(change)
     with pytest.raises(ValueError,match=message):runner.source_run_configuration(plan)
 
 
 def test_same_list_accepts_local_and_s3_paths():
     plan=deepcopy(runner.SOURCE_RUN)
+    plan['start_stage']='final_action'
     plan['source_paths']=['/tmp/claims','s3://medpar-demo-bucket/input/']
     _,configured,_=runner.source_run_configuration(plan)
     assert configured['final_action']['single_files'][0]['source']==plan['source_paths']
+
+
+def test_stage_map_selects_only_the_requested_entry():
+    plan=deepcopy(runner.SOURCE_RUN)
+    stage,configured,_=runner.source_run_configuration(plan,start_stage='final_medpar')
+    assert configured[stage]['single_files'][0]['source']==['data/production/r65/5-intermediate-processing']
+    stage,configured,_=runner.source_run_configuration(plan,start_stage='stay')
+    assert configured[stage]['single_files'][0]['source']==['data/production/q61/3-4yr-window-parquet']
+
+
+def test_none_business_date_uses_current_local_date():
+    from datetime import datetime
+    plan=deepcopy(runner.SOURCE_RUN)
+    plan['source_paths']=['input'];plan['run_date']=None
+    _,configured,_=runner.source_run_configuration(plan,start_stage='final_action')
+    assert configured['final_action']['run_date']==datetime.now().date().isoformat()

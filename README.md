@@ -2,7 +2,7 @@
 
 Validate Final Action, Four-Year Split, Stay, Intermediate and Final MEDPAR using JSON or Parquet inputs. The framework compares production outputs with source rules and approved expected outputs, and produces reports explaining every recorded result.
 
-**Current verification:** 518 automated tests passed on 15 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
+**Current verification:** 522 automated tests passed on 15 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
 
 For your team demo, start with [how one run works](#how-one-run-works), [stage logic](#stage-logic-to-explain-first), [common questions](#questions-your-team-is-likely-to-ask) and [Python concepts](#python-concepts-used-here). Use the expandable [file/function reference](#every-python-file-class-and-function) for coding questions and the [rule reference](#rule-explanation-reference) for validation questions. Search the exact function or file name to jump to its detailed explanation.
 
@@ -36,13 +36,13 @@ Run the complete synthetic five-stage example:
 python -m medpar_qa.cli --manifest config/run_manifest.all_stages.example.yaml
 ```
 
-Run automatic source-only processing (the shipped default is fictitious demo input):
+Run the configured production source entry reviews:
 
 ```sh
 python run_commands.py
 ```
 
-Edit `SOURCE_RUN` in `run_commands.py` to select the source type, starting stage, date and input paths. The command uses only the `SOURCE_RUN` input list and selected starting stage. Missing files, mismatched snapshots and business failures remain visible in reports.
+Edit `SOURCE_RUN` in `run_commands.py` to select the source type, starting stage, date and input paths. The command uses only `SOURCE_RUN`, with its source paths and selected entry stage(s). Missing files, mismatched snapshots and business failures remain visible in reports.
 
 ### One input configuration
 
@@ -51,7 +51,7 @@ Edit only `SOURCE_RUN` near the top of `run_commands.py`:
 ```python
 SOURCE_RUN = {
     "start_stage": "final_action",
-    "run_date": "2026-04-20",
+    "run_date": None,
     "source_paths": [
         "C:/MEDPAR/input/folder1",
         "C:/MEDPAR/input/folder2",
@@ -74,7 +74,9 @@ Then run `python run_commands.py`. For AWS, replace the same `source_paths` entr
 
 All supplied folders/files are discovered and combined before stage rules run, preserving cross-file claim grouping. Outputs are generated under the timestamped report folder and become the next stage's inputs. You do not configure downstream folders. Failures or missing prerequisites stop progression; business drops are recorded and only kept records continue. Reports show original file counts, generated record counts, handoff evidence and final export readiness.
 
-The shipped source is the fictitious `data/demo_source_only` folder. Replace its single list with your real sources. Dataset-specific automatic archive review has been removed from this runner; historical archive results remain in their existing reports.
+The shipped production paths are configured together under `SOURCE_RUN.source_paths`: Q61 quarterly claims for Final Action, Q61 retained Final Action claims for Split, Q61 retained Split bills for Stay, Q61 merged Stay records for Intermediate, and R65 Intermediate extracts for Final MEDPAR. `start_stage: "all"` runs each entry separately and creates one overview linking their connected reports. Q61 and R65 are separate datasets: a supplied later-stage input is never reported as a verified handoff from a different dataset. To run one connected route, set `start_stage` to that stage. Each run forwards only its generated kept records. A plain list is still accepted for a single-entry configuration.
+
+Set `run_date` to `None` for automatic execution-day business dates. The all-entry review resolves this date once so all its stages use the same date. The report also records execution date, time and UTC offset separately; date-based business rules receive the date, not a timestamp.
 
 ### Source-only processing and starting stage
 

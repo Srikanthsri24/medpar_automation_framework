@@ -22,7 +22,7 @@ def test_run_commands_file_loads_and_has_all_five_stages():
     namespace = runpy.run_path("run_commands.py", run_name="run_commands_test")
     assert namespace["STAGE_ORDER"] == ("final_action", "split", "stay", "intermediate", "final_medpar")
     assert "STAGE_RUNS" not in namespace and "PRODUCTION_ROOT" not in namespace
-    stage,configured,_ = namespace["source_run_configuration"](namespace["SOURCE_RUN"])
+    stage,configured,_ = namespace["source_run_configuration"](namespace["SOURCE_RUN"],start_stage="final_action")
     assert list(configured)==[stage]
 
 

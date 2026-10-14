@@ -103,3 +103,11 @@ def test_missing_ssi_feed_does_not_generate_a_negative_match(resolver,make_recor
     rows,notes=writers.intermediate([source],IntermediateProcessor(resolver,date(2026,4,20)))
     assert 'medpar_ssi_data_0252' not in rows[0] and 'medpar_ssi_data_0253' not in rows[0]
     assert any('0253: SSI reference feed not supplied' in note for note in notes)
+
+
+def test_hicn_generation_preserves_separate_eq_bic_component(resolver):
+    data={'claimCan':'000000001','claimCanNchEquatable':'A'}
+    writers.put(data,'hicn',resolver.get(data,'hicn'),resolver)
+    assert data['hicn']=='000000001A'
+    assert data['claimCanNchEquatable']=='A'
+    assert data['claimCan']=='000000001'
