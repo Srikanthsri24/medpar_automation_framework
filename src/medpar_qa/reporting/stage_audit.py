@@ -17,6 +17,6 @@ def write_stage_audit(result, directory):
     paths={}
     for name,items in rows.items():
         path=directory/f"{result.stage.value}_{name}.json"
-        path.write_text(json.dumps(items,indent=2,default=str)+"\n")
+        path.write_text(json.dumps(items,indent=2,default=str)+"\n", encoding="utf-8")
         paths[name]=path
     return paths

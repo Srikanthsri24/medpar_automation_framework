@@ -13093,3 +13093,11 @@ The stage movement summary follows original source files within each configured 
 ### Compact report navigation
 
 `run_commands.py` prints the selected source backend and resolved source-file totals for each starting stage. One run produces six HTML pages: `master/index.html` and one `index.html` for each processing stage. File lists, movement lists and rule evidence open as routed screens within those pages, with the existing filters and collapsed details. HTML screen archives are compressed and loaded on demand in modern Chrome/Edge using the browser’s built-in gzip decompressor. JSON evidence, fingerprints and generated outputs remain in the report folder. `compact_report.json` records the measured before/after HTML counts and sizes.
+
+If an older Windows run stops during report packaging with `UnicodeDecodeError`, update the code and retry only packaging:
+
+```sh
+python scripts/compact_reports.py reports/20261014_184018
+```
+
+Replace the folder with the completed run’s timestamp. This reuses saved HTML and evidence; stage processing is not repeated. New reports use explicit UTF-8; legacy report encodings detected during packaging are listed in `compact_report.json`.

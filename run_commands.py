@@ -325,7 +325,7 @@ def write_source_entry_overview(session,report):
     """Render verified child journeys; file counts stay separate from record counts."""
     entries=report['entries']
     business_date=report['business_run_date']
-    (session.master_directory/'entry_reviews.json').write_text(json.dumps(report,indent=2))
+    (session.master_directory/'entry_reviews.json').write_text(json.dumps(report,indent=2), encoding="utf-8")
     rows=[]
     for number,row in enumerate(entries,1):
         movements=[]
@@ -339,8 +339,8 @@ def write_source_entry_overview(session,report):
         link=f'<a href="{html.escape(row.get("report",""),quote=True)}">Files, rules and transfer evidence</a>' if row.get('report') else 'No report produced'
         rows.append('<tr>'+''.join('<td>'+html.escape(str(value))+'</td>' for value in (number,row['entry_stage'],row['input_files'],row['conclusion']))+f'<td>{link}<details><summary>Executed stage counts</summary><ul>'+''.join('<li>'+html.escape(item)+'</li>' for item in movements)+'</ul></details></td></tr>')
     index=session.master_directory/'entry_overview.html'
-    index.write_text('<!doctype html><html><meta charset="utf-8"><title>Production source entry reviews</title><style>body{font:16px system-ui;background:#f3f6fa;color:#19344e;margin:32px}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #ccd6e0;padding:14px;text-align:left;vertical-align:top}summary{cursor:pointer}a{color:#195da2}</style><h1>MEDPAR production source entry reviews</h1><p>Business date: '+html.escape(str(business_date))+' · Execution started: '+html.escape(report['generated_at'])+'</p><p>These are separate entry runs. Q61 inputs and R65 inputs are not evidence of a shared transfer. Open a report for actual generated handoffs, numbered original files and validation evidence. File counts are original physical input files; record counts are separate.</p><table><tr><th>#</th><th>Starting stage</th><th>Input files</th><th>Conclusion</th><th>Evidence</th></tr>'+''.join(rows)+'</table><p><a href="entry_reviews.json">Machine-readable counts and proof</a></p></html>')
-    (session.root/'review_scope.json').write_text(json.dumps({'description':report['scope']+'; final export readiness and remaining requirements are shown in Entry-source counts and each journey. Successful JSON checks do not certify complete physical MEDPAR output.'}))
+    index.write_text('<!doctype html><html><meta charset="utf-8"><title>Production source entry reviews</title><style>body{font:16px system-ui;background:#f3f6fa;color:#19344e;margin:32px}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #ccd6e0;padding:14px;text-align:left;vertical-align:top}summary{cursor:pointer}a{color:#195da2}</style><h1>MEDPAR production source entry reviews</h1><p>Business date: '+html.escape(str(business_date))+' · Execution started: '+html.escape(report['generated_at'])+'</p><p>These are separate entry runs. Q61 inputs and R65 inputs are not evidence of a shared transfer. Open a report for actual generated handoffs, numbered original files and validation evidence. File counts are original physical input files; record counts are separate.</p><table><tr><th>#</th><th>Starting stage</th><th>Input files</th><th>Conclusion</th><th>Evidence</th></tr>'+''.join(rows)+'</table><p><a href="entry_reviews.json">Machine-readable counts and proof</a></p></html>', encoding="utf-8")
+    (session.root/'review_scope.json').write_text(json.dumps({'description':report['scope']+'; final export readiness and remaining requirements are shown in Entry-source counts and each journey. Successful JSON checks do not certify complete physical MEDPAR output.'}), encoding="utf-8")
     index=refresh_session_indexes(session.root)
     print('Production entry summary: '+relative_display(index,project_root=PROJECT_ROOT),flush=True)
     return index

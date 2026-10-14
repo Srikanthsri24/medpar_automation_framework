@@ -3,10 +3,25 @@ from __future__ import annotations
 import base64
 import gzip
 import json
+import re
 import tempfile
 from pathlib import Path
 
 STAGES=('final_action','split','stay','intermediate','final_medpar')
+
+
+def read_html(path: Path) -> tuple[str,str]:
+    """Decode legacy Windows reports without replacing or dropping characters."""
+    raw=path.read_bytes()
+    if raw.startswith((b'\xff\xfe',b'\xfe\xff')):return raw.decode('utf-16'),'utf-16'
+    try:return raw.decode('utf-8-sig'),'utf-8'
+    except UnicodeDecodeError:pass
+    declared=re.search(br'charset\s*=\s*["\']?([A-Za-z0-9_-]+)',raw[:4096],re.I)
+    candidates=([declared.group(1).decode('ascii')] if declared else [])+['cp1252','latin-1']
+    for encoding in candidates:
+        try:return raw.decode(encoding),encoding
+        except (UnicodeDecodeError,LookupError):continue
+    raise ValueError(f'Cannot decode report HTML: {path}')
 
 
 def compact_reports(root: Path) -> Path:
@@ -24,6 +39,7 @@ def compact_reports(root: Path) -> Path:
         return 'master'
     routes={p.relative_to(root).as_posix():category(p) for p in files}
     before=sum(p.stat().st_size for p in files)
+    legacy_encodings=[]
     groups={name:[] for name in ('master',*STAGES)}
     for path in files:groups[category(path)].append(path)
     with tempfile.TemporaryDirectory(prefix='medpar-report-') as temp:
@@ -38,7 +54,10 @@ def compact_reports(root: Path) -> Path:
                 blocks.append(archive);batch={};size=0
             for path in paths:
                 if size>=4_000_000:flush()
-                batch[path.relative_to(root).as_posix()]=path.read_text(encoding='utf-8');size+=path.stat().st_size
+                text,encoding=read_html(path)
+                key=path.relative_to(root).as_posix()
+                batch[key]=text;size+=path.stat().st_size
+                if encoding!='utf-8':legacy_encodings.append({'file':key,'encoding':encoding})
             if not paths:
                 batch[name+'/index.html']='<html><body><h1>'+name.replace('_',' ').title()+'</h1><p>No stage inputs were executed in this run.</p><a href="../master/index.html">Master report</a></body></html>'
             flush()
@@ -57,7 +76,7 @@ def compact_reports(root: Path) -> Path:
             (root/name).mkdir(exist_ok=True)
             (Path(temp)/(name+'.html')).replace(root/name/'index.html')
     after=sum(p.stat().st_size for p in root.rglob('*.html'))
-    (root/'compact_report.json').write_text(json.dumps({'html_files_before':len(files),'html_files_after':6,'html_bytes_before':before,'html_bytes_after':after,'count_basis':'Original-source lineage remains unchanged','navigation':'One master and one page per stage; screen routes open existing rule/file evidence inside the page'},indent=2))
+    (root/'compact_report.json').write_text(json.dumps({'legacy_html_encodings':legacy_encodings,'html_files_before':len(files),'html_files_after':6,'html_bytes_before':before,'html_bytes_after':after,'count_basis':'Original-source lineage remains unchanged','navigation':'One master and one page per stage; screen routes open existing rule/file evidence inside the page'},indent=2), encoding="utf-8")
     return root/'master/index.html'
 
 

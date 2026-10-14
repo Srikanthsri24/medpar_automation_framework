@@ -40,3 +40,22 @@ def test_downstream_report_is_packaged_in_its_own_stage(tmp_path):
     assert data['routes'][key]=='stay'
     assert data['screens'][key]=='<html>Stay evidence</html>'
     assert 'No stage inputs' in unpack(tmp_path/'split/index.html')['screens']['split/index.html']
+
+
+def test_windows_legacy_html_is_decoded_without_losing_punctuation(tmp_path):
+    master=tmp_path/'master';master.mkdir()
+    text='<html><meta charset="utf-8"><body>PASS · “Evidence” — 5 files</body></html>'
+    (master/'index.html').write_bytes(text.encode('cp1252'))
+    assert b'\xb7' in (master/'index.html').read_bytes()
+    compact_reports(tmp_path)
+    assert unpack(master/'index.html')['screens']['master/index.html']==text
+    stats=json.loads((tmp_path/'compact_report.json').read_text())
+    assert stats['legacy_html_encodings']==[{'file':'master/index.html','encoding':'cp1252'}]
+
+
+def test_utf16_bom_report_is_preserved(tmp_path):
+    master=tmp_path/'master';master.mkdir()
+    text='<html>Evidence · 你好</html>'
+    (master/'index.html').write_bytes(text.encode('utf-16'))
+    compact_reports(tmp_path)
+    assert unpack(master/'index.html')['screens']['master/index.html']==text
