@@ -26,14 +26,15 @@ def write_connected_review(journeys, index, *, synthetic=False):
         stages = []
         for step in journey['steps']:
             name = step['stage'].replace('_', ' ').title()
-            stage_counts.setdefault(name, Counter())[step['status']] += 1
+            stage_counts.setdefault(name, Counter())[step['status']] += len(step.get('input_files',[])) or (0 if step['status']=='BEFORE_START' else 1)
             stage_records.setdefault(name, Counter()).update({key: step.get(key, 0) for key in ('input_records', 'retained', 'dropped')})
+            stage_records[name]['stopped'] += step['input_records'] if step['status'] in ('FAIL','BLOCKED') else 0
             relative = Path(directory).relative_to(index.parent).as_posix()
             report_link = f'{relative}/{step["stage"]}/report.html'
             output_link = f'{relative}/{step["stage"]}/retained.json'
-            if step['status'] == 'NOT_REACHED':
+            if step['status'] in ('NOT_REACHED','BEFORE_START'):
                 stages.append(f'<section><h3>{_esc(name)} — Not run</h3><p>{_esc(step["reason"])}</p>'
-                              '<p>No checks were executed in this stage. This is a consequence of the earlier stop, not another independent defect.</p></section>')
+                              '<p>No checks were executed. The stage is before the selected start, or an earlier stage stopped the journey.</p></section>')
                 continue
             report = json.loads((directory / step['stage'] / 'report.json').read_text())
             checks = report['stages'][0]['rule_results']
@@ -62,14 +63,15 @@ def write_connected_review(journeys, index, *, synthetic=False):
                 + (f' · <a href="{output_link}">Retained output</a>' if step["output"] else "") + '</p></section>')
         routes = _esc(json.dumps({step['stage'].replace('_', ' ').title(): step['status'] for step in journey['steps']}))
         volumes = _esc(json.dumps({step["stage"].replace("_", " ").title(): {"records_in": step.get("input_records", 0), "kept": step.get("retained", 0), "dropped": step.get("dropped", 0), "records_stopped": max(0, step.get("input_records", 0)-step.get("retained", 0)-step.get("dropped", 0))} for step in journey["steps"]}))
+        originals = "<ol>"+"".join("<li>"+_esc(path)+"</li>" for path in journey.get("source_files",[journey["source_file"]]))+"</ol>"
         sections.append(f'<details class="file-card" data-routes="{routes}" data-volumes="{volumes}"><summary>#{len(sections)+1} · File: {_esc(journey["source_file"])}</summary>'
-                        f'<p><b>File conclusion:</b> {_esc(journey["conclusion"])}</p>' + ''.join(stages) + '</details>')
-    completed = sum(journey['completed'] for journey, _ in journeys)
+                        f'<p>Starting stage: {_esc(journey.get("start_stage","final_action"))}. Source files: {journey.get("source_file_count",1)}. Output scope: supported JSON processing; see generation coverage.</p><details><summary>Original source files</summary>{originals}</details><p><b>File conclusion:</b> {_esc(journey["conclusion"])}</p>' + ''.join(stages) + '</details>')
+    completed = sum(journey['completed'] for journey,_ in journeys)
     stage_table = '<section id="stage-results"><h2>Files and records by stage</h2><p>Kept: continues. Dropped: removed by a business rule. Stopped: not processed after a failed check or missing prerequisite. Click a count for its file evidence. Files passed includes valid business drops; known differences remain disclosed in full reports.</p>'
     for name, counts in stage_counts.items():
         records = stage_records[name]
-        reached = sum(counts.values())-counts['NOT_REACHED']
-        volume = dict(files_in=reached, files_passed=counts['KEEP']+counts['DROP'], files_stopped=counts['FAIL']+counts['BLOCKED'], records_in=records['input_records'], kept=records['retained'], dropped=records['dropped'], records_stopped=max(0,records['input_records']-records['retained']-records['dropped']))
+        reached = sum(counts.values())-counts['NOT_REACHED']-counts['BEFORE_START']
+        volume = dict(files_in=reached, files_passed=counts['KEEP']+counts['DROP'], files_stopped=counts['FAIL']+counts['BLOCKED'], records_in=records['input_records'], kept=records['retained'], dropped=records['dropped'], records_stopped=records.get('stopped',0))
         strip = volume_strip(volume)
         for key in volume:
             value = f'{volume[key]:,}'
@@ -84,8 +86,8 @@ def write_connected_review(journeys, index, *, synthetic=False):
     stage_table += '</section>'
     label = 'Synthetic demonstration' if synthetic else 'Connected validation'
     scope = ('Fictitious inputs; all five real validators run. Final Action and Split calculate retained records. '
-             'Stay, Intermediate and Final validate supplied candidate JSON outputs. This is workflow evidence, not production acceptance. '
-             'Approved golden outputs, external reference calculations and the complete 3000-byte layout are not certified.' if synthetic else 'Production input validation. Stage outcomes below identify what ran and where processing stopped. A completed journey would establish only the executed checks; approved golden outputs and full physical layout certification remain separate acceptance requirements.')
+             'Stay, Intermediate and Final either generate supported JSON fields or validate supplied candidates. This is workflow evidence, not production acceptance. '
+             'Approved golden outputs, external reference calculations and the complete 3000-byte layout are not certified.' if synthetic else 'Stage processing and validation. BEFORE_START means the stage was not requested. Source-generated JSON covers supported calculations; generation coverage lists unresolved references and layouts. A completed journey would establish only the executed checks; approved golden outputs and full physical layout certification remain separate acceptance requirements.')
     source_link = '<p><a href="../input_sources.html">Local/S3 input sources — file counts and download evidence</a></p>' if (index.parent.parent / 'input_sources.html').exists() else ''
     index.write_text('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
         '<title>MEDPAR evidence report</title><style>body{font:16px system-ui;line-height:1.55;background:#f3f6fa;color:#18324b;margin:0}'
@@ -100,4 +102,4 @@ def write_connected_review(journeys, index, *, synthetic=False):
         'BLOCKED: a required input or prerequisite prevents a decision. NOT REACHED: an earlier stage stopped the file, so this stage did not run. '
         'Not assessed / N/A: the individual check was not evaluated; its explanation records why. None of these skipped states is a pass.</p>'
         '<p>Software test reports can contain intentionally invalid examples. Their test outcome tells you whether the framework handled those examples correctly; it is not the business outcome of this demonstration.</p></details>'
-        + stage_table + connected_transfers(journeys, index) + '<section id="file-evidence"><h2>File evidence</h2><p>Search the original input filename, then expand a file to review its stage conclusions and proof.</p><label for="file-search">Search filename</label><input id="file-search" type="search" placeholder="Filename or path…"><button onclick="clearOutcome()">Show all files</button><p id="file-count"></p></section>' + ''.join(sections) + '<script>const field=document.getElementById("file-search");let selectedStage="",selectedOutcome="",selectedMetric="";function selectOutcome(link){selectedStage=link.dataset.stage;selectedOutcome=link.dataset.outcome||"";selectedMetric=link.dataset.metric||"";field.value="";filterFiles();}function clearOutcome(){selectedStage="";selectedOutcome="";selectedMetric="";field.value="";filterFiles();}function matchesStage(el){const outcome=JSON.parse(el.dataset.routes)[selectedStage];if(selectedMetric==="files_in")return outcome!=="NOT_REACHED";if(selectedMetric==="files_passed")return ["KEEP","DROP"].includes(outcome);if(selectedMetric==="files_stopped")return ["FAIL","BLOCKED"].includes(outcome);if(selectedMetric)return (JSON.parse(el.dataset.volumes)[selectedStage]||{})[selectedMetric]>0;return outcome===selectedOutcome;}function filterFiles(){let n=0;document.querySelectorAll(".file-card").forEach(el=>{el.hidden=!el.querySelector("summary").textContent.toLowerCase().includes(field.value.toLowerCase())||(selectedStage&&!matchesStage(el));if(!el.hidden)n++;});document.getElementById("file-count").textContent=n+" files shown; dashboard totals describe the complete run.";}field.addEventListener("input",filterFiles);filterFiles();</script></main></body></html>', encoding='utf-8')
+        + stage_table + connected_transfers(journeys, index) + '<section id="file-evidence"><h2>File evidence</h2><p>Search the original input filename, then expand a file to review its stage conclusions and proof.</p><label for="file-search">Search filename</label><input id="file-search" type="search" placeholder="Filename or path…"><button onclick="clearOutcome()">Show all files</button><p id="file-count"></p></section>' + ''.join(sections) + '<script>const field=document.getElementById("file-search");let selectedStage="",selectedOutcome="",selectedMetric="";function selectOutcome(link){selectedStage=link.dataset.stage;selectedOutcome=link.dataset.outcome||"";selectedMetric=link.dataset.metric||"";field.value="";filterFiles();}function clearOutcome(){selectedStage="";selectedOutcome="";selectedMetric="";field.value="";filterFiles();}function matchesStage(el){const outcome=JSON.parse(el.dataset.routes)[selectedStage];if(selectedMetric==="files_in")return !["NOT_REACHED","BEFORE_START"].includes(outcome);if(selectedMetric==="files_passed")return ["KEEP","DROP"].includes(outcome);if(selectedMetric==="files_stopped")return ["FAIL","BLOCKED"].includes(outcome);if(selectedMetric)return (JSON.parse(el.dataset.volumes)[selectedStage]||{})[selectedMetric]>0;return outcome===selectedOutcome;}function filterFiles(){let n=0;document.querySelectorAll(".file-card").forEach(el=>{el.hidden=!el.querySelector("summary").textContent.toLowerCase().includes(field.value.toLowerCase())||(selectedStage&&!matchesStage(el));if(!el.hidden)n++;});document.getElementById("file-count").textContent=n+" processing batches shown; expand Original source files for individual filenames.";}field.addEventListener("input",filterFiles);filterFiles();</script></main></body></html>', encoding='utf-8')

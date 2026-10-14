@@ -243,7 +243,7 @@ DIRECT_MOVES = {
 
 
 def validate_business_rules(source: SourceRecord, target: SourceRecord,
-                            resolver: FieldResolver, *, revenue_category_ranges=None) -> list[RuleResult]:
+                            resolver: FieldResolver, *, revenue_category_ranges=None, calculation_sink=None) -> list[RuleResult]:
     """Calculate supported Intermediate expectations from source operands and compare them with the
     matched target, emitting field-specific evidence.
     """
@@ -288,6 +288,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         try:
             expected = calculate()
             calculated=True
+            if calculation_sink is not None:
+                calculation_sink(field, expected, None)
+                return
             if observed in (None, ""):
                 status = ValidationStatus.PASS if expected is None else ValidationStatus.NOT_APPLICABLE
             else:
@@ -301,6 +304,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         except (ValueError, TypeError, ArithmeticError) as exc:
             calculated=False
             expected, status, message = "Valid source operands", ValidationStatus.FAIL, str(exc)
+        if calculation_sink is not None:
+            calculation_sink(field, None, message)
+            return
         results.append(RuleResult(stage=Stage.INTERMEDIATE, rule_id=rule, field_name=field,
                                   status=status, message=message, expected=str(expected) if isinstance(expected, Decimal) else expected,
                                   actual=observed, record_ids=list(dict.fromkeys([source.record_id, target.record_id])),
@@ -417,6 +423,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         except (ValueError,TypeError,ArithmeticError) as exc:
             expected,message="Valid accommodation lines",str(exc)
             result_status=ValidationStatus.FAIL
+        if calculation_sink is not None:
+            calculation_sink(field,[str(v) for v in expected] if isinstance(expected,list) else None,None if isinstance(expected,list) else message)
+            continue
         results.append(RuleResult(stage=Stage.INTERMEDIATE,rule_id="INT-ACCOMMODATION-CATEGORIES",status=result_status,
             message=message,field_name=field,expected=[str(v) for v in expected] if isinstance(expected,list) else expected,
             actual=observed,record_ids=[source.record_id,target.record_id]))

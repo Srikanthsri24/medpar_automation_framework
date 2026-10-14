@@ -18,20 +18,11 @@
           ],
           "actual": [],
           "expected": [],
-          "dropped": [],
-          "pipeline_outputs": {
-            "stay": [
-              "s3://your-medpar-bucket/stay-outputs/"
-            ],
-            "intermediate": [
-              "s3://your-medpar-bucket/intermediate-outputs/"
-            ],
-            "final_medpar": [
-              "s3://your-medpar-bucket/final_medpar-outputs/"
-            ]
-          }
+          "dropped": []
         }
       ]
     }
-  }
+  },
+  "start_stage": "final_action",
+  "generate_outputs": true
 }

@@ -42,9 +42,9 @@ def test_drop_stops_all_later_stages(tmp_path, resolver):
     assert not list(directory.rglob('retained.json'))
 
 
-def test_keep_forwards_generated_output_then_blocks_missing_stay_writer(tmp_path, resolver):
+def test_comparison_mode_forwards_then_blocks_missing_comparison(tmp_path, resolver):
     pipeline, source = setup_pipeline(tmp_path, resolver, [base_claim(admissionDate='20260101')])
-    journey, directory = pipeline.run_file(source, DATES)
+    journey, directory = pipeline.run_file(source, DATES, generate_outputs=False)
     assert [s['status'] for s in journey['steps']] == ['KEEP','KEEP','BLOCKED','NOT_REACHED','NOT_REACHED']
     assert journey['steps'][1]['input'] == journey['steps'][0]['output']
     assert journey['steps'][2]['input'] == journey['steps'][1]['output']

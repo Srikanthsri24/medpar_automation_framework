@@ -71,19 +71,51 @@ S3 access requires read permission for selected objects and list permission for 
 
 Open **Local/S3 input sources** from the generated report for a collapsed list of original paths, files used, byte sizes and SHA-256 fingerprints. An unreadable S3 object or empty S3 folder stops input preparation with exit code 2 and records the reason in `input_sources.html`; the runner does not silently validate a partial folder. Missing repository-local paths continue into the existing ingestion failure report.
 
-Custom configurations now default to connected flow. The updated example enables it explicitly. For an older configuration with `connected_pipeline_enabled: false`, override it with:
+### Source-only processing and starting stage
+
+Give a local folder or S3 prefix directly. No comparison files are required:
+
+```sh
+python run_commands.py --source data/production/my_inputs --start-stage final_action --run-date 2026-04-20
+python run_commands.py --source s3://my-bucket/my_inputs/ --start-stage intermediate --run-date 2026-04-20
+```
+
+Try the fictitious source-only financial demo (one input folder, no comparison files):
+
+```sh
+python run_commands.py --source data/demo_source_only --run-date 2026-04-20
+```
+
+Its supplied amounts yield DRG price 134, total charges 150, covered charges 140 and four SSI days. The SSI/DOD availability flags are fictitious enriched input values, not live external lookups.
+
+Repeat `--source` for multiple files/folders. `--start-stage` accepts `final_action`, `split`, `stay`, `intermediate` or `final_medpar`; it defaults to Final Action. `--run-date` is the business date, defaulting to the laptop's current date. Inputs must match the chosen stage: Stay receives retained Split bills with routing indicators; Intermediate receives merged Stay records; Final MEDPAR receives Intermediate records. Missing required operands produce a stop with evidence rather than invented values.
+
+You can also set `start_stage` and `generate_outputs: true` in `config/stage_runs.local.json`, then run:
 
 ```sh
 python run_commands.py --config config/stage_runs.local.json --flow connected
 ```
 
-Final Action retained records become Split input; each subsequent KEEP forwards its retained output to the next stage. FAIL/BLOCKED stops that journey; DROP stops when no records remain. Local and S3 seeds use this same path. Missing stage dates inherit the Final Action date; explicit dates override it. `connected_settings` may override stage settings; custom configurations derive Split's year from the processing date unless you supply a year override.
+Only the chosen seed stage needs source paths and a date. Missing subsequent dates inherit its date. Earlier stages show **BEFORE_START**, with zero input/check counts. `--stage` still selects an independent review; use `--start-stage` for source-driven onward processing.
 
-Configure `pipeline_outputs` on the Final Action entry for Stay, Intermediate and Final MEDPAR. Those paths can be local folders or S3 prefixes. Alternatively, the runner uses configured `actual` paths from those stage entries. These are comparison outputs: the framework computes Final Action/Split decisions but requires existing pipeline outputs to validate later stages. With only starting claims, it advances through Final Action/Split and records the missing-output stop at Stay; it cannot certify absent outputs. The synthetic demo provides all three comparison outputs for a complete five-stage example.
+Generated outputs live under `reports/<session>/connected/<journey>/<stage>/`:
 
-Use `--flow independent` for separate stage reviews, or `--stage final_action` for one stage. The default R65 archive review remains independent. `--flow connected` cannot be combined with `--stage`.
+- `generated.json`: generated Stay, Intermediate or Final candidate data.
+- `retained.json`: validated retained records forwarded to the next stage.
+- `dropped.json`: records excluded by keep/drop decisions or Final bypass.
+- `generation.json`: calculation scope and unassessed source/reference dependencies.
+- `handoff.json`: incoming files, counts, outgoing file and progression status.
+- `report.html` / `report.json`: rule evidence and conclusions.
 
-If AWS setup fails, open the input-source evidence report. Credential JSON accepts a Windows UTF-8 BOM and trims surrounding spaces. Errors now distinguish missing credentials, expired temporary tokens, incorrect keys/signatures, access denied and missing objects. An explicitly supplied missing `--aws-config` file is rejected before running. Never share secret keys or session tokens when collecting error evidence.
+Source-generated folder inputs are grouped together before processing, so an ICN cancellation or a Stay's bills can span physical files. The report lists original files and counts them at the starting stage. Later stages count the generated working input files. Combining bills can reduce output record counts; this is not counted as stopped records. FAIL/BLOCKED stops the batch; DROP stops when no records remain. Raw source files remain unchanged.
+
+Stay applies supported first/last/nonblank/date/sum rules, revenue aggregation and 45-line segments. Intermediate calculates supported monetary, revenue, clinical/count/date, indicator and warning fields using source operands. Final applies bypass and provider classification, removes the routing indicator, and trims a supplied 3050-byte physical payload to 3000 bytes. Independent regression examples check generated values; generated-output self-checks alone are not CMS acceptance.
+
+**Export boundary:** these writers generate supported JSON records. A complete physical MEDPAR export requires the approved copybook/field layout, and some clinical/revenue/SSI mappings and vendor DRG calculations remain unavailable. These are disclosed in generation coverage. Missing required operands stop processing; unavailable optional/reference calculations are unassessed, not fabricated as zero or marked PASS. Set Final `require_fixed_width: true` in `connected_settings` when physical output is mandatory; absence then blocks Final validation. Source-only processing does not require comparison files, but cannot replace missing external calculation definitions or reference data.
+
+Comparison mode remains available with `generate_outputs: false` plus `pipeline_outputs`. Without an explicit generation flag, configured comparison paths select comparison mode; otherwise outputs are generated from source. The updated example selects generation explicitly. Use `--flow independent` for separate stage reviews. The default R65 archive review remains independent.
+
+AWS setup errors identify missing credentials, expired tokens, access denied and missing objects. Credential JSON supports a Windows UTF-8 BOM and trims whitespace. An explicitly supplied missing `--aws-config` file is rejected before running. Share error codes, not keys or session tokens.
 
 [Boto3 credentials reference](https://docs.aws.amazon.com/boto3/latest/guide/credentials.html) · [S3 pagination reference](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/paginator/ListObjectsV2.html)
 

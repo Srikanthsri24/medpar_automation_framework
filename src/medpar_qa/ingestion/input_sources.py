@@ -205,18 +205,18 @@ class InputSources:
             # No exception payloads or URL query credentials in terminal/report evidence.
             raise InputSourceError(f'S3 input could not be read ({code}): {advice}') from exc
 
-    def prepare(self, stage_runs, *, selected_stage=None, connected=False):
+    def prepare(self, stage_runs, *, selected_stage=None, connected=False, start_stage="final_action", generate_outputs=None):
         """Resolve enabled entries including role-specific and downstream candidate paths."""
         configured = deepcopy(stage_runs)
         try:
             for stage, settings in configured.items():
-                if not settings.get('enabled', True) or selected_stage and stage != selected_stage or connected and stage != 'final_action': continue
+                if not settings.get('enabled', True) or selected_stage and stage != selected_stage or connected and stage != start_stage: continue
                 for list_name in ('single_files', 'folder_paths'):
                     for item in settings.get(list_name, []):
                         if not item.get('enabled', True): continue
                         for role in ('source', 'actual', 'expected', 'dropped'):
                             if item.get(role): item[role] = self.resolve(item[role])
-                        for target, values in item.get('pipeline_outputs', {}).items():
+                        for target, values in (item.get('pipeline_outputs', {}) if generate_outputs is not True else {}).items():
                             item['pipeline_outputs'][target] = self.resolve(values)
             return configured
         except InputSourceError as exc:

@@ -68,15 +68,68 @@ def test_connected_runner_forwards_same_outputs_through_all_stages(tmp_path,monk
 
 
 @pytest.mark.integration
-def test_source_only_connected_flow_reaches_stay_and_reports_missing_output(tmp_path,monkeypatch,capsys):
+def test_source_only_connected_flow_generates_without_comparison_files(tmp_path,monkeypatch,capsys):
     import run_commands as runner
     config={'stage_runs':{'final_action':{'run_date':'2026-04-20','single_files':[{'source':['data/demo_connected/claims.json']}]}}}
     path=tmp_path/'source-only.json';path.write_text(json.dumps(config))
     monkeypatch.setattr(sys,'argv',['run_commands.py','--config',str(path)])
-    assert runner.main()==1
+    assert runner.main()==0
     index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',capsys.readouterr().out).group(1)
     journey=json.loads(next(index.parent.glob('*/journey.json')).read_text())
-    assert [step['status'] for step in journey['steps']]==['KEEP','KEEP','BLOCKED','NOT_REACHED','NOT_REACHED']
+    assert [step['status'] for step in journey['steps']]==['KEEP']*5
     assert journey['steps'][0]['output']==journey['steps'][1]['input']
     assert journey['steps'][1]['output']==journey['steps'][2]['input']
-    assert 'candidate output' in journey['steps'][2]['reason']
+    assert all(step['output_origin']=='source_generated' for step in journey['steps'][2:])
+    assert journey['completed']
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize('start_stage', ['final_action','split','stay','intermediate','final_medpar'])
+@pytest.mark.parametrize('remote', [False,True], ids=['local','s3'])
+def test_source_only_any_start_stage_generates_remaining_stages(tmp_path,monkeypatch,capsys,start_stage,remote):
+    import run_commands as runner
+    import medpar_qa.ingestion.input_sources as sources
+    fixture='intermediate_candidate.json' if start_stage=='final_medpar' else 'stay_candidate.json' if start_stage=='intermediate' else 'claims.json'
+    content=(runner.PROJECT_ROOT/'data/demo_connected'/fixture).read_bytes()
+    if start_stage=='stay':
+        rows=json.loads(content)
+        for row in rows:row['split_year_indicator']='Y00109'  # Split output is the Stay input contract.
+        content=json.dumps(rows).encode()
+    class FakeS3:
+        def get_paginator(self,operation):return self
+        def paginate(self,**kwargs):yield {'Contents':[{'Key':'input/source.json','Size':len(content)}]}
+        def download_file(self,bucket,key,filename):Path(filename).write_bytes(content)
+    monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
+    folder=tmp_path/'inputs';folder.mkdir();(folder/'source.json').write_bytes(content)
+    source='s3://medpar-demo-bucket/input/' if remote else str(folder)
+    monkeypatch.setattr(sys,'argv',['run_commands.py','--source',source,'--start-stage',start_stage,'--run-date','2026-04-20'])
+    assert runner.main()==0
+    index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',capsys.readouterr().out).group(1)
+    path=next(index.parent.glob('*/journey.json'));journey=json.loads(path.read_text())
+    order=['final_action','split','stay','intermediate','final_medpar'];start=order.index(start_stage)
+    assert [s['status'] for s in journey['steps']]==['BEFORE_START']*start+['KEEP']*(5-start)
+    assert journey['completed'] and journey['start_stage']==start_stage
+    for stage in order[start:]:assert (path.parent/stage/'retained.json').exists()
+    for stage in order[:start]:assert not (path.parent/stage/'retained.json').exists()
+    final=json.loads((path.parent/'final_medpar/retained.json').read_text())
+    assert 'split_year_indicator' not in final[0]
+    assert 'BEFORE_START' in index.read_text() or start==0
+
+
+@pytest.mark.integration
+def test_cross_file_rule6_cancellation_is_grouped_before_forwarding(tmp_path,monkeypatch,capsys):
+    import run_commands as runner
+    content=json.loads((runner.PROJECT_ROOT/'data/demo_connected/claims.json').read_text())[0]
+    folder=tmp_path/'claims';folder.mkdir()
+    for qc in (0,5):
+        (folder/f'{qc}.json').write_text(json.dumps([{**content,'queryCode':qc,'actionCode':4}]))
+    monkeypatch.setattr(sys,'argv',['run_commands.py','--source',str(folder),'--run-date','2026-04-20'])
+    assert runner.main()==0
+    index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',capsys.readouterr().out).group(1)
+    path=next(index.parent.glob('*/journey.json'));journey=json.loads(path.read_text())
+    assert journey['source_file_count']==2 and journey['steps'][0]['status']=='DROP'
+    assert len(json.loads((path.parent/'final_action/dropped.json').read_text()))==2
+    assert all(step['status']=='NOT_REACHED' for step in journey['steps'][1:])
+    report=json.loads((path.parent/'final_action/report.json').read_text())
+    rule=next(c for stage in report['stages'] for c in stage['rule_results'] if c['rule_id']=='FA-RULE-06')
+    assert rule['status']=='PASS' and len(rule['source_files'])==2

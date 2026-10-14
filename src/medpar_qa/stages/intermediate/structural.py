@@ -389,7 +389,7 @@ def validate_accommodation_totals(
         )
     try:
         rounded_charges = [quantize_decimal(value, scale=scale) for value in raw_charges]
-        expected = quantize_decimal(sum(rounded_charges, Decimal("0")), scale=scale)
+        expected = min(quantize_decimal(sum(rounded_charges, Decimal("0")), scale=scale), Decimal("999999999"))
         actual = quantize_decimal(raw_total, scale=scale)
         status = ValidationStatus.PASS if expected == actual else ValidationStatus.FAIL
         message = (

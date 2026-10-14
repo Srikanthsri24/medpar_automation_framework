@@ -1,0 +1,66 @@
+[
+  {
+    "claimCan": "DEMO-CAN",
+    "claimCanNchEquatable": "DEMO-HICN",
+    "provider": {
+      "providerId": "990999"
+    },
+    "admissionDate": "20260101",
+    "stayFromDate": "20260101",
+    "stayThruDate": "20260105",
+    "transactionCode": 1,
+    "queryCode": 1,
+    "internalControlNumber": "DEMO-ICN",
+    "nchWeeklyProcessingDate": "20260110",
+    "accreteDate": "20260111",
+    "sourceSequence": 1,
+    "actionCode": "A",
+    "conditionCodes": [],
+    "occurrenceCodes": [],
+    "occurrenceSpanLines": [],
+    "valueLines": [],
+    "revenueLines": [
+      {
+        "code": "0100",
+        "units": 4,
+        "charges": "100",
+        "nonCoveredCharge": "10"
+      },
+      {
+        "code": "0270",
+        "units": 1,
+        "charges": "50",
+        "nonCoveredCharge": "0",
+        "ndcNumber": "00000000001"
+      }
+    ],
+    "beneficiary_date_of_birth": "19500101",
+    "claimPaymentAmount": "100",
+    "primary_payment_amount": "10",
+    "coinsuranceAmount": "5",
+    "inPatientDeduction": "20",
+    "bloodDeductable": "0",
+    "outlierAmount": "1",
+    "totalCharges": "150",
+    "utilization_days": 4,
+    "patientStatus": "01",
+    "primaryPaymentCode": "A",
+    "pass_thru_per_diem": "2",
+    "hcfa_received": "20260109",
+    "procedureLines": [],
+    "diagnosisLines": [
+      {
+        "code": "I10",
+        "version": "0",
+        "poa": "Y"
+      }
+    ],
+    "ssi_reference_available": true,
+    "ssi_reference_matched": true,
+    "ssi_month_flags": {
+      "2026-01": 1
+    },
+    "dod_reference_available": true,
+    "dod_reference_matched": false
+  }
+]

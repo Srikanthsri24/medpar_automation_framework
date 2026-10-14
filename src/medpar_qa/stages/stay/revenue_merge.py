@@ -34,7 +34,10 @@ def coalesce_segments(records, resolver, identity_fields):
         if len(group)==1:
             combined.extend(group);continue
         keys=['revenue_lines',*resolver.aliases.get('revenue_lines',[])]
-        def other(record):return strip_lineage([{k:v for k,v in record.data.items() if k not in keys}])[0]
+        def other(record):
+            from medpar_qa.normalization.fields import _key_form
+            excluded={_key_form(key) for key in keys}
+            return strip_lineage([{k:v for k,v in record.data.items() if _key_form(k) not in excluded}])[0]
         lengths=[len(resolver.get(record.data,'revenue_lines') or []) for record in group]
         valid=all(other(r)==other(group[0]) for r in group) and all(n==45 for n in lengths[:-1]) and 1<=lengths[-1]<=45
         if not valid:

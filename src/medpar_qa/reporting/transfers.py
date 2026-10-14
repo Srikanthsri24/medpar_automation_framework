@@ -89,8 +89,8 @@ def connected_transfers(journeys, index):
         relative = directory.relative_to(index.parent).as_posix()
         for number, step in enumerate(steps):
             following = steps[number + 1] if number + 1 < len(steps) else None
-            moved = bool(following and step.get('output') and following['status'] != 'NOT_REACHED' and following.get('input') == step['output'])
-            status = 'Moved to next stage' if moved else 'Completed final stage' if not following and step['status'] == 'KEEP' else 'Not reached' if step['status'] == 'NOT_REACHED' else 'Dropped — no retained records' if step['status'] == 'DROP' else 'Stopped — not moved'
+            moved = bool(following and step.get('output') and following['status'] not in ('NOT_REACHED','BEFORE_START') and following.get('input') == step['output'])
+            status = 'Moved to next stage' if moved else 'Completed final stage' if not following and step['status'] == 'KEEP' else 'Before selected start — not executed' if step['status'] == 'BEFORE_START' else 'Not reached' if step['status'] == 'NOT_REACHED' else 'Dropped — no retained records' if step['status'] == 'DROP' else 'Stopped — not moved'
             links = '' if step['status'] == 'NOT_REACHED' else f'<a href="{relative}/{step["stage"]}/report.html">Source stage proof</a>'
             if moved:
                 links += f' · <a href="{relative}/{following["stage"]}/report.html">Next stage proof</a> · <a href="{relative}/{step["stage"]}/retained.json">Transferred records</a>'
