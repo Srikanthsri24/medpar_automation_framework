@@ -13101,3 +13101,5 @@ python scripts/compact_reports.py reports/20261014_184018
 ```
 
 Replace the folder with the completed run’s timestamp. This reuses saved HTML and evidence; stage processing is not repeated. New reports use explicit UTF-8; legacy report encodings detected during packaging are listed in `compact_report.json`.
+
+S3 object names do not need a file extension. Put exact object links in `SOURCE_RUN.source_paths.s3.<stage>.files` and prefix/folder links in `folders`; both accept the supported S3 URI, HTTPS and AWS console URL forms. Folder entries are normalized to prefixes, including links without a trailing slash. For objects with missing or unknown extensions, downloaded content identifies JSON or Parquet and the cache receives the detected extension. The original bucket/key and SHA-256 remain in `input_sources.json`, together with the detection method. Standard success/metadata markers are excluded from folder discovery; unrecognized data content stops with an explicit ingestion error. AWS credentials and the existing automatic stage flow are unchanged.

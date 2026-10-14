@@ -108,7 +108,7 @@ def test_source_only_any_start_stage_generates_remaining_stages(tmp_path,monkeyp
         content=json.dumps(rows).encode()
     class FakeS3:
         def get_paginator(self,operation):return self
-        def paginate(self,**kwargs):yield {'Contents':[{'Key':'input/source.json','Size':len(content)}]}
+        def paginate(self,**kwargs):yield {'Contents':[{'Key':'input/opaque-source','Size':len(content)}]}
         def download_file(self,bucket,key,filename):Path(filename).write_bytes(content)
     monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
     folder=tmp_path/'inputs';folder.mkdir();(folder/'source.json').write_bytes(content)
@@ -237,3 +237,25 @@ def test_all_entries_share_one_timestamp_folder_with_live_report_links(tmp_path,
         assert link.relative_to(timestamps[0]).as_posix() in bundle
         assert entry['input_files']==1
         assert len(list((timestamps[0]/'entries'/entry['entry_stage']/'connected').glob('*/journey.json')))==1
+
+
+@pytest.mark.integration
+def test_extensionless_s3_object_runs_all_stages(tmp_path,monkeypatch,capsys):
+    import run_commands as runner
+    import medpar_qa.ingestion.input_sources as sources
+    content=(runner.PROJECT_ROOT/'data/demo_source_only/claims.json').read_bytes()
+    class FakeS3:
+        def head_object(self,**kwargs):return {'ContentLength':len(content)}
+        def download_file(self,bucket,key,filename):Path(filename).write_bytes(content)
+    monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
+    monkeypatch.setattr(sys,'argv',['run_commands.py','--source','s3://medpar-demo-bucket/opaque-claim','--start-stage','final_action','--run-date','2026-04-20'])
+    assert runner.main()==0
+    output=capsys.readouterr().out
+    index=runner.PROJECT_ROOT/re.search(r'Connected pipeline report: (.+)',output).group(1)
+    journey=json.loads(next((index.parent.parent/'connected').glob('*/journey.json')).read_text())
+    assert journey['completed']
+    assert [s['status'] for s in journey['steps']]==['KEEP']*5
+    for a,b in zip(journey['steps'],journey['steps'][1:]):assert a['output']==b['input']
+    inventory=json.loads((index.parent.parent/'input_sources.json').read_text())
+    assert inventory['files'][0]['origin']=='s3://medpar-demo-bucket/opaque-claim'
+    assert inventory['files'][0]['detected_format']=='json'

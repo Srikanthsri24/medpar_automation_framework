@@ -159,15 +159,22 @@ class InputSources:
             except Exception as exc: raise InputSourceError(f'Cannot initialize AWS credentials ({type(exc).__name__}); check JSON format, AWS profile and temporary session token') from exc
         uri = f's3://{bucket}/{key}'
         wildcard = next((i for i,c in enumerate(key) if c in '*?['), None)
-        exact = not key.endswith('/') and wildcard is None and PurePosixPath(key).suffix.lower() in SUPPORTED
+        exact = bool(key) and not key.endswith('/') and wildcard is None
         try:
             if exact:
-                metadata = self.client.head_object(Bucket=bucket, Key=key)
-                objects = [dict(Key=key, Size=metadata['ContentLength'], ETag=metadata.get('ETag'), LastModified=metadata.get('LastModified'))]
-            else:
+                try:
+                    metadata = self.client.head_object(Bucket=bucket, Key=key)
+                    objects = [dict(Key=key, Size=metadata['ContentLength'], ETag=metadata.get('ETag'), LastModified=metadata.get('LastModified'))]
+                except Exception as exc:
+                    code=str(getattr(exc,'response',{}).get('Error',{}).get('Code',''))
+                    if code not in ('404','NoSuchKey','NotFound'):raise
+                    exact=False
+            if not exact:
                 prefix = key[:wildcard] if wildcard is not None else key.rstrip('/') + '/' if key else ''
                 objects = [obj for page in self.client.get_paginator('list_objects_v2').paginate(Bucket=bucket, Prefix=prefix)
-                    for obj in page.get('Contents', []) if not obj['Key'].endswith('/') and PurePosixPath(obj['Key']).suffix.lower() in SUPPORTED
+                    for obj in page.get('Contents', []) if not obj['Key'].endswith('/') and PurePosixPath(obj['Key']).name not in ('_SUCCESS','_metadata','_common_metadata')
+                    and not PurePosixPath(obj['Key']).name.startswith(('_started_','_committed_'))
+                    and PurePosixPath(obj['Key']).suffix.lower() not in ('.txt','.md','.log','.crc')
                     and (wildcard is None or fnmatchcase(obj['Key'], key))]
             objects = sorted({obj['Key']: obj for obj in objects}.values(), key=lambda obj: obj['Key'])
             if not objects: raise InputSourceError(f'No JSON or Parquet objects found at {uri}')
@@ -177,16 +184,27 @@ class InputSources:
                 existing = next((p for p, record in self.files.items() if record['origin'] == origin), None)
                 if existing:
                     result.append(existing); continue
-                path = self._destination('s3', bucket, obj['Key'].split('/'))
+                needs_detection=PurePosixPath(obj['Key']).suffix.lower() not in SUPPORTED
+                path = self._destination('s3', origin if needs_detection else bucket, obj['Key'].split('/'))
                 temporary = path.with_name(path.name + '.download')
                 try:
                     self.client.download_file(bucket, obj['Key'], str(temporary))
                     if temporary.stat().st_size != obj['Size']: raise InputSourceError('Downloaded object size differs from S3 metadata; rerun using a stable extraction snapshot')
+                    detected=None
+                    if needs_detection:
+                        with temporary.open('rb') as handle:
+                            sample=handle.read(65536)
+                            handle.seek(max(0,temporary.stat().st_size-4));tail=handle.read(4)
+                        if sample[:4]==b'PAR1' and tail==b'PAR1':detected='parquet'
+                        elif sample.removeprefix(b'\xef\xbb\xbf').lstrip().startswith((b'{',b'[')):detected='json'
+                        else:raise InputSourceError(f'Object content is not recognizable JSON or Parquet: {origin}')
+                        path=path.with_name(path.name+'.'+detected)
                     temporary.replace(path)
                 finally:
                     temporary.unlink(missing_ok=True)
                 result.append(self._record(origin, path, kind='s3', etag=obj.get('ETag'),
-                    last_modified=str(obj.get('LastModified') or ''), bucket=bucket, key=obj['Key']))
+                    last_modified=str(obj.get('LastModified') or ''), bucket=bucket, key=obj['Key'],
+                    detected_format=detected, format_detection='content' if needs_detection else 'extension'))
             return result
         except InputSourceError: raise
         except Exception as exc:

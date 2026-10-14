@@ -13,6 +13,9 @@ class FakeS3:
         self.listings=[]
 
     def head_object(self, Bucket, Key):
+        if (Bucket,Key) not in self.objects:
+            from botocore.exceptions import ClientError
+            raise ClientError({'Error':{'Code':'404'}},'HeadObject')
         return {'ContentLength':len(self.objects[(Bucket,Key)]),'ETag':'fake-etag'}
 
     def get_paginator(self, operation):
@@ -198,3 +201,43 @@ def test_real_boto3_download_and_pagination_with_stubbed_aws_responses(tmp_path)
         assert len(paths)==1 and (tmp_path/paths[0]).read_bytes()==content
         assert resolver.files[paths[0]]['origin']=='s3://medpar-demo-bucket/seed/year=2026/claim.json'
         stub.assert_no_pending_responses()
+
+
+@pytest.mark.parametrize('url',[
+    's3://medpar-demo-bucket/input/opaque-key',
+    'https://medpar-demo-bucket.s3.amazonaws.com/input/opaque-key',
+    'https://s3.console.aws.amazon.com/s3/object/medpar-demo-bucket?prefix=input%2Fopaque-key',
+])
+def test_extensionless_object_is_detected_and_original_url_is_preserved(tmp_path,url):
+    from medpar_qa.ingestion.readers import read_records
+    bucket='medpar-demo-bucket';content=b'[{"queryCode":3}]'
+    fake=FakeS3({(bucket,'input/opaque-key'):content})
+    resolver=InputSources(tmp_path,tmp_path/'reports/run',client=fake)
+    paths=resolver.resolve([url,'s3://'+bucket+'/input/'])
+    assert len(paths)==1 and len(fake.downloads)==1
+    assert paths[0].endswith('.json')
+    assert (tmp_path/paths[0]).read_bytes()==content
+    assert resolver.files[paths[0]]['origin']=='s3://'+bucket+'/input/opaque-key'
+    assert resolver.files[paths[0]]['detected_format']=='json'
+
+
+def test_extensionless_folder_without_slash_and_parquet_content(tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    source=tmp_path/'fixture.parquet';pq.write_table(pa.table({'queryCode':[3]}),source)
+    bucket='medpar-demo-bucket'
+    fake=FakeS3({(bucket,'input/part-00001'):source.read_bytes(),(bucket,'input/_SUCCESS'):b'',(bucket,'input/part-00001.parquet'):source.read_bytes()})
+    resolver=InputSources(tmp_path,tmp_path/'reports/run',client=fake)
+    paths=resolver.resolve('s3://'+bucket+'/input')
+    assert len(paths)==2 and len(set(paths))==2
+    assert all(p.endswith('.parquet') for p in paths)
+    assert all(pq.read_table(tmp_path/p).num_rows==1 for p in paths)
+    assert len(fake.downloads)==2
+
+
+def test_unknown_object_content_stops_without_registering_partial_input(tmp_path):
+    bucket='medpar-demo-bucket';fake=FakeS3({(bucket,'opaque'):b'unsupported binary'})
+    resolver=InputSources(tmp_path,tmp_path/'reports/run',client=fake)
+    with pytest.raises(InputSourceError,match='not recognizable JSON or Parquet'):
+        resolver.resolve('s3://'+bucket+'/opaque')
+    assert not resolver.files and not list(resolver.cache.rglob('*.download'))

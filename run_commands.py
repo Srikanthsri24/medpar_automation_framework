@@ -96,6 +96,9 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
                 raise ValueError(f'{stage}.{role}: path does not match selected source_type {source_type}')
             if remote and role=='files' and (not remote[1] or remote[1].endswith('/')):
                 raise ValueError(f'{stage}.files: S3 file must identify an object, not a folder')
+            if remote and role=='folders':
+                prefix=remote[1].rstrip('/')
+                path='s3://'+remote[0]+'/'+(prefix+'/' if prefix else '')
             if not remote:
                 local=Path(path)
                 if not local.is_absolute():local=PROJECT_ROOT/local
