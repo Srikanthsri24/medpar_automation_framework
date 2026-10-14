@@ -13,7 +13,7 @@ def test_overview_links_separate_entry_reports_and_records_counts(tmp_path,monke
         folder=report_session.root/'connected';folder.mkdir(parents=True)
         (folder/'index.html').write_text('entry evidence')
         journey=folder/'batch';journey.mkdir()
-        (journey/'journey.json').write_text(json.dumps(dict(source_file_count=3,conclusion='Validation stopped',steps=[dict(stage=stage,status='FAIL',input_files=['a','b','c'],input_records=7,retained=0,dropped=0)])))
+        (journey/'journey.json').write_text(json.dumps(dict(source_file='source.json',source_file_count=3,conclusion='Validation stopped',steps=[dict(stage=stage,status='FAIL',reason='Validation stopped',input_files=['a','b','c'],input_records=7,retained=0,dropped=0)])))
         print('Connected pipeline report: '+(folder/'index.html').relative_to(tmp_path).as_posix())
         return 1
     monkeypatch.setattr(runner,'main',child)
@@ -23,7 +23,8 @@ def test_overview_links_separate_entry_reports_and_records_counts(tmp_path,monke
     report=next((tmp_path/'reports').glob('20*/master/entry_reviews.json'))
     data=json.loads(report.read_text())
     assert len(data['entries'])==5 and all(row['input_files']==3 for row in data['entries'])
-    page=report.with_name('index.html').read_text()
+    page=report.with_name('entry_overview.html').read_text()
+    assert 'MEDPAR QA — Master Report' in report.with_name('index.html').read_text()
     assert 'not evidence of a shared transfer' in page
     assert page.count('3 files received, 7 records read, 0 kept, 0 dropped; FAIL')==5
     assert len(list((tmp_path/'reports').iterdir()))==1

@@ -86,7 +86,8 @@ def connected_transfers(journeys, index):
     rows = []
     for journey, directory in journeys:
         steps = journey['steps']
-        relative = directory.relative_to(index.parent).as_posix()
+        from .path_utils import relative_link
+        relative = relative_link(index.parent,directory)
         for number, step in enumerate(steps):
             following = steps[number + 1] if number + 1 < len(steps) else None
             moved = bool(following and step.get('output') and following['status'] not in ('NOT_REACHED','BEFORE_START') and following.get('input') == step['output'])

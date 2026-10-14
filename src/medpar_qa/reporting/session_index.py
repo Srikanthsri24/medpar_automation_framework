@@ -42,12 +42,18 @@ def _read_json(path: Path) -> dict[str, Any] | None:
 def _business_report_entries(session_root: Path) -> list[dict[str, Any]]:
     """Discover saved business-run report entries in the session."""
     entries: list[dict[str, Any]] = []
-    for path in sorted(session_root.glob("*/*/report.json")):
+    paths=list(session_root.glob("*/*/report.json"))+list(session_root.glob("entries/*/connected/*/*/report.json"))
+    for path in sorted(paths):
         if path.parts[-3] in {"master", "pytest"}:
             continue
         payload = _read_json(path)
         if payload and "stages" in payload:
-            entries.append({"path": path, "payload": payload, "stage_folder": path.parts[-3], "command_folder": path.parts[-2]})
+            nested=path.is_relative_to(session_root/'entries')
+            if nested and payload.get('context',{}).get('handoff',{}).get('status') in ('BEFORE_START','NOT_REACHED'):
+                continue
+            entries.append({"path": path, "payload": payload,
+                            "stage_folder":path.parent.name if nested else path.parts[-3],
+                            "command_folder":(path.relative_to(session_root/'entries').parts[0]+' entry — '+path.parent.name) if nested else path.parts[-2]})
     return entries
 
 
@@ -81,10 +87,9 @@ def write_stage_index(session_root: str | Path, stage_name: str) -> Path:
     stage_dir = root / stage_name
     stage_dir.mkdir(parents=True, exist_ok=True)
     reports: list[dict[str, Any]] = []
-    for report_json in sorted(stage_dir.glob("*/report.json")):
-        payload = _read_json(report_json)
-        if payload:
-            reports.append({"json": report_json, "payload": payload})
+    for entry in _business_report_entries(root):
+        if entry['stage_folder']==stage_name:
+            reports.append({'json':entry['path'],'payload':entry['payload']})
 
     rows: list[str] = []
     total = Counter()
@@ -163,7 +168,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
                 totals["validations"] += 1
 
     try:
-        session_started = datetime.strptime(root.name, "%Y%m%d_%H%M%S").strftime("%d %B %Y at %I:%M:%S %p")
+        session_started = datetime.strptime("_".join(root.name.split("_")[:2]), "%Y%m%d_%H%M%S").strftime("%d %B %Y at %I:%M:%S %p")
     except ValueError:
         session_started = "Not recorded in session ID"
     scope_payload = _read_json(root / "review_scope.json") or {}
@@ -249,7 +254,12 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
     ordered_stages = ['final_action', 'split', 'stay', 'intermediate', 'final_medpar']
     stage_sections = [stage_blocks.get(stage, f"<details id='stage-{_esc(stage)}' class='stage'><summary>{_esc(stage.replace('_',' ').title())} — Not run</summary><p>No recorded stage report; no file or record acceptance result is available.</p></details>") for stage in ordered_stages]
     from .transfers import independent_transfers
-    transfer_table = independent_transfers(master, by_stage)
+    journey_paths=sorted(root.glob('entries/*/connected/*/journey.json'))
+    if journey_paths:
+        from .transfers import connected_transfers
+        transfer_table=connected_transfers([(_read_json(path),path.parent) for path in journey_paths],master/'index.html')
+    else:
+        transfer_table = independent_transfers(master, by_stage)
     overall_conclusions = ''.join(stage_conclusion(stage, [c for item in items for c in item['stage'].get('rule_results', [])]) for stage, items in by_stage.items())
     missing_stages = [stage for stage in ['final_action', 'split', 'stay', 'intermediate', 'final_medpar'] if stage not in by_stage]
     missing_stage_notes = ''.join(f"<p><strong>{_esc(stage.replace('_', ' ').title())}: NOT RUN / NO RESULT.</strong> No stage validation report was included in this session; acceptance cannot be established.</p>" for stage in missing_stages)
@@ -272,6 +282,8 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
 <details class='command'><summary>Command execution summary</summary>{''.join(command_cards) or '<p>No command execution metadata supplied.</p>'}</details></main><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{if(target.tagName==='DETAILS')target.open=true;for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script>{FILE_FILTER_SCRIPT}</body></html>"""
     if (root / "input_sources.html").exists():
         document = document.replace("</header>", '<p><a href="../input_sources.html">Local/S3 input sources — file counts and download evidence</a></p></header>', 1)
+    if (master/'entry_overview.html').exists():
+        document=document.replace('</header>','<p><a style="color:white" href="entry_overview.html">Entry-source counts, export readiness and journey conclusions</a></p></header>',1)
     output = master / "index.html"
     (master / "details.html").write_text(document, encoding="utf-8")
     output.write_text(document, encoding="utf-8")
@@ -284,8 +296,11 @@ def refresh_session_indexes(session_root: str | Path, executions: list[dict[str,
     """Refresh stage and master indexes after artifacts have been written."""
     root = Path(session_root)
     for child in sorted(root.iterdir() if root.exists() else []):
-        if child.is_dir() and child.name not in {"master", "pytest"}:
+        if child.is_dir() and child.name not in {"master", "pytest", "entries"}:
             write_stage_index(root, child.name)
+    if (root/'entries').exists():
+        for stage in sorted({entry['stage_folder'] for entry in _business_report_entries(root)}):
+            write_stage_index(root,stage)
     if (root / "pytest").exists():
         write_stage_index(root, "pytest")
     return write_master_index(root, executions=executions)

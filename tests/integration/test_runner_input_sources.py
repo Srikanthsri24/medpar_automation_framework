@@ -206,7 +206,7 @@ def test_all_entries_share_one_timestamp_folder_with_live_report_links(tmp_path,
         def download_file(self,bucket,key,filename):Path(filename).write_bytes(objects[key])
     monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
     monkeypatch.setattr(runner,'SOURCE_RUN',plan)
-    report_root=runner.PROJECT_ROOT/'reports'/f'test_single_root_{tmp_path.name}_{backend}'
+    report_root=runner.PROJECT_ROOT/'reports'/f'test_single_root_{tmp_path.parent.name}_{tmp_path.name}_{backend}'
     monkeypatch.setattr(runner,'REPORTS_ROOT',report_root.relative_to(runner.PROJECT_ROOT).as_posix())
     monkeypatch.setattr(sys,'argv',['run_commands.py'])
     assert runner.main()==0
@@ -214,6 +214,10 @@ def test_all_entries_share_one_timestamp_folder_with_live_report_links(tmp_path,
     timestamps=list(report_root.iterdir());assert len(timestamps)==1
     overview=json.loads((timestamps[0]/'master/entry_reviews.json').read_text())
     assert len(overview['entries'])==5
+    master=(timestamps[0]/'master/index.html').read_text()
+    assert 'MEDPAR QA — Master Report' in master and 'Files and records by stage' in master
+    assert 'Full rule explanations and evidence' in master and 'entry_overview.html' in master
+    assert (timestamps[0]/'master/entry_overview.html').exists()
     for entry in overview['entries']:
         link=(timestamps[0]/'master'/entry['report']).resolve()
         assert link.is_file() and link.is_relative_to(timestamps[0])
