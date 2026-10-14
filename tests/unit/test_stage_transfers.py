@@ -52,3 +52,28 @@ def test_transfer_uses_original_s3_origin_instead_of_generated_batch_label(tmp_p
     assert 's3://demo-bucket/claims/original.parquet' in text
     assert 'source_batch.json' not in text and 'cache.json' not in text
     assert 'SHA-256 evidence' in text and 'Started here' in text and 'Files moved' in text
+
+
+def test_each_configured_entry_counts_as_started_at_its_own_stage(tmp_path):
+    import json
+    from html.parser import HTMLParser
+    class Summary(HTMLParser):
+        def __init__(self):super().__init__();self.row=[];self.rows=[];self.cell=False
+        def handle_starttag(self,t,a):
+            if t=='tr':self.row=[]
+            if t=='td':self.cell=True;self.row.append('')
+        def handle_endtag(self,t):
+            if t=='td':self.cell=False
+            if t=='tr' and self.row:self.rows.append(self.row)
+        def handle_data(self,d):
+            if self.cell:self.row[-1]+=d
+    counts={'final_action':15,'split':65,'stay':12,'intermediate':83,'final_medpar':552}
+    journeys=[]
+    for stage,count in counts.items():
+        directory=tmp_path/stage;directory.mkdir()
+        files=[f'{stage}-{i}.parquet' for i in range(count)]
+        step=dict(stage=stage,status='FAIL',input_files=files,input_records=count,retained=0,dropped=0,reason='Stopped')
+        journeys.append((dict(source_file='batch.json',source_files=files,start_stage=stage,steps=[step]),directory))
+    parser=Summary();parser.feed(connected_transfers(journeys,tmp_path/'index.html'))
+    assert [int(row[2]) for row in parser.rows[:5]]==list(counts.values())  # stage,to,started
+    assert all(int(row[3])==0 for row in parser.rows[:5])

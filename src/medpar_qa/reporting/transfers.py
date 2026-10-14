@@ -88,6 +88,7 @@ def connected_transfers(journeys, index):
     from .path_utils import relative_link
     from .stage_volume import connected_dispositions
     rows=[]
+    totals={stage:{key:0 for key in ('started','received','inputs','kept','dropped','stopped','moved')} for stage in STAGES}
     for journey,directory in journeys:
         originals=journey.get('source_files',[journey['source_file']])
         inventory_path=directory.parent.parent/'input_sources.json'
@@ -102,7 +103,7 @@ def connected_transfers(journeys, index):
         origin='<details><summary>'+str(len(originals))+' original input files — '+e(journey.get('start_stage','final_action').replace('_',' ').title())+' entry</summary><ol>'+''.join(original_list)+'</ol>'+inventory_link+'</details>'
         relative=relative_link(index.parent,directory)
         for number,step in enumerate(journey['steps']):
-            if step['status']=='BEFORE_START':continue
+            if step['status'] in ('BEFORE_START','NOT_REACHED'):continue
             following=journey['steps'][number+1] if number+1<len(journey['steps']) else None
             previous=journey['steps'][number-1] if number else None
             executed=step['status']!='NOT_REACHED'
@@ -121,7 +122,14 @@ def connected_transfers(journeys, index):
             links='<a href="'+relative+'/'+step['stage']+'/report.html">Stage rules and evidence</a>' if executed else ''
             if moved:links+=' · <a href="'+relative+'/'+following['stage']+'/report.html">Next stage proof</a> · <a href="'+relative+'/'+step['stage']+'/retained.json">Transferred output</a>'
             proof='<details><summary>'+e(state)+' — '+e(step['status'])+'</summary><p>'+e(step.get('reason',''))+'</p><p>'+str(step.get('input_records',0))+' records read; '+str(step.get('retained',0))+' retained record(s); '+str(step.get('dropped',0))+' dropped.</p><p>'+links+'</p></details>'
+            for key,value in dict(started=started,received=int(received),inputs=inputs,kept=counts['files_kept'],dropped=counts['files_dropped'],stopped=counts['files_stopped'],moved=int(moved)).items():totals[step['stage']][key]+=value
             values=[origin,e(step['stage'].replace('_',' ').title()),e(following['stage'].replace('_',' ').title()) if following else 'End',str(started),str(int(received)),str(inputs),str(counts['files_kept']),str(counts['files_dropped']),str(counts['files_stopped']),str(int(moved)),proof]
             rows.append('<tr data-file="'+e(' '.join(display_originals))+'">'+''.join('<td>'+value+'</td>' for value in values)+'</tr>')
+    overview=[]
+    for stage,values in totals.items():
+        number=STAGES.index(stage);next_stage=STAGES[number+1].replace('_',' ').title() if number+1<len(STAGES) else 'End of workflow'
+        stage_link='#stage-'+stage if index.parent.name=='master' else next((relative_link(index.parent,directory/stage/'report.html') for journey,directory in journeys if any(step['stage']==stage and step['status'] not in ('BEFORE_START','NOT_REACHED') for step in journey['steps'])), '#transfer-detail')
+        overview.append('<tr><td>'+e(stage.replace('_',' ').title())+'</td><td>'+e(next_stage)+'</td>'+''.join('<td>'+str(values[key])+'</td>' for key in ('started','received','inputs','kept','dropped','stopped','moved'))+'<td><a href="'+e(stage_link)+'">Stage file evidence</a> · <a href="#transfer-detail">Journey evidence</a></td></tr>')
+    summary='<table><tr>'+''.join('<th>'+e(label)+'</th>' for label in ('From stage','To stage','Started here','Received from previous','Input files','Kept','Dropped','Stopped','Files moved','Evidence'))+'</tr>'+''.join(overview)+'</table>'
     headings=['Original source files','From stage','To stage','Started here','Received from previous','Input files','Kept','Dropped','Stopped','Files moved','Evidence']
-    return number_file_tables('<details id="stage-transfers"><summary>Moved to next stage — file status</summary><p>All counts in this table are physical files. Started here counts supplied source files; Received counts generated files from the previous stage. A generated output may combine many source files: one transferred file can contain many retained records. Kept means at least one record survives; Dropped means all records were dropped; Stopped means no stage output was approved. File disposition counts add up to input files. Open original sources for filenames, then the movement evidence for stage reports and record counts.</p><label>Search original filename <input id="transfer-search" type="search"></label><div class="scroll"><table id="transfer-table"><tr>'+''.join('<th>'+e(h)+'</th>' for h in headings)+'</tr>'+''.join(rows)+'</table></div></details><script>document.getElementById("transfer-search").addEventListener("input",function(){document.querySelectorAll("#transfer-table tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(this.value.toLowerCase()));});</script>')
+    return number_file_tables('<details id="stage-transfers"><summary>Moved to next stage — file status</summary><p>All counts in this table are physical files. Started here counts supplied source files; Received counts generated files from the previous stage. A generated output may combine many source files: one transferred file can contain many retained records. Kept means at least one record survives; Dropped means all records were dropped; Stopped means no stage output was approved. File disposition counts add up to input files. Open original sources for filenames, then the movement evidence for stage reports and record counts.</p>'+summary+'<details id="transfer-detail"><summary>Individual input journeys and original-source evidence</summary><label>Search original filename <input id="transfer-search" type="search"></label><div class="scroll"><table id="transfer-table"><tr>'+''.join('<th>'+e(h)+'</th>' for h in headings)+'</tr>'+''.join(rows)+'</table></div></details></details><script>document.getElementById("transfer-search").addEventListener("input",function(){document.querySelectorAll("#transfer-table tr[data-file]").forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(this.value.toLowerCase()));});</script>')
