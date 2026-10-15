@@ -32,3 +32,18 @@ def test_output_and_next_input_row_difference_is_flagged(tmp_path):
     data=json.loads((tmp_path/'row_flow.json').read_text())
     assert not data[0]['output_handoff_verified']
     assert 'Count discrepancy' in body
+
+
+def test_started_here_separates_file_count_targets_and_context(tmp_path):
+    group=tmp_path/'connected/g1';group.mkdir(parents=True)
+    rows=[dict(file='a.json',decision='KEEP' if i<3 else 'DROP',checks=[]) for i in range(5)]
+    files=[dict(file='a.json',total_rows=100,selected_rows=3,context_rows=2,decisions={'KEEP':3,'DROP':2}),dict(file='b.json',total_rows=7,selected_rows=0,context_rows=0,decisions={})]
+    audit=dict(rows=rows,files=files,decision_counts={'KEEP':3,'DROP':2},input_kind='supplied_original',selection={'target_rows':3,'context_rows':2})
+    steps=[dict(stage='final_action',status='KEEP',input_records=5,retained=3,output='kept.json'),dict(stage='split',status='FAIL',input='kept.json',input_records=3,retained=0)]
+    forwarded=dict(rows=[{}]*3,files=[],decision_counts={'STOPPED':3},input_kind='generated_previous_stage')
+    body=write_row_flow(tmp_path,[({'steps':steps},group)],{'final_action':[(audit,tmp_path/'final_action/row_review.html')],'split':[(forwarded,tmp_path/'split/row_review.html')]})
+    metrics=json.loads((tmp_path/'row_flow.json').read_text())[0]
+    assert metrics['supplied_input_files']==2 and metrics['selected_target_rows']==3 and metrics['context_rows']==2
+    assert '2 supplied files' in body and '3 target rows + 2 context = 5 starting rows' in body
+    assert 'a.json' in body and 'b.json' in body
+    assert 'KEEP and DROP comparison with supplied paths' in body
