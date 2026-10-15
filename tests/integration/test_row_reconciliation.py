@@ -96,3 +96,24 @@ def test_membership_failure_explains_wrong_output(tmp_path):
     assert audit['decision_counts']=={'KEEP':2}
     assert audit['scoped_output_rows']=={'keep':0,'drop':2}
     assert audit['output_rows_outside_processed_identities']['drop']['rows']==1
+
+
+def test_split_reconciles_exception_separately_from_keep_drop(tmp_path):
+    import shutil
+    (tmp_path/'config').mkdir();shutil.copy('config/field_aliases.yaml',tmp_path/'config/field_aliases.yaml')
+    base=json.loads(Path('data/demo_source_only/claims.json').read_text())[0]
+    good={**base,'internalControlNumber':'GOOD','transactionCode':3,'stayFromDate':'20260101','stayThruDate':'20260103','admissionDate':'20260101'}
+    bad={**good,'internalControlNumber':'BAD','transactionCode':6}
+    for name,rows in [('original',[good,bad]),('keep',[{**good,'split_year_indicator':'Y00109'}]),('drop',[])]:
+        (tmp_path/(name+'.json')).write_text(json.dumps(rows))
+    session=ReportSession.create('reports',project_root=tmp_path)
+    configs={s:{'run_date':'2026-04-20'} for s in ('final_action','split','stay','intermediate','final_medpar')}
+    configs['split']['single_files']=[dict(source=['original.json'],actual=['keep.json'],dropped=['drop.json'])]
+    run_configured(tmp_path,session,configs,{'_row_selection':{'mode':'all'}},start_stage='split')
+    audit=json.loads((session.root/'split/row_review.json').read_text())
+    assert audit['full_count_conservation']=='PASS'
+    assert audit['count_balance']['original_rows']==2 and audit['count_balance']['exception_rows']==1
+    assert audit['count_balance']['expected_keep_plus_drop_rows']==1
+    exceptional=next(r for r in audit['rows'] if r['decision']=='STOPPED')
+    assert exceptional['comparison_status']=='PASS'
+    assert 'exception output' in exceptional['reason']

@@ -164,3 +164,30 @@ def test_stay_birth_date_compares_calendar_value(resolver,make_record):
     checks=validate_merge_rules([source],actual,resolver,Decimal('0.001'))
     dob=next(r for r in checks if r.field_name=='beneficiary_date_of_birth')
     assert dob.status==ValidationStatus.FAIL
+
+
+def test_split_exception_row_does_not_stop_valid_row(tmp_path,resolver):
+    good=base_claim(admissionDate='20260101',transactionCode=3,internalControlNumber='VALID')
+    bad=base_claim(admissionDate='20260101',transactionCode=6,internalControlNumber='INVALID')
+    pipeline,source=setup_pipeline(tmp_path,resolver,[good,bad])
+    journey,directory=pipeline.run_file(source,DATES,start_stage='split',generate_outputs=False)
+    split=journey['steps'][1]
+    assert split['input_records']==2 and split['retained']==1 and split['exception_rows']==1
+    assert split['status']=='KEEP' and journey['steps'][2]['input_records']==1
+    exceptions=json.loads((directory/'split/exceptions.json').read_text())
+    assert len(exceptions)==1 and exceptions[0]['record']['transactionCode']==6
+    output=json.loads((directory/'split/retained.json').read_text())
+    assert len(output)==1 and output[0]['transactionCode']==3
+
+
+def test_intermediate_failure_evidence_has_original_row_ids(tmp_path,resolver):
+    row=json.loads(Path('data/demo_connected/intermediate_candidate.json').read_text())[0]
+    # A historic procedure date must remain a failure under the current window.
+    row['medpar_surg_date_0514']=['2018210']
+    pipeline,source=setup_pipeline(tmp_path,resolver,[row])
+    journey,directory=pipeline.run_file(source,DATES,start_stage='intermediate')
+    report=json.loads((directory/'intermediate/report.json').read_text())
+    checks=report['stages'][0]['rule_results']
+    source_ids={rid for c in checks if c['rule_id']=='INGEST-READ-FILE' for rid in c['record_ids']}
+    stop=next(c for c in checks if c['rule_id']=='PIPELINE-GROUP-STOP')
+    assert source_ids and source_ids.issubset(set(stop['record_ids']))

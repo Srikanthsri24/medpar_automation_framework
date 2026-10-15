@@ -22,3 +22,22 @@ def test_same_identity_with_different_data_is_not_identical_file(tmp_path):
     assert original['files']==2 and original['rows']==2
     assert original['repeated_identity_rows']==1
     assert original['identical_file_groups']==[]
+
+
+def test_split_count_balance_excludes_exceptions_from_expected_keep_drop(tmp_path):
+    (tmp_path/'original.json').write_text('[{"id":1,"tc":3},{"id":2,"tc":6}]')
+    (tmp_path/'keep.json').write_text('[{"id":1,"tc":3}]')
+    (tmp_path/'drop.json').write_text('[]')
+    data=audit_populations(tmp_path,'split',dict(original=['original.json'],keep=['keep.json'],drop=['drop.json']),lambda r:(r.data['id'],),lambda r:r.data['tc'] not in range(5))
+    assert data['source_exception_rows']==1 and data['expected_keep_drop_rows']==1
+    assert data['missing_output_occurrences']==0 and data['excess_output_occurrences']==0
+
+
+def test_merging_stages_do_not_require_equal_physical_row_counts(tmp_path):
+    (tmp_path/'original.json').write_text('[{"id":1},{"id":1},{"id":1}]')
+    (tmp_path/'keep.json').write_text('[{"id":1}]')
+    data=audit_populations(tmp_path,'stay',dict(original=['original.json'],keep=['keep.json'],drop=[]),lambda r:(r.data['id'],),one_to_one=False)
+    assert data['expected_keep_drop_rows'] is None
+    assert data['missing_output_occurrences'] is None
+    assert not data['count_comparison_applicable']
+    assert 'merging' in data['conclusion']

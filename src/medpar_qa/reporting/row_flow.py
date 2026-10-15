@@ -23,7 +23,7 @@ def write_row_flow(master,journeys,audits):
             forwarded[stage]+=count
             if moved:verified_received[following['stage']]+=count
             report=relative_link(master,directory/stage/'report.html')
-            proof={k:step.get(k) for k in ('input','input_files','input_records','output','retained','dropped','status','reason')}
+            proof={k:step.get(k) for k in ('input','input_files','input_records','logical_input_records','exception_rows','output','retained','dropped','status','reason')}
             evidence[stage].append('<details><summary>Group '+str(len(evidence[stage])+1)+' — '+str(step.get('input_records',0))+' input rows; '+str(step.get('retained',0))+' output rows; '+str(count)+' forwarded rows</summary><p>'+e(step.get('reason',''))+'</p><a href="'+e(report)+'">Rule and decision evidence</a><pre>'+e(json.dumps(proof,default=str))+'</pre><p>Transfer proof: '+('Next stage read this generated output: '+str(count)+' rows.' if moved else 'No next-stage read occurred.')+'</p></details>')
     table=[];transfers=[];metrics=[]
     for stage in STAGES:

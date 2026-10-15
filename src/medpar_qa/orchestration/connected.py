@@ -57,7 +57,7 @@ def _failfast(processor, records):
 
 def _terminal(result):
     return next((r for r in result.rule_results if r.status in
-                 (ValidationStatus.FAIL, ValidationStatus.BLOCKED)), None)
+                 (ValidationStatus.FAIL, ValidationStatus.BLOCKED) and not r.evidence.get('record_exception')), None)
 
 
 def _not_reached(result, reason):
@@ -166,6 +166,7 @@ class ConnectedPipeline:
                 result = StageResult(stage)
                 source_records, candidate = [], []
                 generation_notes, generated_dropped = [], []
+                entry_records=[];exception_checks=[];exception_ids=set();processor=None
                 try:
                     source_records = initial_records if stage_index==start_index and initial_records is not None else _read(original_inputs if stage_index==start_index else [current], stage, FileRole.SOURCE, self.root)
                     if not source_records:
@@ -174,6 +175,7 @@ class ConnectedPipeline:
                         from medpar_qa.reference_data import ReferenceData
                         reference_data = ReferenceData(manifest.settings['reference_feeds'],self.root)
                         for record in source_records: record.data = reference_data.enrich(record.data,self.resolver)
+                    entry_records=list(source_records)
                     config = manifest.settings.setdefault(stage.value, {})
                     if stage == Stage.SPLIT:
                         config['require_actual_output'] = True
@@ -191,8 +193,17 @@ class ConnectedPipeline:
                         # Physical segments are grouped into one logical Stay before extraction.
                         if segment_proofs:_dump(stage_dir/'source_segments.json',{'physical_segments':sum(len(c.record_ids) for c in segment_proofs),'logical_records':len(source_records),'source_files':sorted({p for c in segment_proofs for p in c.source_files})})
                     if stage == Stage.SPLIT:
+                        valid_records=[]
+                        for record in source_records:
+                            try:code=processor._transaction_code(record)
+                            except (TypeError,ValueError):code=None
+                            if code not in processor.settings.allowed_transaction_codes:
+                                exception_ids.add(record.record_id)
+                                exception_checks.append(RuleResult(stage=stage,rule_id='SP-INVALID-TRANSACTION-CODE',status=ValidationStatus.FAIL,message='Row routed to the Split exception output; transaction code is outside 0–4. Other valid rows remain eligible for processing.',expected=list(processor.settings.allowed_transaction_codes),actual=processor.resolver.get(record.data,'transaction_code'),field_name='transaction_code',record_ids=[record.record_id],source_files=[record.source.file_path],evidence={'record_exception':True,'requirement':'FA_Split_Intermediate_Clarifications.pdf, Q6; V3 p.22: input = retained + dropped + exception'}))
+                            else:valid_records.append(record)
+                        _dump(stage_dir/'exceptions.json',[{'record':r.data,'source_record_id':r.record_id,'reason':'Invalid Split transaction code'} for r in source_records if r.record_id in exception_ids])
                         candidate_path = stage_dir / 'candidate.json'
-                        _dump(candidate_path, _candidate_split(source_records, processor))
+                        _dump(candidate_path, _candidate_split(valid_records, processor))
                         candidate = _read([relative_display(candidate_path, project_root=self.root)], stage, FileRole.ACTUAL_OUTPUT, self.root)
                     elif stage in (Stage.STAY, Stage.INTERMEDIATE, Stage.FINAL_MEDPAR):
                         if generate_outputs:
@@ -222,7 +233,9 @@ class ConnectedPipeline:
                                 actual={'candidate_records_read': len(available), 'matching_records': 0,
                                         'matching_fields': list(fields)}, source_files=[current]))
                     if not _terminal(result):
-                        result = _failfast(processor, source_records + candidate)
+                        valid_source=[r for r in source_records if r.record_id not in exception_ids]
+                        result = _failfast(processor, valid_source + candidate) if valid_source else StageResult(stage)
+                        result.rule_results[:0]=exception_checks
                 except GenerationBlocked as exc:
                     result.rule_results.append(RuleResult(stage=stage,rule_id='PROCESSING-INPUT-REQUIRED',status=ValidationStatus.BLOCKED,message=str(exc),expected='Complete required source operands / approved export definitions',actual='Generation stopped',source_files=[current]))
                 except CandidateInputRejected as exc:
@@ -231,17 +244,31 @@ class ConnectedPipeline:
                     result.rule_results.append(RuleResult(stage=stage, rule_id='PIPELINE-INPUT',
                         status=ValidationStatus.FAIL, message=f'Cannot prepare stage input: {exc}',
                         expected='Readable input and valid candidate output', actual=str(exc), source_files=[current]))
+                if entry_records and processor is not None and getattr(processor,'settings',None) is not None:
+                    from medpar_qa.stages.common import record_identity
+                    fields=processor.settings.identity_fields
+                    identities={r.record_id:record_identity(r,self.resolver,fields) for r in source_records+candidate}
+                    original_by_identity={}
+                    for record in entry_records:original_by_identity.setdefault(record_identity(record,self.resolver,fields),[]).append(record.record_id)
+                    for check in result.rule_results:
+                        if check.evidence.get('record_exception'):continue
+                        keys={identities[rid] for rid in check.record_ids if rid in identities}
+                        original_ids=[rid for key in keys for rid in original_by_identity.get(key,[])]
+                        if original_ids:
+                            check.evidence['evaluated_record_ids']=list(check.record_ids)
+                            check.record_ids=list(dict.fromkeys([*check.record_ids,*original_ids]))
                 if source_records:
                     by_file={}
-                    for record in source_records: by_file.setdefault(record.source.file_path,[]).append(record)
+                    for record in entry_records or source_records: by_file.setdefault(record.source.file_path,[]).append(record)
                     for path,read_records_for_file in by_file.items():
                         result.rule_results.insert(0,RuleResult(stage=stage,rule_id='INGEST-READ-FILE',status=ValidationStatus.PASS,message='Stage source file read successfully',expected='At least one readable source record',actual={'file':path,'role':'source','record_count':len(read_records_for_file)},source_files=[path],record_ids=[r.record_id for r in read_records_for_file]))
                 terminal = _terminal(result)
+                if exception_checks and len(exception_ids)==len(source_records):terminal=exception_checks[0]
                 retained, dropped = [], []
                 if not terminal:
                     if stage in (Stage.FINAL_ACTION, Stage.SPLIT):
                         decisions = {d.record_id: d for d in result.decisions}
-                        if set(decisions) != {r.record_id for r in source_records}:
+                        if set(decisions) != {r.record_id for r in source_records if r.record_id not in exception_ids}:
                             terminal = RuleResult(stage=stage, rule_id='PIPELINE-DECISION-COVERAGE',
                                 status=ValidationStatus.BLOCKED, message='Not every input record has a KEEP/DROP decision',
                                 expected='One decision per input record', actual=len(decisions))
@@ -251,7 +278,7 @@ class ConnectedPipeline:
                                         if stage == Stage.FINAL_ACTION else [r.data for r in candidate])
                             dropped = [{'record': r.data, 'decision': decisions[r.record_id].reason,
                                         'rule': decisions[r.record_id].rule_id, 'source_record_id': r.record_id}
-                                       for r in source_records if decisions[r.record_id].decision == RecordDecision.DROP]
+                                       for r in source_records if r.record_id in decisions and decisions[r.record_id].decision == RecordDecision.DROP]
                     else:
                         retained = [r.data for r in candidate]
                         dropped = generated_dropped
@@ -259,6 +286,7 @@ class ConnectedPipeline:
                     result.rule_results.append(RuleResult(stage=stage,rule_id="PROCESSING-COVERAGE",status=ValidationStatus.KNOWN_DIFFERENCE,message="Source-generated JSON; checks cover populated supported fields; this is not CMS certification",expected="Complete approved field/layout/reference coverage for production certification",actual={"unassessed_calculations":generation_notes,"scope":"No independent golden comparison; physical layout requires approved copybook"},source_files=[current]))
                 output = None
                 if terminal:
+                    result.rule_results.append(RuleResult(stage=stage,rule_id='PIPELINE-GROUP-STOP',status=ValidationStatus.BLOCKED,message='This related group cannot proceed because '+terminal.rule_id+': '+terminal.message,expected=terminal.expected,actual=terminal.actual,record_ids=[r.record_id for r in entry_records or source_records],source_files=sorted({r.source.file_path for r in entry_records or source_records}),evidence={'blocking_rule':terminal.rule_id,'requirement':'Stop dependent rules and stages when a prerequisite fails'}))
                     stop_reason = f'{stage.value}: {terminal.rule_id}: {terminal.message}'
                     status = terminal.status.value
                     _not_reached(result, stop_reason)
@@ -271,9 +299,9 @@ class ConnectedPipeline:
                         status = 'KEEP'
                     else:
                         status = 'DROP'
-                        stop_reason = f'{stage.value}: all input records were dropped; no records remain to forward'
+                        stop_reason = (f'{stage.value}: no retained rows; {len(dropped)} valid rows dropped and {len(exception_ids)} rows routed to exceptions' if exception_ids else f'{stage.value}: all input records were dropped; no records remain to forward')
                 step = {'stage': stage.value, 'status': status, 'reason': stop_reason or 'Checks completed; retained output can proceed',
-                        'input': current, 'output': output, 'input_records': len(source_records),
+                        'input': current, 'output': output, 'input_records': len(entry_records or source_records),'logical_input_records':len(source_records),'exception_rows':len(exception_ids),
                         'retained': len(retained), 'dropped': len(dropped),
                         'input_files':original_inputs if stage_index==start_index else [step_input for step_input in [current] if step_input],
                         'generation_notes':sorted(set(generation_notes)),

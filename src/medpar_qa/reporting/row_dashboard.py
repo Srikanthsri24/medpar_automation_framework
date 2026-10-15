@@ -55,3 +55,16 @@ def unmapped_leaves(data,resolver,prefix=''):
         elif _key_form(path) not in known:
             yield path,value
     return list(walk(data,prefix))
+
+
+def render_file_flow(data):
+    """A numbered file-to-rows inventory with decisions and reconciliation in one place."""
+    from pathlib import Path
+    rows=[]
+    for i,item in enumerate(data['files'],1):
+        decisions=item.get('decisions',{});comparison=item.get('comparison_outcomes',{})
+        def cell(value):return '<td><a href="#rows-'+str(i)+'">'+html.escape(str(value))+'</a></td>'
+        stopped=sum(v for k,v in decisions.items() if k not in ('KEEP','DROP'))
+        conclusion='Not selected for processing' if not item['processed_rows'] else 'FAIL' if comparison.get('FAIL') else 'BLOCKED' if comparison.get('BLOCKED') else 'PASS' if comparison.get('PASS') else 'Comparison not supplied'
+        rows.append('<tr><td>'+str(i)+'</td><td title="'+html.escape(item['file'],quote=True)+'"><a href="#rows-'+str(i)+'">'+html.escape(Path(item['file']).name)+'</a><details><summary>Full source path</summary>'+html.escape(item['file'])+'</details></td>'+''.join(cell(v) for v in (item['total_rows'],item['selected_rows'],item['context_rows'],decisions.get('KEEP',0),decisions.get('DROP',0),stopped))+'<td>'+html.escape(conclusion)+'</td></tr>')
+    return '<section><h2>File → selected rows → decisions → output comparison</h2><ol><li>Discover every original input file; count its top-level claim rows.</li><li>Select target rows using the configured limit; include related context separately.</li><li>Apply stage rules. KEEP continues, DROP is removed by a business rule, STOPPED includes exceptions and unmet prerequisites.</li><li>Cross-check each processed row against supplied keep/drop membership and field values. Inspect full-population balance separately.</li><li>Conclude from the decision, validation evidence and comparison result. A KEEP decision is not proof that the supplied output matched.</li></ol><p>Click a number or filename to open that file’s paginated row evidence. A limited sample does not assess unselected rows.</p><table><tr>'+''.join('<th>'+h+'</th>' for h in ('No.','Original input file','Total rows','Selected targets','Related context','KEEP rows','DROP rows','STOPPED rows','Processed-row comparison'))+'</tr>'+''.join(rows)+'</table></section>'

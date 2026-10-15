@@ -120,3 +120,10 @@ def test_one_input_producing_multiple_groups_counts_input_once(tmp_path,monkeypa
     assert '1 physical file event(s)' in (tmp_path/'final_action_movement_moved.html').read_text()
     second=re.search(r'<tr><td>Split</td>(.*?)</tr>',html).group(1)
     assert re.findall(r'>(\d+)</a>',second)==['0','1','1','0','0','1','0']
+
+
+def test_nested_connected_row_review_link_targets_session_master(tmp_path):
+    folder=tmp_path/'entries/split/connected';folder.mkdir(parents=True)
+    step=dict(stage='split',status='FAIL',input_records=1,retained=0,dropped=0,reason='Invalid source code')
+    text=connected_transfers([(dict(source_file='input.json',source_files=['input.json'],start_stage='split',steps=[step]),folder/'group')],folder/'index.html')
+    assert 'href="../../../master/index.html#record-validation"' in text
