@@ -49,9 +49,22 @@ def test_reference_counts_deduplicate_identity_and_keep_full_multiplicity(tmp_pa
     row=dict(row=1,decision='KEEP',input_row={'icn':'A'},comparison_status='BLOCKED',checks=[dict(rule_id='ROW-OUTPUT-MEMBERSHIP',actual={'keep':7,'drop':2},evidence={'keep':[{'file':'kept.json','row':1}]})])
     audit=dict(identity_fields=['icn'],comparison_rows={'keep':100},comparison_files={'keep':[dict(file='kept.json',rows=100)]})
     html=reference_cell(tmp_path,audit,[row,row],tmp_path/'row_review.html',1,'keep')
-    assert '>7</a>' in html and '100 whole-folder rows' in html
+    assert '0 / 2 matched' in html and '2 unverified' in html
     evidence=next(tmp_path.glob('reference_*.html')).read_text()
     assert '7 matching reference rows' in evidence
     assert 'kept.json' in evidence and 'BLOCKED' in evidence
     assert 'Count equality alone does not prove a data match' in evidence
     assert reference_cell(tmp_path,audit,[row],tmp_path/'row_review.html',1,'drop')=='<td>Not supplied</td>'
+
+
+def test_reference_comparison_uses_only_same_decision_rows(tmp_path):
+    from medpar_qa.reporting.stage_drilldown import reference_cell
+    records=[dict(row=i,decision=decision,input_row={'icn':str(i)},comparison_status=status,checks=[]) for i,decision,status in [(1,'KEEP','PASS'),(2,'KEEP','FAIL'),(3,'KEEP','BLOCKED'),(4,'DROP','PASS')]]
+    audit=dict(identity_fields=['icn'],comparison_rows={'keep':1000},comparison_files={'keep':[dict(file='reference.json',rows=1000)]})
+    html=reference_cell(tmp_path,audit,records,tmp_path/'row_review.html',1,'keep')
+    assert '1 / 3 matched' in html
+    assert '1 mismatched · 1 unverified' in html
+    assert '1000' not in html
+    proof=next(tmp_path.glob('reference_*.html')).read_text()
+    assert '1000 rows in 1 files' in proof
+    assert '<td>DROP</td>' not in proof
