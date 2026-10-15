@@ -4,13 +4,15 @@ from medpar_qa.orchestration.connected import run_configured
 from medpar_qa.reporting.run_layout import ReportSession
 
 
-def run(tmp_path,wrong=False,bad_field=False):
+def run(tmp_path,wrong=False,bad_field=False,duplicate_candidates=False,both=False):
     import shutil
     (tmp_path/'config').mkdir();shutil.copy('config/field_aliases.yaml',tmp_path/'config/field_aliases.yaml')
     base=json.loads(Path('data/demo_source_only/claims.json').read_text())[0]
     rows=[{**base,'claimCan':f'CAN{i}','claimCanNchEquatable':f'HICN{i}','internalControlNumber':f'ICN{i}'} for i in range(3)]
     kept=[{**r,'provider':{'providerId':'123456'}} for r in rows] if bad_field else rows
-    for name,data in [('original',rows),('keep',[] if wrong else kept),('drop',rows if wrong else [])]:
+    if duplicate_candidates:
+        kept=[{**r,'provider':{'providerId':'123456'}} for r in rows]*2+rows
+    for name,data in [('original',rows),('keep',[] if wrong else kept),('drop',rows if wrong or both else [])]:
         (tmp_path/(name+'.json')).write_text(json.dumps(data))
     session=ReportSession.create('reports',project_root=tmp_path)
     configs={s:{'run_date':'2026-04-20'} for s in ('final_action','split','stay','intermediate','final_medpar')}
@@ -117,3 +119,22 @@ def test_split_reconciles_exception_separately_from_keep_drop(tmp_path):
     exceptional=next(r for r in audit['rows'] if r['decision']=='STOPPED')
     assert exceptional['comparison_status']=='PASS'
     assert 'exception output' in exceptional['reason']
+
+
+def test_searches_past_first_two_duplicate_identity_candidates(tmp_path):
+    audit,_=run(tmp_path,duplicate_candidates=True)
+    for row in audit['rows']:
+        assert row['comparison_status']=='PASS'
+        proof=next(c for c in row['checks'] if c['rule_id']=='ROW-OUTPUT-CANDIDATES')
+        assert proof['evidence']['candidate_count']==3
+        assert proof['actual']==1
+        assert proof['evidence']['selected_reference']['row']>6
+    assert audit['full_count_conservation']=='FAIL'  # Extra physical output rows remain visible.
+
+
+def test_opposite_output_conflict_is_explicit_failure_not_duplicate_block(tmp_path):
+    audit,_=run(tmp_path,both=True)
+    for row in audit['rows']:
+        assert row['comparison_status']=='FAIL'
+        assert any('both KEEP and DROP' in reason for reason in row['comparison_reasons'])
+        assert next(c for c in row['checks'] if c['rule_id']=='ROW-OUTPUT-CANDIDATES')['status']=='PASS'

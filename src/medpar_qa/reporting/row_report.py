@@ -15,6 +15,29 @@ def show(value):
     return html.escape(json.dumps(value,default=str,ensure_ascii=False))
 
 
+def compare_row_values(**kwargs):
+    """Accept lossless numeric JSON/Parquet representation changes, preserving identifiers."""
+    from medpar_qa.stages.comparison import compare_values
+    from numbers import Number
+    def pair(expected,actual):
+        if isinstance(expected,dict) and isinstance(actual,dict):
+            left=dict(expected);right=dict(actual)
+            for key in left.keys() & right.keys():left[key],right[key]=pair(left[key],right[key])
+            return left,right
+        if isinstance(expected,list) and isinstance(actual,list) and len(expected)==len(actual):
+            values=[pair(x,y) for x,y in zip(expected,actual)]
+            return [x for x,y in values],[y for x,y in values]
+        if isinstance(expected,Number) and not isinstance(expected,bool) and isinstance(actual,str) and str(expected)==actual.strip():return expected,expected
+        if isinstance(actual,Number) and not isinstance(actual,bool) and isinstance(expected,str) and expected.strip()==str(actual):return actual,actual
+        return expected,actual
+    raw_expected=kwargs['expected'];raw_actual=kwargs['actual']
+    expected,actual=pair(raw_expected,raw_actual)
+    result=compare_values(**{**kwargs,'expected':expected,'actual':actual})
+    if (type(raw_expected)!=type(expected) or type(raw_actual)!=type(actual) or raw_expected!=expected or raw_actual!=actual):
+        result.evidence['representation_normalization']={'raw_expected':raw_expected,'raw_actual':raw_actual,'method':'Lossless numeric value versus identical text; leading zeros and differing values are preserved.'}
+    return result
+
+
 def write_row_report(root,session,journeys,settings,start_stage,items,selected_records=None,selection_override=None,source_origins=None):
     """Attach real rule events to source rows and reconcile separately supplied outputs."""
     from medpar_qa.stages.common import record_identity
@@ -78,8 +101,8 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
                 value=identity(record)
                 if value in wanted:
                     counts[value]+=1
-                    if len(matching_records[value])<2:
-                        matching_records[value].append(record);locations[value].append({'file':path,'row':record.source.row_number})
+                    matching_records[value].append(record)
+                    if len(locations[value])<10:locations[value].append({'file':path,'row':record.source.row_number})
                 else:
                     unmatched+=1
                     if len(examples)<10:examples.append({'file':path,'row':record.source.row_number,'identity':value})
@@ -113,8 +136,8 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
         supplied=any(role_counts[r] is not None for r in ('keep','drop'))
         if supplied:
             observed={r:role_matches[r][key] if key is not None else 0 for r in ('keep','drop')}
-            if key is None or (duplicate_keys[key]>1 and start_stage!='stay' and not (start_stage=='intermediate' and coalesced_sources)) or any(count>1 for count in observed.values()):
-                status='BLOCKED';message=f'Missing or duplicate comparison identity: source matches={duplicate_keys[key] if key is not None else 0}, keep matches={observed["keep"]}, drop matches={observed["drop"]}. A unique output row cannot be assigned safely; source locations show up to two examples per output.'
+            if key is None:
+                status='BLOCKED';message='The configured comparison identity has missing values; a reliable cross-file match cannot be established.'
             elif any(c.get('evidence',{}).get('record_exception') for c in linked):
                 status='FAIL' if any(observed.values()) else 'PASS' if all(role_counts[r] is not None for r in ('keep','drop')) else 'BLOCKED'
                 message='This row requires the Split exception output, not KEEP or DROP. '+('It incorrectly appears in supplied KEEP/DROP outputs.' if status=='FAIL' else 'No matching row appears in the supplied KEEP/DROP outputs.' if status=='PASS' else 'Both reference outputs are required to verify absence.')
@@ -124,39 +147,54 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
                 status='BLOCKED';message='The required comparison output was not supplied.'
             else:
                 expected=outcome.lower();opposite='drop' if expected=='keep' else 'keep'
-                status='PASS' if observed[expected]==1 and observed[opposite]==0 else 'FAIL'
-                message=(f'Calculated {outcome}: exactly one row found in {expected} and none in {opposite}.' if status=='PASS' else f'Calculated {outcome}, but supplied outputs contain {observed[expected]} matching {expected} row(s) and {observed[opposite]} matching {opposite} row(s). '+('The row is in the wrong output.' if observed[opposite] else 'The required output row is missing.'))
+                status='PASS' if observed[expected]>=1 and observed[opposite]==0 else 'FAIL'
+                message=(f'Calculated {outcome}: found {observed[expected]} candidate row(s) anywhere in supplied {expected} and none in {opposite}. All candidates are evaluated for data agreement; duplicate counts are assessed separately in population reconciliation.' if status=='PASS' else f'Calculated {outcome}, but supplied outputs contain {observed[expected]} matching {expected} row(s) and {observed[opposite]} matching {opposite} row(s). '+('The identity appears in both KEEP and DROP outputs.' if observed[expected] and observed[opposite] else 'The row is in the wrong output.' if observed[opposite] else 'The required output row is missing.'))
             match_checks=[dict(rule_id='ROW-OUTPUT-MEMBERSHIP',status=status,message=message,expected=outcome,actual=observed,evidence={r:role_paths[r].get(key,[]) for r in ('keep','drop')})]
-            if match_checks[0]['status']=='PASS' and outcome in ('KEEP','DROP'):
+            if outcome in ('KEEP','DROP') and key is not None and role_records[outcome.lower()].get(key):
                 from medpar_qa.stages.comparison import compare_values
                 from medpar_qa.normalization.dates import parse_date
                 from dataclasses import asdict
                 expected_rows=expected_outputs.get(key,[])
                 expected_row=record if outcome=='DROP' or start_stage=='final_action' else expected_rows[0] if len(expected_rows)==1 else None
-                actual_row=role_records[outcome.lower()][key][0]
-                if expected_row is None:
-                    match_checks.append(dict(rule_id='ROW-OUTPUT-FIELDS',status='BLOCKED',message='A unique calculated output is required to compare transformed field values.',expected='Unique generated output identity',actual=len(expected_rows)))
-                else:
-                    compare_fields=list(dict.fromkeys([*fields,*resolver.aliases,*getattr(config,'selected_fields',('hicn','provider_id','stay_from_date','stay_thru_date','query_code','action_code')),*(('split_year_indicator','transaction_code') if start_stage=='split' and outcome=='KEEP' else ())]))
-                    for name in compare_fields:
-                        expected=resolver.get(expected_row.data,name);actual=resolver.get(actual_row.data,name)
-                        if expected is None and actual is None:continue
-                        if expected is None:
-                            match_checks.append(dict(rule_id='ROW-OUTPUT-FIELD-'+name,status='BLOCKED',message='No calculated expected value is available for this populated output field; null is not assumed to be the required value.',expected='Calculated or approved expected value',actual=actual,field_name=name))
-                            continue
-                        if name.endswith('_date'):
-                            try:expected=parse_date(expected).isoformat() if expected is not None else None;actual=parse_date(actual).isoformat() if actual is not None else None
-                            except (ValueError,AttributeError):pass
-                        elif name in fields:
-                            expected=str(expected).strip() if expected is not None else None;actual=str(actual).strip() if actual is not None else None
-                        result=compare_values(stage=Stage(start_stage),rule_id='ROW-OUTPUT-FIELD-'+name,field_name=name,expected=expected,actual=actual,record_ids=[record.record_id],source_files=[record.source.file_path,actual_row.source.file_path],decimal_scale=getattr(config,'decimal_scale',None) if name in getattr(config,'decimal_fields',()) else None)
-                        match_checks.append(asdict(result))
-                    if start_stage=='final_action' or outcome=='DROP':
-                        from medpar_qa.normalization.fields import nested_get
-                        for name,expected in unmapped_leaves(expected_row.data,resolver):
-                            actual=nested_get(actual_row.data,name)
-                            result=compare_values(stage=Stage(start_stage),rule_id='ROW-OUTPUT-DATA-'+name,field_name=name,expected=expected,actual=actual,record_ids=[record.record_id],source_files=[record.source.file_path,actual_row.source.file_path])
-                            match_checks.append(asdict(result))
+                def compare_candidate(actual_row):
+                    candidate_checks=[]
+                    if expected_row is None:
+                        candidate_checks.append(dict(rule_id='ROW-OUTPUT-FIELDS',status='BLOCKED',message='A unique calculated output is required to compare transformed field values.',expected='Unique generated output identity',actual=len(expected_rows)))
+                    else:
+                        compare_fields=list(dict.fromkeys([*fields,*resolver.aliases,*getattr(config,'selected_fields',('hicn','provider_id','stay_from_date','stay_thru_date','query_code','action_code')),*(('split_year_indicator','transaction_code') if start_stage=='split' and outcome=='KEEP' else ())]))
+                        for name in compare_fields:
+                            expected=resolver.get(expected_row.data,name);actual=resolver.get(actual_row.data,name)
+                            if expected is None and actual is None:continue
+                            if expected is None:
+                                candidate_checks.append(dict(rule_id='ROW-OUTPUT-FIELD-'+name,status='BLOCKED',message='No calculated expected value is available for this populated output field; null is not assumed to be the required value.',expected='Calculated or approved expected value',actual=actual,field_name=name))
+                                continue
+                            if name.endswith('_date'):
+                                try:expected=parse_date(expected).isoformat() if expected is not None else None;actual=parse_date(actual).isoformat() if actual is not None else None
+                                except (ValueError,AttributeError):pass
+                            elif name in fields:
+                                expected=str(expected).strip() if expected is not None else None;actual=str(actual).strip() if actual is not None else None
+                            result=compare_row_values(stage=Stage(start_stage),rule_id='ROW-OUTPUT-FIELD-'+name,field_name=name,expected=expected,actual=actual,record_ids=[record.record_id],source_files=[record.source.file_path,actual_row.source.file_path],decimal_scale=getattr(config,'decimal_scale',None) if name in getattr(config,'decimal_fields',()) else None)
+                            candidate_checks.append(asdict(result))
+                        if start_stage=='final_action' or outcome=='DROP':
+                            from medpar_qa.normalization.fields import nested_get
+                            for name,expected in unmapped_leaves(expected_row.data,resolver):
+                                actual=nested_get(actual_row.data,name)
+                                result=compare_row_values(stage=Stage(start_stage),rule_id='ROW-OUTPUT-DATA-'+name,field_name=name,expected=expected,actual=actual,record_ids=[record.record_id],source_files=[record.source.file_path,actual_row.source.file_path])
+                                candidate_checks.append(asdict(result))
+                    return candidate_checks
+                candidates=role_records[outcome.lower()][key]
+                def rank(results):
+                    statuses=[c['status'] for c in results]
+                    return (sum(x=='FAIL' for x in statuses),sum(x=='BLOCKED' for x in statuses))
+                best=None;best_checks=None;exact=0;matching_locations=[]
+                for candidate in candidates:
+                    results=compare_candidate(candidate)
+                    if best_checks is None or rank(results)<rank(best_checks):best,best_checks=candidate,results
+                    if not any(c['status'] in ('FAIL','BLOCKED') for c in results):
+                        exact+=1
+                        if len(matching_locations)<10:matching_locations.append({'file':candidate.source.file_path,'row':candidate.source.row_number})
+                match_checks.extend(best_checks)
+                match_checks.append(dict(rule_id='ROW-OUTPUT-CANDIDATES',status='PASS' if exact else 'FAIL' if any(c['status']=='FAIL' for c in best_checks) else 'BLOCKED',message=f'Searched every row in all supplied reference files. Evaluated {len(candidates)} matching-identity candidate(s); {exact} agree with all compared data values. Opposite-output membership and whole-population counts are separate checks.',expected='At least one data-equivalent candidate in calculated output',actual=exact,evidence={'candidate_count':len(candidates),'selected_reference':{'file':best.source.file_path,'row':best.source.row_number},'data_matching_locations':matching_locations}))
         for number,check in enumerate(match_checks):check['event_id']=record.record_id+'/comparison/'+str(number)
         events=linked+match_checks
         counts=Counter(c['status'] for c in events)
