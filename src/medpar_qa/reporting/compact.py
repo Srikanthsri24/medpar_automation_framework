@@ -112,6 +112,17 @@ try {
   });
   frame.onload=()=>{
    frame.hidden=false;document.getElementById('loading').hidden=true;
+   // Paginated evidence inserts links after initial screen parsing.
+   frame.contentDocument.addEventListener('click',event=>{
+    const link=event.target.closest('a[href]');if(!link)return;
+    const target=new URL(link.getAttribute('href'),base.href);
+    if(target.hash.startsWith('#screen='))return;
+    const relative=decodeURIComponent(target.pathname.slice(root.pathname.length));
+    if(target.origin===root.origin&&target.pathname.startsWith(root.pathname)&&data.routes[relative]){
+     event.preventDefault();const route=new URL(data.routes[relative]+'/index.html',root);
+     route.hash='screen='+encodeURIComponent(relative)+'&anchor='+encodeURIComponent(target.hash.slice(1));location.href=route.href;
+    }
+   });
    const anchor=args.get('anchor');
    if(anchor)frame.contentDocument.getElementById(anchor)?.scrollIntoView();
   };

@@ -84,3 +84,13 @@ def test_final_row_report_keeps_explicit_bypass_drop_decision(tmp_path):
     assert journeys[0][0]['steps'][-1]['status']=='KEEP'
     audit=json.loads((session.root/'final_medpar/row_review.json').read_text())
     assert [r['decision'] for r in audit['rows']]==['KEEP','DROP']
+
+
+def test_membership_failure_explains_wrong_output(tmp_path):
+    audit,_=run(tmp_path,wrong=True)
+    for row in audit['rows']:
+        assert row['comparison_status']=='FAIL'
+        assert any('wrong output' in reason for reason in row['comparison_reasons'])
+    assert audit['decision_counts']=={'KEEP':2}
+    assert audit['scoped_output_rows']=={'keep':0,'drop':2}
+    assert audit['output_rows_outside_processed_identities']['drop']['rows']==1
