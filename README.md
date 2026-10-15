@@ -30,8 +30,6 @@ python -m pip install -e ".[test]"
 
 Team overview: [MedPAR regression framework technical overview](presentations/MedPAR_Regression_Framework_Technical_Overview.pptx) — scope evolution, engineering changes, architecture, report evidence and speaker notes for the team demonstration.
 
-Team presentation: [MedPAR visual demonstration](presentations/MedPAR_Visual_Demonstration.pptx) — plain explanations, editable stage diagrams, worked examples, report evidence and a detailed rule reference.
-
 Run the complete synthetic five-stage example:
 
 ```sh
@@ -45,6 +43,10 @@ python run_commands.py
 ```
 
 Edit `SOURCE_RUN` in `run_commands.py` to select the source type, starting stage, date and input paths. The command uses only `SOURCE_RUN`, with its source paths and selected entry stage(s). Missing files, mismatched snapshots and business failures remain visible in reports.
+
+### Terminal progress
+
+`python run_commands.py` prints timestamped progress for input preparation, source/reference file discovery, downloads, row scans, stage groups, actual stage decisions and rule identifiers, reference comparisons, and report packaging. Full S3 downloads show transferred bytes, percentage and remaining bytes through the SDK callback. Selective Parquet reads show the byte ranges fetched and selected-row progress. Operations with unknown work totals show counts rather than invented percentages. During a long active step, a heartbeat prints the current task and elapsed time every 15 seconds. Detailed rule outcomes remain in the linked evidence report.
 
 ### S3 transfer options and missing dependencies
 

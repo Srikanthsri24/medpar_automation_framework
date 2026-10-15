@@ -1,5 +1,6 @@
 """Resolve runner inputs into local files with auditable, credential-free provenance."""
 from __future__ import annotations
+from medpar_qa.progress import tracked, emit, Progress
 
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -101,9 +102,13 @@ class InputSources:
     def _record(self, origin, path, **metadata):
         relative = path.resolve().relative_to(self.root).as_posix()
         if relative not in self.files:
+            emit(f'Verifying cached file and SHA-256: {path}')
+            hashed=Progress('Cache bytes hashed',path.stat().st_size,'bytes')
             digest = hashlib.sha256()
             with path.open('rb') as handle:
-                for chunk in iter(lambda: handle.read(1024 * 1024), b''): digest.update(chunk)
+                for chunk in iter(lambda: handle.read(1024 * 1024), b''):
+                    digest.update(chunk);hashed.advance(len(chunk))
+            hashed.finish()
             self.files[relative] = dict(origin=origin, local_path=relative, bytes=path.stat().st_size,
                 sha256=digest.hexdigest(), **metadata)
         return relative
@@ -158,6 +163,7 @@ class InputSources:
             if not path.is_relative_to(self.root):
                 # Preserve directory hierarchy/hive partition labels for external local inputs.
                 path = self._destination('local', str(source.parent), source.parts[1:])
+                emit(f'Copying external local input into run cache: {source} ({source.stat().st_size:,} bytes)')
                 shutil.copy2(source, path)
             result.append(self._record(str(source), path, kind='local'))
         return result
@@ -168,6 +174,7 @@ class InputSources:
             except InputSourceError: raise
             except Exception as exc: raise InputSourceError(f'Cannot initialize AWS credentials ({type(exc).__name__}); check JSON format, AWS profile and temporary session token') from exc
         uri = f's3://{bucket}/{key}'
+        emit(f'Resolving S3 input: {uri}; checking object or listing prefix')
         wildcard = next((i for i,c in enumerate(key) if c in '*?['), None)
         exact = bool(key) and not key.endswith('/') and wildcard is None
         try:
@@ -181,19 +188,26 @@ class InputSources:
                     exact=False
             if not exact:
                 prefix = key[:wildcard] if wildcard is not None else key.rstrip('/') + '/' if key else ''
-                objects = [obj for page in self.client.get_paginator('list_objects_v2').paginate(Bucket=bucket, Prefix=prefix)
+                def pages():
+                    for page_number,page in enumerate(self.client.get_paginator('list_objects_v2').paginate(Bucket=bucket, Prefix=prefix),1):
+                        emit(f'S3 listing page {page_number}: s3://{bucket}/{prefix}; {len(page.get("Contents",[]))} keys returned on this page')
+                        yield page
+                objects = [obj for page in pages()
                     for obj in page.get('Contents', []) if not obj['Key'].endswith('/') and PurePosixPath(obj['Key']).name not in ('_SUCCESS','_metadata','_common_metadata')
                     and not PurePosixPath(obj['Key']).name.startswith(('_started_','_committed_'))
                     and PurePosixPath(obj['Key']).suffix.lower() not in ('.txt','.md','.log','.crc')
                     and (wildcard is None or fnmatchcase(obj['Key'], key))]
+            emit(f'S3 discovery: {len(objects)} object(s) at {uri}')
             objects = sorted({obj['Key']: obj for obj in objects}.values(), key=lambda obj: obj['Key'])
             if not objects: raise InputSourceError(f'No JSON or Parquet objects found at {uri}')
             result = []
-            for obj in objects:
+            objects_progress=Progress('S3 objects prepared',len(objects),'objects')
+            for object_number,obj in enumerate(objects,1):
+                emit(f"S3 object {object_number}/{len(objects)}: s3://{bucket}/{obj['Key']} ({obj['Size']:,} bytes)")
                 origin = f"s3://{bucket}/{obj['Key']}"
                 existing = next((p for p, record in self.files.items() if record['origin'] == origin and (not record.get('access_mode')=='s3_parquet_sample' or self._sample_source)), None)
                 if existing:
-                    result.append(existing); continue
+                    result.append(existing); objects_progress.update(object_number,force=True); continue
                 needs_detection=PurePosixPath(obj['Key']).suffix.lower() not in SUPPORTED
                 path = self._destination('s3', origin if needs_detection else bucket, obj['Key'].split('/'))
                 eligible=(self.s3_read_mode=='sample_parquet' and self._sample_source and self.row_selection.get('mode')=='first_n_per_file' and self.row_selection.get('include_related_records',True) is False and type(self.row_selection.get('limit')) is int and self.row_selection['limit']>0 and hasattr(self.client,'get_object') and bool(obj.get('ETag')) and PurePosixPath(obj['Key']).suffix.lower()!='.json')
@@ -204,11 +218,18 @@ class InputSources:
                     if sampled is not None:
                         result.append(self._record(origin,sample_path,kind='s3',bucket=bucket,key=obj['Key'],etag=obj.get('ETag'),detected_format='parquet',**sampled))
                         print(f"S3 Parquet sample: {self.row_selection['limit']} requested; {sampled['cached_rows']} cached / {sampled['source_total_rows']} source rows; {sampled['bytes_transferred']} bytes transferred / {sampled['source_bytes']} object bytes",flush=True)
+                        objects_progress.update(object_number,force=True)
                         continue
                     if PurePosixPath(obj['Key']).suffix.lower()=='.parquet':raise InputSourceError('Parquet object has an invalid header')
                 temporary = path.with_name(path.name + '.download')
                 try:
-                    self.client.download_file(bucket, obj['Key'], str(temporary))
+                    import inspect
+                    transfer=Progress('Downloading '+origin,obj['Size'],'bytes')
+                    parameters=inspect.signature(self.client.download_file).parameters
+                    callback_supported='Callback' in parameters or any(v.kind==inspect.Parameter.VAR_KEYWORD for v in parameters.values())
+                    kwargs={'Callback':transfer.advance} if callback_supported else {}
+                    self.client.download_file(bucket, obj['Key'], str(temporary),**kwargs)
+                    transfer.finish()
                     if temporary.stat().st_size != obj['Size']: raise InputSourceError('Downloaded object size differs from S3 metadata; rerun using a stable extraction snapshot')
                     detected=None
                     if needs_detection:
@@ -225,6 +246,7 @@ class InputSources:
                 result.append(self._record(origin, path, kind='s3', etag=obj.get('ETag'),
                     last_modified=str(obj.get('LastModified') or ''), bucket=bucket, key=obj['Key'],
                     detected_format=detected, format_detection='content' if needs_detection else 'extension'))
+                objects_progress.update(object_number,force=True)
             return result
         except InputSourceError: raise
         except Exception as exc:
@@ -246,6 +268,7 @@ class InputSources:
             # No exception payloads or URL query credentials in terminal/report evidence.
             raise InputSourceError(f'S3 input could not be read ({code}): {advice}') from exc
 
+    @tracked('Resolve and prepare local/S3 source and reference inputs')
     def prepare(self, stage_runs, *, selected_stage=None, connected=False, start_stage="final_action", generate_outputs=None):
         """Resolve enabled entries including role-specific and downstream candidate paths."""
         configured = deepcopy(stage_runs)
@@ -256,7 +279,9 @@ class InputSources:
                     for item in settings.get(list_name, []):
                         if not item.get('enabled', True): continue
                         for role in ('source', 'actual', 'expected', 'dropped'):
-                            if item.get(role): item[role] = self.resolve(item[role],sample_source=role=="source")
+                            if item.get(role):
+                                emit(f'Preparing {stage} dataset {role}: {len(item[role]) if not isinstance(item[role],str) else 1} configured path(s)')
+                                item[role] = self.resolve(item[role],sample_source=role=="source")
                         for target, values in (item.get('pipeline_outputs', {}) if generate_outputs is not True else {}).items():
                             item['pipeline_outputs'][target] = self.resolve(values)
             return configured

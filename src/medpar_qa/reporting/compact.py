@@ -1,5 +1,6 @@
 """Package existing report screens into six compressed, navigable HTML pages."""
 from __future__ import annotations
+from medpar_qa.progress import tracked, emit, Progress
 import base64
 import gzip
 import json
@@ -24,6 +25,7 @@ def read_html(path: Path) -> tuple[str,str]:
     raise ValueError(f'Cannot decode report HTML: {path}')
 
 
+@tracked('Compress report screens and preserve evidence routes')
 def compact_reports(root: Path) -> Path:
     """Keep original screens and raw evidence, replacing HTML sprawl with lazy screens."""
     root=Path(root).resolve()
@@ -39,6 +41,8 @@ def compact_reports(root: Path) -> Path:
         return 'master'
     routes={p.relative_to(root).as_posix():category(p) for p in files}
     before=sum(p.stat().st_size for p in files)
+    emit(f'Report packaging: {len(files):,} HTML screens; {before:,} input bytes; producing one master and one file per stage')
+    screens_progress=Progress('Report screens packaged',len(files),'screens');processed=0
     legacy_encodings=[]
     groups={name:[] for name in ('master',*STAGES)}
     for path in files:groups[category(path)].append(path)
@@ -49,6 +53,7 @@ def compact_reports(root: Path) -> Path:
                 nonlocal batch,size
                 if not batch:return
                 for key in batch:screen_blocks[key]=len(blocks)
+                emit(f'Compressing {name} block {len(blocks)+1}: {len(batch):,} screens, {size:,} source bytes')
                 archive=Path(temp)/(name+str(len(blocks))+'.gz')
                 with gzip.open(archive,'wt',encoding='utf-8',compresslevel=9) as out:json.dump(batch,out,separators=(',',':'))
                 blocks.append(archive);batch={};size=0
@@ -57,6 +62,7 @@ def compact_reports(root: Path) -> Path:
                 text,encoding=read_html(path)
                 key=path.relative_to(root).as_posix()
                 batch[key]=text;size+=path.stat().st_size
+                processed+=1;screens_progress.update(processed)
                 if encoding!='utf-8':legacy_encodings.append({'file':key,'encoding':encoding})
             if not paths:
                 batch[name+'/index.html']='<html><body><h1>'+name.replace('_',' ').title()+'</h1><p>No stage inputs were executed in this run.</p><a href="../master/index.html">Master report</a></body></html>'
@@ -70,6 +76,8 @@ def compact_reports(root: Path) -> Path:
                 for number,archive in enumerate(blocks):
                     out.write('<script id="block-'+str(number)+'" type="application/octet-stream">'+base64.b64encode(archive.read_bytes()).decode('ascii')+'</script>')
                 out.write('<script>const defaultScreen='+json.dumps(default)+';'+SCRIPT+'</script></body></html>')
+        screens_progress.finish()
+        emit('All compressed report wrappers written; replacing intermediate HTML files')
         # All replacements exist before removing the source pages.
         for path in files:path.unlink()
         for name in groups:
@@ -77,6 +85,7 @@ def compact_reports(root: Path) -> Path:
             (Path(temp)/(name+'.html')).replace(root/name/'index.html')
     after=sum(p.stat().st_size for p in root.rglob('*.html'))
     (root/'compact_report.json').write_text(json.dumps({'legacy_html_encodings':legacy_encodings,'html_files_before':len(files),'html_files_after':6,'html_bytes_before':before,'html_bytes_after':after,'count_basis':'Processed input rows, generated output rows and verified next-stage reads' if (root/'master/row_flow.json').exists() else 'Original-source lineage remains unchanged','navigation':'One master and one page per stage; screen routes open existing rule/file evidence inside the page'},indent=2), encoding="utf-8")
+    emit(f'Report ready: {root}/master/index.html; six HTML files; {after:,} bytes after packaging')
     return root/'master/index.html'
 
 

@@ -1,4 +1,6 @@
 """Original/keep/drop row reconciliation and file/row rule evidence."""
+from medpar_qa.progress import tracked, emit, Progress
+
 import html,json
 from collections import Counter,defaultdict
 from pathlib import Path
@@ -42,6 +44,7 @@ def compare_row_values(**kwargs):
     return result
 
 
+@tracked('Reconcile source rows with all supplied KEEP/DROP references')
 def write_row_report(root,session,journeys,settings,start_stage,items,selected_records=None,selection_override=None,source_origins=None):
     """Attach real rule events to source rows and reconcile separately supplied outputs."""
     from medpar_qa.stages.common import record_identity
@@ -60,7 +63,9 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     provenance=json.loads(provenance_path.read_text(encoding='utf-8')) if provenance_path.exists() else {}
     origins={row['local_path']:row['origin'] for row in provenance.get('files',[])}
     checks=defaultdict(list);decisions={};reasons={};reports={};file_checks=defaultdict(list);file_reports=defaultdict(list);expected_outputs=defaultdict(list);coalesced_sources=False
-    for journey,directory in journeys:
+    emit(f'Reading saved stage evidence for {len(journeys):,} record groups at {start_stage}')
+    for journey_number,(journey,directory) in enumerate(journeys,1):
+        if journey_number==1 or journey_number%25==0:emit(f'Loading {start_stage} group evidence {journey_number}/{len(journeys)}')
         target=directory/start_stage/'report.json'
         if not target.exists():continue
         if next(s for s in journey['steps'] if s['stage']==start_stage)['status'] in ('BEFORE_START','NOT_REACHED'):continue
@@ -97,10 +102,14 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     for role,key in (('keep','actual'),('drop','dropped')):
         paths=list(dict.fromkeys(p for item in items for p in item.get(key,[])))
         counts=Counter();locations=defaultdict(list);file_counts=[];matching_records=defaultdict(list);unmatched=0;examples=[]
-        for path in paths:
+        references_progress=Progress(f'{start_stage} {role.upper()} reference files searched',len(paths),'files')
+        for path_number,path in enumerate(paths,1):
+            emit(f'Searching all {role.upper()} rows in reference file {path_number}/{len(paths)}: {path}')
+            scanned=Progress(f'{role.upper()} reference rows scanned',unit='rows')
             total=0
             for record in iter_records(Path(root)/path,Stage(start_stage),FileRole.SOURCE,root):
                 total+=1
+                if total%1000==0:scanned.update(total)
                 if isinstance(record.data.get('record'),dict):record.data=record.data['record']
                 value=identity(record)
                 if value in wanted:
@@ -110,6 +119,8 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
                 else:
                     unmatched+=1
                     if len(examples)<10:examples.append({'file':path,'row':record.source.row_number,'identity':value})
+            scanned.update(total,force=True)
+            references_progress.update(path_number,force=True)
             file_counts.append({'file':path,'origin':origins.get(path,path),'rows':total})
         outside_scope[role]={'rows':unmatched,'examples':examples}
         role_counts[role]=sum(r['rows'] for r in file_counts) if paths else None
@@ -138,7 +149,9 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     count_balance['difference']=count_balance['keep_plus_drop_rows']-expected_output_rows if count_balance['keep_plus_drop_rows'] is not None and expected_output_rows is not None else None
     by_file=defaultdict(list);row_payload=[];sample_targets=set(selection.get('target_record_ids',[r.record_id for r in selected_records]))
     duplicate_keys=Counter(identity(r) for r in selected_records)
-    for record in selected_records:
+    comparisons_progress=Progress(f'{start_stage} selected-row comparisons',len(selected_records),'rows')
+    for row_number,record in enumerate(selected_records,1):
+        if row_number==1 or row_number%25==0:emit(f'Comparing {start_stage} source row {row_number}/{len(selected_records)}; source {record.source.file_path} row {record.source.row_number}')
         key=identity(record);outcome=decisions.get(record.record_id,'NOT ASSESSED');linked=checks[record.record_id]
         match_checks=[]
         supplied=any(role_counts[r] is not None for r in ('keep','drop'))
@@ -211,15 +224,21 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
         item['comparison_status']='FAIL' if any(c['status']=='FAIL' for c in match_checks) else 'BLOCKED' if any(c['status']=='BLOCKED' for c in match_checks) else 'PASS' if match_checks else 'NOT PROVIDED'
         item['comparison_reasons']=[c.get('message','') for c in match_checks if c['status']!='PASS']
         row_payload.append(item);by_file[item['file']].append(item)
+        comparisons_progress.update(row_number)
+    comparisons_progress.finish()
+    emit(f'Building {start_stage} file/row evidence pages and row comparison summaries')
     output=session.root/start_stage/'row_review.html';output.parent.mkdir(parents=True,exist_ok=True)
     inventory={r['file']:r for r in originals};sections=[];file_summaries=[]
     for path in inventory:by_file.setdefault(path,[])
+    file_evidence_progress=Progress(f'{start_stage} file evidence rendered',len(by_file),'files')
     for number,(path,rows) in enumerate(by_file.items(),1):
+        emit(f'Rendering {start_stage} evidence file {number}/{len(by_file)}: {path}; {len(rows):,} selected rows')
         unique={json.dumps(c,sort_keys=True,default=str) for r in rows for c in r['checks']}
         unique.update(json.dumps(c,sort_keys=True,default=str) for c in file_checks[path])
         totals=Counter(json.loads(c)['status'] for c in unique)
         cards=[]
-        for row in rows:
+        for evidence_number,row in enumerate(rows,1):
+            if evidence_number%1000==0:emit(f'Rendering {path}: row {evidence_number:,}/{len(rows):,}; rule cards and reference evidence')
             rules=''.join('<details><summary>'+html.escape(c['status']+' '+c['rule_id'])+'</summary><p>'+html.escape(c.get('message',''))+'</p><p>Expected</p><pre>'+show(c.get('expected'))+'</pre><p>Observed</p><pre>'+show(c.get('actual'))+'</pre><details><summary>Source evidence</summary><pre>'+show({'source_files':c.get('source_files',[]),'record_ids':c.get('record_ids',[]),'field':c.get('field_name'),'details':c.get('evidence',{})})+'</pre></details></details>' for c in row['checks'])
             report=reports.get(row['record_id']);link='<a href="'+html.escape(relative_link(output.parent,report))+'">Full stage / group rule evidence</a>' if report else ''
             cards.append('<details data-row="'+str(row['row'])+'"><summary>Row '+str(row['row'])+' · '+row['decision']+' · Validation '+row['validation_status']+' · Output comparison '+row['comparison_status']+' · '+str(len(row['checks']))+' validations</summary><p>'+html.escape(row['reason'])+'</p><pre>'+show(row['validation_counts'])+'</pre>'+link+'<details><summary>Input row values</summary><pre>'+show(row['input_row'])+'</pre></details>'+rules+'</details>')
@@ -229,6 +248,8 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
         shared='<details><summary>File-wide / shared group checks</summary><pre>'+show(file_checks[path])+'</pre></details>'
         file_links='<details><summary>All stage/group reports for this file</summary>'+''.join('<p><a href="'+html.escape(relative_link(output.parent,report))+'">Group '+str(i)+' — complete evidence</a></p>' for i,report in enumerate(dict.fromkeys(file_reports[path]),1))+'</details>'
         sections.append('<details><summary>#'+str(number)+' '+html.escape(origins.get(path,path))+' — '+str(total)+' total rows; '+str(len(rows))+' selected; '+str(max(total-len(rows),0))+' not processed</summary><p>Original source files for this generated input: '+show([origins.get(p,p) for p in source_origins.get(path,[path])])+'</p><p>File validation totals (unique events; shared group events can apply to multiple rows): '+str(len(unique))+'</p><pre>'+show(totals)+'</pre>'+shared+file_links+row_browser(number,rows,cards)+'<p>Row validation outcomes: '+show(row_statuses)+'</p><p>File conclusion: '+str(sum(r['decision']=='KEEP' for r in rows))+' kept; '+str(sum(r['decision']=='DROP' for r in rows))+' dropped; '+str(sum(r['decision'] not in ('KEEP','DROP') for r in rows))+' stopped or not assessed among processed rows.</p></details>')
+        file_evidence_progress.update(number)
+    file_evidence_progress.finish()
     comparison_events=[c for r in row_payload for c in r['checks'] if c['rule_id'].startswith('ROW-OUTPUT-')]
     comparison_status='FAIL' if (selection.get('full_dataset',False) and any(v['rows'] for v in outside_scope.values())) or conservation=='FAIL' or any(c['status']=='FAIL' for c in comparison_events) else 'BLOCKED' if any(c['status']=='BLOCKED' for c in comparison_events) else 'PASS' if comparison_events else 'NOT PROVIDED'
     decision_counts=dict(Counter(r['decision'] for r in row_payload))

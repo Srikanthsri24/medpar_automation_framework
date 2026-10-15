@@ -2,6 +2,7 @@
 and overall conclusions.
 """
 from __future__ import annotations
+from medpar_qa.progress import tracked, emit, Progress
 
 import html
 import json
@@ -340,6 +341,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
     return output
 
 
+@tracked('Build master and stage report indexes')
 def refresh_session_indexes(session_root: str | Path, executions: list[dict[str, Any]] | None = None) -> Path:
     """Refresh stage and master indexes after artifacts have been written."""
     root = Path(session_root)

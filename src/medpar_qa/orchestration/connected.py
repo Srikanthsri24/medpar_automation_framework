@@ -4,6 +4,7 @@ FA and Split materialize decisions; subsequent writers calculate supported JSON 
 Comparison mode is optional. Missing physical layouts/reference definitions remain disclosed.
 """
 from __future__ import annotations
+from medpar_qa.progress import tracked, emit, Progress
 
 import copy
 import hashlib
@@ -132,6 +133,7 @@ class ConnectedPipeline:
         self.resolver = resolver or FieldResolver.from_yaml(self.root / 'config/field_aliases.yaml')
         self.settings = settings or {}
 
+    @tracked('Process a connected record group through the requested stages')
     def run_file(self, source, run_dates, outputs=None, *, start_stage="final_action", generate_outputs=None, original_inputs=None, initial_records=None):
         """One input file owns a five-stage journey; failure never forwards its data."""
         source = relative_display(Path(source), project_root=self.root)
@@ -163,6 +165,7 @@ class ConnectedPipeline:
                     message=f'Stage not executed because an earlier stage stopped this input: {stop_reason}',
                     expected='Retained output from the preceding stage', actual='NOT_REACHED'))
             else:
+                emit(f'Running {stage.value}: reading {current}; validating business rules and generating decisions')
                 result = StageResult(stage)
                 source_records, candidate = [], []
                 generation_notes, generated_dropped = [], []
@@ -175,6 +178,7 @@ class ConnectedPipeline:
                         from medpar_qa.reference_data import ReferenceData
                         reference_data = ReferenceData(manifest.settings['reference_feeds'],self.root)
                         for record in source_records: record.data = reference_data.enrich(record.data,self.resolver)
+                    emit(f'{stage.value}: {len(source_records):,} input rows loaded; executing stage processing and validation')
                     entry_records=list(source_records)
                     config = manifest.settings.setdefault(stage.value, {})
                     if stage == Stage.SPLIT:
@@ -317,6 +321,12 @@ class ConnectedPipeline:
                                 source_files=[current], evidence={'execution_state': 'NOT_APPLICABLE'}))
                 if output:
                     current = output
+            if step['status'] not in ('BEFORE_START','NOT_REACHED'):
+                emit(f"{stage.value} result: {step['status']}; input {step['input_records']:,}; retained {step['retained']:,}; dropped {step['dropped']:,}; {len(result.rule_results):,} validation events")
+                rules=list(dict.fromkeys(check.rule_id for check in result.rule_results))
+                emit(f"{stage.value} rules evaluated: {', '.join(rules[:12])}"+ (f' and {len(rules)-12} more; complete rule evidence in {stage_dir}/report.html' if len(rules)>12 else ''))
+                emit(f"{stage.value} reason: {step['reason']}")
+            emit(f'Writing {stage.value} rule evidence and handoff report: {stage_dir}')
             write_report_bundle(run_id=identity, results=[result], output_directory=stage_dir,
                                 manifest=manifest, title=f'Connected pipeline — {stage.value}', parent_link='../index.html',
                                 context={'mode': 'connected', 'original_input': source, 'handoff': step})
@@ -393,6 +403,7 @@ def processing_components(records,resolver,start_stage,settings):
     return list(components.values())
 
 
+@tracked('Select source rows, execute stage groups and build evidence')
 def run_configured(root, session, stage_runs, settings=None, *, start_stage="final_action", generate_outputs=None):
     pipeline = ConnectedPipeline(root, session, settings=settings)
     dates = {s.value: stage_runs[s.value]['run_date'] for s in STAGES}
@@ -431,14 +442,18 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
                 source_records=None
             working=Path(root)/files[0] if len(files)==1 else session.root/'connected_inputs'/'source_batch.json'
             if len(files)>1:_dump(working,[record.data for record in source_records or []])
+            emit(f'Grouping {len(source_records or []):,} selected source rows by related claim/stay identities')
             components=processing_components(source_records,pipeline.resolver,start_stage,settings) if source_records else []
             if len(components)>1:
                 _dump(session.root/'connected_inputs'/'components.json',{'source_files':files,'components':len(components),'purpose':'A failure stops only related claims/bills; cross-file FA and Stay identities remain connected'})
+                groups_progress=Progress('Related record groups processed',len(components),'groups')
                 for number,group in enumerate(components,1):
+                    emit(f'Processing related group {number}/{len(components)} with {len(group):,} source rows')
                     group_path=session.root/'connected_inputs'/f'group_{number:05}.json'
                     _dump(group_path,[record.data for record in group])
                     originals=list(dict.fromkeys(record.source.file_path for record in group))
                     journeys.append(pipeline.run_file(group_path,dates,start_stage=start_stage,generate_outputs=True,original_inputs=originals,initial_records=group))
+                    groups_progress.update(number,force=True)
             else:
                 journeys.append(pipeline.run_file(working,dates,start_stage=start_stage,generate_outputs=True,original_inputs=files,initial_records=source_records))
     else:

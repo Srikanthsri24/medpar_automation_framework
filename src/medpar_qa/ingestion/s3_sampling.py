@@ -1,4 +1,5 @@
 """Read sampled Parquet over conditional S3 byte ranges, preserving full row totals."""
+from medpar_qa.progress import emit, Progress
 import io
 import json
 from pathlib import Path
@@ -33,6 +34,7 @@ class S3RangeReader(io.RawIOBase):
                 self.position+=count;return data[offset:offset+count]
         kwargs=dict(Bucket=self.bucket,Key=self.key,Range=f'bytes={start}-{start+count-1}')
         if self.etag:kwargs['IfMatch']=self.etag
+        emit(f'S3 range read: s3://{self.bucket}/{self.key}; bytes {start:,}-{start+count-1:,}; object size {self.size:,}; previously transferred {self.bytes_read:,} bytes')
         response=self.client.get_object(**kwargs);body=response['Body']
         try:data=body.read()
         finally:body.close()
@@ -52,10 +54,13 @@ def stage_parquet_sample(client,bucket,key,size,etag,destination,limit):
         stream.seek(0);magic=stream.read(4)
         if magic!=b'PAR1':return None
         parquet=pq.ParquetFile(stream,pre_buffer=False,buffer_size=0)
+        emit(f'Parquet footer read: {parquet.metadata.num_rows:,} source rows; selecting up to {limit:,}')
+        sample_progress=Progress('Parquet source rows selected',min(limit,parquet.metadata.num_rows),'rows')
         batches=[];remaining=limit
         for batch in parquet.iter_batches(batch_size=limit):
             take=min(batch.num_rows,remaining)
             if take:batches.append(batch.slice(0,take));remaining-=take
+            sample_progress.update(limit-remaining,force=True)
             if remaining==0:break
         table=pa.Table.from_batches(batches,schema=parquet.schema_arrow)
         total=parquet.metadata.num_rows

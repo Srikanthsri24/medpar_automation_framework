@@ -1,4 +1,6 @@
 """Full-input multiplicity evidence, independent of validation sampling."""
+from medpar_qa.progress import tracked, emit, Progress
+
 import hashlib
 import json
 from collections import Counter,defaultdict
@@ -7,20 +9,25 @@ from medpar_qa.ingestion.row_selection import iter_records
 from medpar_qa.enums import Stage,FileRole
 
 
+@tracked('Audit full source/KEEP/DROP identity populations')
 def audit_populations(root,stage,paths,identity,exception_predicate=None,one_to_one=True):
     counters={};result={};locations={};exceptions=Counter()
     for role,files in paths.items():
         counts=Counter();examples=defaultdict(list);fingerprints=defaultdict(list);inventory=[]
-        for file in dict.fromkeys(files):
+        unique_files=list(dict.fromkeys(files));progress=Progress(f'Population audit {role}',len(unique_files),'files')
+        for file_number,file in enumerate(unique_files,1):
+            emit(f'Population audit {role}: scanning {file_number}/{len(unique_files)} {file}')
             hashes=Counter();total=0
             for record in iter_records(Path(root)/file,Stage(stage),FileRole.SOURCE,root):
                 if isinstance(record.data.get('record'),dict):record.data=record.data['record']
                 key=identity(record);counts[key]+=1;total+=1
+                if total%10000==0:emit(f'Population audit {role}: {total:,} rows scanned in current file')
                 if role=='original' and exception_predicate and exception_predicate(record):exceptions[key]+=1
                 if len(examples[key])<2:examples[key].append(dict(file=file,row=record.source.row_number))
                 digest=hashlib.sha256(json.dumps(record.data,sort_keys=True,default=str,separators=(',',':')).encode()).hexdigest();hashes[digest]+=1
             fingerprint=hashlib.sha256(json.dumps(sorted(hashes.items())).encode()).hexdigest()
             fingerprints[fingerprint].append(file);inventory.append(dict(file=file,rows=total,content_sha256=fingerprint))
+            progress.update(file_number,force=True)
         counters[role]=counts;locations[role]=examples
         result[role]=dict(files=len(inventory),rows=sum(counts.values()),distinct_identities=len(counts),repeated_identity_rows=sum(counts.values())-len(counts),missing_identity_rows=counts[None],inventory=inventory,identical_file_groups=[dict(content_sha256=h,files=files) for h,files in fingerprints.items() if len(files)>1])
     source=counters['original']-exceptions;output=counters['keep']+counters['drop'];excess=output-source;missing=source-output

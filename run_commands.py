@@ -29,6 +29,8 @@ from medpar_qa.reporting.path_utils import (  # noqa: E402
 from medpar_qa.reporting.run_layout import ReportSession  # noqa: E402
 from medpar_qa.reporting.session_index import refresh_session_indexes  # noqa: E402
 
+from medpar_qa.progress import tracked, emit, Progress
+
 PYTHON = sys.executable
 REPORTS_ROOT = "reports"
 STOP_ON_FAILURE = False
@@ -384,6 +386,7 @@ def write_source_entry_overview(session,report):
     return index
 
 
+@tracked('Run configuration and stage workflow')
 def main(argv=None, *, report_session=None) -> int:
     """Run this script command-line workflow and return its process exit status. The team entry
     point. SOURCE_RUN selects the source paths, starting stage and business date;

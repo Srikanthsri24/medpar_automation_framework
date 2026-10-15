@@ -1,4 +1,5 @@
 """Stream top-level claim rows, keeping source row numbers and optional related context."""
+from medpar_qa.progress import emit, Progress
 from pathlib import Path
 from collections import Counter
 from medpar_qa.models import SourceRecord,SourceLocation
@@ -60,14 +61,21 @@ def options(value):
 def select(files,stage,role,root,selection,token_function):
     """Count every supplied row and select targets plus transitive related context."""
     selection=options(selection);selected=[];inventory=[]
-    for name in files:
+    file_progress=Progress('Source files read',len(files),'files')
+    for file_number,name in enumerate(files,1):
+        emit(f'Reading source file {file_number}/{len(files)}: {name}; selection {selection}')
+        row_progress=Progress('Source rows scanned: '+str(name),unit='rows')
         total=0;chosen=[]
         from .s3_sampling import sample_metadata
         remote=sample_metadata(Path(root)/name)
         for row in iter_records(Path(root)/name,stage,role,root):
             total+=1
+            if total%1000==0:row_progress.update(total)
             if selection['mode']=='all' or (len(chosen) if selection['mode']=='first_n_per_file' else len(selected)+len(chosen))<selection['limit']:chosen.append(row)
+        row_progress.update(total,force=True)
         if remote:total=remote['source_total_rows']
+        emit(f'Source file read: {name}; {total:,} original rows; {len(chosen):,} selected rows')
+        file_progress.update(file_number,force=True)
         selected.extend(chosen)
         inventory.append(dict(file=name,total_rows=total,selected_rows=len(chosen),context_rows=0))
     target_ids={r.record_id for r in selected};known=set(target_ids);context=[]
