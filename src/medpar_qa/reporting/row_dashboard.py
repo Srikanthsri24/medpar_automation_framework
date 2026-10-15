@@ -17,6 +17,7 @@ def row_browser(number, rows, cards):
 
 BROWSER_SCRIPT='''<script>
 document.querySelectorAll('.row-browser').forEach(box=>{
+ let ready=false;function activate(){if(ready)return;ready=true;
  const data=JSON.parse(box.querySelector('.row-data').textContent);let offset=0;
  const controls=['search','decision','status','comparison'].map(n=>box.querySelector('.row-'+n));
  function draw(){const [row,decision,status,comparison]=controls.map(c=>c.value);
@@ -26,7 +27,8 @@ document.querySelectorAll('.row-browser').forEach(box=>{
  box.querySelector('.row-range').textContent=found.length?'Showing '+(offset+1)+'–'+Math.min(offset+10,found.length)+' of '+found.length+' matching processed rows':'No matching processed rows';
  box.querySelector('.row-prev').disabled=offset===0;box.querySelector('.row-next').disabled=offset+10>=found.length;}
  controls.forEach(c=>c.addEventListener('input',()=>{offset=0;draw()}));
- box.querySelector('.row-prev').onclick=()=>{offset=Math.max(0,offset-10);draw()};box.querySelector('.row-next').onclick=()=>{offset+=10;draw()};draw();
+ box.querySelector('.row-prev').onclick=()=>{offset=Math.max(0,offset-10);draw()};box.querySelector('.row-next').onclick=()=>{offset+=10;draw()};draw();}
+ const parent=box.closest('details');if(!parent||parent.open)activate();else parent.addEventListener('toggle',()=>{if(parent.open)activate()});
 });</script>'''
 
 
@@ -42,7 +44,7 @@ def render_overview(data):
     decisions=data['decision_counts'];scoped=data['scoped_output_rows']
     rows=''.join(f'<tr><td>{role.title()}</td><td>{decisions.get(role.upper(),0):,}</td><td>{scoped[role]:,}</td><td>{data["comparison_rows"][role] if data["comparison_rows"][role] is not None else "Not supplied"}</td></tr>' for role in ('keep','drop'))
     return (bars('Calculated decisions — processed source rows',decisions)+bars('Comparison results — processed source rows',data['comparison_outcomes'])+
-        '<section id="output-comparison"><h3>Calculated decision versus supplied outputs</h3><p>Validate original rows → calculate KEEP / DROP → locate the same identity in the supplied outputs → compare field values. A row count match alone does not prove a data match.</p><table><tr><th>Output</th><th>Calculated source-row decisions</th><th>Supplied output rows matching processed identities</th><th>All supplied output rows</th></tr>'+rows+'</table><p>Stopped rows have no approved keep/drop decision. Sample results apply only to selected and related context rows. Stages that merge or derive records can have different source and output row counts; use identity and field evidence below.</p></section>')
+        '<section id="output-comparison"><h3>Calculated decision versus supplied outputs</h3><p>Validate original rows → calculate KEEP / DROP → locate the same identity in the supplied outputs → compare field values. A row count match alone does not prove a data match.</p><table><tr><th>Output</th><th>Calculated source-row decisions</th><th>Supplied output rows matching processed identities</th><th>All supplied output rows</th></tr>'+rows+'</table><p>Stopped rows have no approved keep/drop decision. Sample results apply only to selected rows. Stages that merge or derive records can have different source and output row counts; use identity and field evidence below.</p></section>')
 
 
 def unmapped_leaves(data,resolver,prefix=''):
@@ -66,5 +68,5 @@ def render_file_flow(data):
         def cell(value):return '<td><a href="#rows-'+str(i)+'">'+html.escape(str(value))+'</a></td>'
         stopped=sum(v for k,v in decisions.items() if k not in ('KEEP','DROP'))
         conclusion='Not selected for processing' if not item['processed_rows'] else 'FAIL' if comparison.get('FAIL') else 'BLOCKED' if comparison.get('BLOCKED') else 'PASS' if comparison.get('PASS') else 'Comparison not supplied'
-        rows.append('<tr><td>'+str(i)+'</td><td title="'+html.escape(item['file'],quote=True)+'"><a href="#rows-'+str(i)+'">'+html.escape(Path(item['file']).name)+'</a><details><summary>Full source path</summary>'+html.escape(item['file'])+'</details></td>'+''.join(cell(v) for v in (item['total_rows'],item['selected_rows'],item['context_rows'],decisions.get('KEEP',0),decisions.get('DROP',0),stopped))+'<td>'+html.escape(conclusion)+'</td></tr>')
-    return '<section><h2>File → selected rows → decisions → output comparison</h2><ol><li>Discover every original input file; count its top-level claim rows.</li><li>Select target rows using the configured limit; include related context separately.</li><li>Apply stage rules. KEEP continues, DROP is removed by a business rule, STOPPED includes exceptions and unmet prerequisites.</li><li>Cross-check each processed row against supplied keep/drop membership and field values. Inspect full-population balance separately.</li><li>Conclude from the decision, validation evidence and comparison result. A KEEP decision is not proof that the supplied output matched.</li></ol><p>Click a number or filename to open that file’s paginated row evidence. A limited sample does not assess unselected rows.</p><table><tr>'+''.join('<th>'+h+'</th>' for h in ('No.','Original input file','Total rows','Selected targets','Related context','KEEP rows','DROP rows','STOPPED rows','Processed-row comparison'))+'</tr>'+''.join(rows)+'</table></section>'
+        rows.append('<tr><td>'+str(i)+'</td><td title="'+html.escape(item['file'],quote=True)+'"><a href="#rows-'+str(i)+'">'+html.escape(Path(item['file']).name)+'</a><details><summary>Full source path</summary>'+html.escape(item['file'])+'</details></td>'+''.join(cell(v) for v in (item['total_rows'],item['processed_rows'],decisions.get('KEEP',0),decisions.get('DROP',0),stopped))+'<td>'+html.escape(conclusion)+'</td></tr>')
+    return '<section><h2>File → selected rows → decisions → output comparison</h2><ol><li>Discover every original input file; count its top-level claim rows.</li><li>Select only the configured number of rows from each file. No additional rows are included.</li><li>Apply stage rules. KEEP continues, DROP is removed by a business rule, STOPPED includes exceptions and unmet prerequisites.</li><li>Cross-check each processed row against supplied keep/drop membership and field values. Inspect full-population balance separately.</li><li>Conclude from the decision, validation evidence and comparison result. A KEEP decision is not proof that the supplied output matched.</li></ol><p>Click a number or filename to open that file’s paginated row evidence. A limited sample does not assess unselected rows.</p><table><tr>'+''.join('<th>'+h+'</th>' for h in ('No.','Original input file','Total rows','Selected rows','KEEP rows','DROP rows','STOPPED rows','Processed-row comparison'))+'</tr>'+''.join(rows)+'</table></section>'

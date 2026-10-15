@@ -44,6 +44,6 @@ def test_started_here_separates_file_count_targets_and_context(tmp_path):
     body=write_row_flow(tmp_path,[({'steps':steps},group)],{'final_action':[(audit,tmp_path/'final_action/row_review.html')],'split':[(forwarded,tmp_path/'split/row_review.html')]})
     metrics=json.loads((tmp_path/'row_flow.json').read_text())[0]
     assert metrics['supplied_input_files']==2 and metrics['selected_target_rows']==3 and metrics['context_rows']==2
-    assert '2 supplied files' in body and '3 target rows + 2 context = 5 starting rows' in body
+    assert '2 supplied files' in body and '5 selected rows' in body
     assert 'a.json' in body and 'b.json' in body
     assert 'KEEP and DROP comparison with supplied paths' in body

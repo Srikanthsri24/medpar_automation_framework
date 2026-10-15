@@ -21,10 +21,10 @@ def file_rows(master,sources,moved_reports):
             def cell(value):return '<td><a href="'+e(target)+'">'+e(value)+'</a></td>'
             stopped=sum(v for k,v in decisions.items() if k not in ('KEEP','DROP'))
             name=item.get('origin',item['file'])
-            rows.append('<tr><td>'+str(serial)+'</td><td>'+e(kind)+'</td><td><a href="'+e(target)+'">'+e(Path(name).name)+'</a><details><summary>Source path</summary>'+e(name)+'</details></td>'+''.join(cell(v) for v in (item['total_rows'],item.get('selected_rows',0),item.get('context_rows',0),decisions.get('KEEP',0),decisions.get('DROP',0),stopped,continued))+'</tr>')
+            rows.append('<tr><td>'+str(serial)+'</td><td>'+e(kind)+'</td><td><a href="'+e(target)+'">'+e(Path(name).name)+'</a><details><summary>Source path</summary>'+e(name)+'</details></td>'+''.join(cell(v) for v in (item['total_rows'],item.get('processed_rows',item.get('selected_rows',0)+item.get('context_rows',0)),decisions.get('KEEP',0),decisions.get('DROP',0),stopped,continued))+'</tr>')
     supplied=sum(len(a.get('files',[])) for a,_ in sources if a.get('input_kind')=='supplied_original')
     generated=serial-supplied
-    headings=('No.','Input origin','File — open row evidence','Total rows','Selected targets','Context','KEEP','DROP','STOPPED / exceptions','Kept source rows continued*')
+    headings=('No.','Input origin','File — open row evidence','Total rows','Selected rows','KEEP','DROP','STOPPED / exceptions','Kept source rows continued*')
     return '<details><summary>Input files and their row results — '+str(supplied)+' supplied files; '+str(generated)+' generated input containers</summary><p>Supplied files are the configured originals. Generated input containers carry rows received from the previous stage and are listed separately by origin; they do not increase Started here’s supplied-file count.</p><p>*Continued counts kept source rows whose group output was actually read by the next stage. A merged output may represent multiple source rows; this column is not the number of generated output rows. See the next-stage handoff table for generated row counts. Unselected files remain listed with zero processed decisions.</p><div style="overflow-x:auto"><table><tr>'+''.join('<th>'+h+'</th>' for h in headings)+'</tr>'+''.join(rows)+'</table></div></details>'
 
 

@@ -47,7 +47,7 @@ SOURCE_RUN: dict[str, Any] = {
     "source_type": "local",  # "local" or "s3"; paths below must match this choice.
     "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
     "run_date": None,  # Resolve today's local business date once at execution.
-    "row_selection": {"mode": "first_n_total", "limit": 5, "include_related_records": True},  # mode="all" processes all rows.
+    "row_selection": {"mode": "first_n_per_file", "limit": 5, "include_related_records": False},  # Up to five rows per supplied file; mode="all" processes every row.
     "source_paths": {'local': {'final_action': {'original': {'files': [], 'folders': ['data/production/q61/1-quarterly-claims-parquet']},
                                 'keep': {'files': [], 'folders': ['data/production/q61/2-final-action-rules-parquet']},
                                 'drop': {'files': [], 'folders': ['data/production/q61/2-final-action-rules-dropped']}},

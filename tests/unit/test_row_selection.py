@@ -51,3 +51,12 @@ def test_total_limit_is_shared_across_files(tmp_path):
     assert len(rows)==5 and audit['target_rows']==5
     assert [f['selected_rows'] for f in audit['files']]==[5,0]
     assert [f['total_rows'] for f in audit['files']]==[10,10]
+
+
+def test_five_per_file_does_not_load_related_rows(tmp_path):
+    for name in ('a.json','b.json'):(tmp_path/name).write_text(json.dumps([{'id':i,'group':'same'} for i in range(20)]))
+    def forbidden(_):raise AssertionError('Related-row lookup must not run')
+    rows,audit=select(['a.json','b.json'],Stage.FINAL_ACTION,FileRole.SOURCE,tmp_path,{'mode':'first_n_per_file','limit':5,'include_related_records':False},forbidden)
+    assert len(rows)==10 and audit['context_rows']==0
+    assert [f['selected_rows'] for f in audit['files']]==[5,5]
+    assert all(f['context_rows']==0 for f in audit['files'])
