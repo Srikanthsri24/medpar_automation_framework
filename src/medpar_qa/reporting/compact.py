@@ -124,7 +124,7 @@ try {
     }
    });
    const anchor=args.get('anchor');
-   if(anchor)frame.contentDocument.getElementById(anchor)?.scrollIntoView();
+   if(anchor){const node=frame.contentDocument.getElementById(anchor);if(node){for(let parent=node.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;node.scrollIntoView();}}
   };
   frame.srcdoc='<!doctype html>'+doc.documentElement.outerHTML;
  }

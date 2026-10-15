@@ -22,6 +22,8 @@ def run(tmp_path,wrong=False,bad_field=False):
 def test_selected_rows_are_validated_with_original_numbers_and_outputs(tmp_path):
     audit,journeys=run(tmp_path)
     assert audit['original_rows']==3 and len(audit['rows'])==2
+    assert audit['population_audit']['datasets']['original']['rows']==3
+    assert audit['population_audit']['excess_output_occurrences']==0
     assert [r['row'] for r in audit['rows']]==[1,2]
     assert audit['comparison_rows']=={'keep':3,'drop':0}
     assert audit['full_count_conservation']=='PASS' and audit['comparison_status']=='PASS'

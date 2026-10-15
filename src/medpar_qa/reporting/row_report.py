@@ -86,6 +86,11 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
         role_matches[role]=counts;role_files[role]=file_counts;role_paths[role]=locations;role_records[role]=matching_records
     originals=selection.get('files',[])
     total_original=sum(f['total_rows'] for f in originals) if originals else len(selected_records)
+    population=None
+    if selection_override is None and any(role_files.values()):
+        from .population_audit import audit_populations
+        population=audit_populations(root,start_stage,{'original':[f['file'] for f in originals],'keep':[f['file'] for f in role_files['keep']],'drop':[f['file'] for f in role_files['drop']]},identity)
+
     conservation='NOT PROVIDED'
     if all(role_counts[r] is not None for r in ('keep','drop')):
         conservation=('PASS' if total_original==sum(role_counts.values()) else 'FAIL') if start_stage in ('final_action','split') else 'NOT APPLICABLE — this stage can merge or derive rows; equal row counts are not an acceptance rule'
@@ -171,14 +176,19 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     decision_counts=dict(Counter(r['decision'] for r in row_payload))
     comparison_outcomes=dict(Counter(r['comparison_status'] for r in row_payload))
     scoped_outputs={role:sum(role_matches[role].values()) for role in ('keep','drop')}
-    data=dict(output_rows_outside_processed_identities=outside_scope,decision_counts=decision_counts,comparison_outcomes=comparison_outcomes,scoped_output_rows=scoped_outputs,count_balance=count_balance,row_statuses=dict(Counter(r['validation_status'] for r in row_payload)),files=file_summaries,source_origins=source_origins,input_kind='generated_previous_stage' if selection_override is not None else 'supplied_original',comparison_status=comparison_status,stage=start_stage,selection=selection,identity_fields=fields,original_rows=total_original,comparison_rows=role_counts,comparison_files=role_files,full_count_conservation=conservation,rows=row_payload,assessment_scope='A limited sample is not full-dataset acceptance. Related rows are processed as context, not counted as selected targets. Source-only generated outputs are not independent golden evidence.')
+    data=dict(population_audit=population,output_rows_outside_processed_identities=outside_scope,decision_counts=decision_counts,comparison_outcomes=comparison_outcomes,scoped_output_rows=scoped_outputs,count_balance=count_balance,row_statuses=dict(Counter(r['validation_status'] for r in row_payload)),files=file_summaries,source_origins=source_origins,input_kind='generated_previous_stage' if selection_override is not None else 'supplied_original',comparison_status=comparison_status,stage=start_stage,selection=selection,identity_fields=fields,original_rows=total_original,comparison_rows=role_counts,comparison_files=role_files,full_count_conservation=conservation,rows=row_payload,assessment_scope='A limited sample is not full-dataset acceptance. Related rows are processed as context, not counted as selected targets. Source-only generated outputs are not independent golden evidence.')
     output.with_suffix('.json').write_text(json.dumps(data,separators=(',',':'),default=str),encoding='utf-8')
     overview=render_overview(data)+'<details><summary>Output rows outside processed identities</summary><p>'+('Unexpected output identities: the complete original dataset was processed.' if selection.get('full_dataset',False) else 'Outside sampled identities: these output rows are not individually assessed by this sample.')+'</p><pre>'+show(outside_scope)+'</pre></details>'
+    if population:
+        from .population_audit import render_population
+        overview+=render_population(population)
     body=overview+'<h2>Record-based validation — '+html.escape(start_stage.replace('_',' ').title())+'</h2><p>Input files: '+str(len(by_file))+' · Original rows: '+str(total_original)+' · Selected targets: '+str(selection.get('target_rows',len(selected_records)))+' · Related context: '+str(selection.get('context_rows',0))+'</p><p>'+html.escape(data['assessment_scope'])+'</p><details><summary>Original / keep / drop row reconciliation</summary><p>Keep files: '+str(len(role_files['keep']))+' · Drop files: '+str(len(role_files['drop']))+'</p><p>Original rows: '+str(total_original)+' · Keep rows: '+(str(role_counts['keep']) if role_counts['keep'] is not None else 'Not supplied')+' · Drop rows: '+(str(role_counts['drop']) if role_counts['drop'] is not None else 'Not supplied')+'</p><p>Output membership result: '+comparison_status+'</p><p>Count conservation: '+html.escape(conservation)+'</p><p>Count evidence (whole supplied datasets, not just sampled rows): '+show(count_balance)+'</p><p>For Final Action/Split, a difference means the supplied keep/drop populations do not balance against the supplied original population; verify that all three inputs describe the same extraction. This is separate from individual rule and field results.</p><p>Comparison identity: '+html.escape(', '.join(fields))+'</p><pre>'+show(role_files)+'</pre></details><label>Search file / row / rule <input oninput="document.querySelectorAll(\'main>details\').forEach(el=>el.hidden=!el.textContent.toLowerCase().includes(this.value.toLowerCase()))"></label>'+''.join(sections)
     main_root=session.root.parent.parent if session.root.parent.name=='entries' else session.root
     document=page('Record-based validation',body).replace('href="index.html#stage-results"','href="'+html.escape(relative_link(output.parent,main_root/'master/index.html'))+'#stage-results"')
     document=document.replace('</body>',BROWSER_SCRIPT+'</body>')
     output.write_text(document,encoding='utf-8')
+    if population:
+        print(f"Original / keep / drop verification — {start_stage}: {total_original} original rows; {role_counts['keep']} keep rows; {role_counts['drop']} drop rows; comparison {comparison_status}. Evidence: {output}")
 
 
 def write_forwarded_row_reports(root,session,journeys,settings,start_stage):

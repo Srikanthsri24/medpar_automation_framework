@@ -175,15 +175,19 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
     scope_payload = _read_json(root / "review_scope.json") or {}
     row_reviews=sorted(root.rglob('row_review.html'))
     row_items=[]
+    row_audits=defaultdict(list)
     for path in row_reviews:
         audit=_read_json(path.with_suffix('.json')) or {};selection=audit.get('selection',{})
+        row_audits[path.parent.name].append((audit,path))
         name=path.parent.name.replace('_',' ').title()
         entry=path.parent.parent.name.replace('_',' ').title()
         counts=audit.get('row_statuses',{})
         counts_label=' · '.join(str(v)+' '+k for k,v in counts.items()) or 'No row checks'
+        decisions=audit.get('decision_counts',{})
+        counts_label='Calculated rows: '+str(decisions.get('KEEP',0))+' KEEP · '+str(decisions.get('DROP',0))+' DROP · '+str(sum(v for k,v in decisions.items() if k not in ('KEEP','DROP')))+' STOPPED / not assessed. Validation rows: '+counts_label
         supplied='Original input' if audit.get('input_kind')=='supplied_original' else 'Forwarded from '+entry+' entry'
-        row_items.append('<tr><td>'+_esc(name)+'</td><td>'+_esc(supplied)+'</td><td>'+str(len(audit.get('files',[])))+'</td><td>'+str(audit.get('original_rows',0))+' total; '+str(selection.get('target_rows',0))+' selected; '+str(selection.get('context_rows',0))+' context</td><td>'+_esc(counts_label)+'<br>Output comparison: '+_esc(audit.get('comparison_status','Not provided'))+'</td><td><a href="'+_esc(relative_link(master,path))+'">Open files, rows and rule evidence</a></td></tr>')
-    row_section='<section><h2>Record-based validation</h2><p>Validations run on claim rows and related groups, not on files as indivisible records. Nested lines belong to their parent row. Samples do not certify unselected rows. Supplied file/row totals include unselected files; the collapsed file and transfer sections count only inputs actually processed. Open a dataset for per-file totals and per-row checks.</p><table><tr><th>Stage</th><th>Dataset</th><th>Files</th><th>Input rows</th><th>Row results</th><th>Evidence</th></tr>'+''.join(row_items)+'</table></section>' if row_items else ''
+        row_items.append('<tr><td>'+_esc(name)+'</td><td>'+_esc(supplied)+'</td><td>'+str(len(audit.get('files',[])))+'</td><td>'+str(audit.get('original_rows',0))+' total; '+str(selection.get('target_rows',0))+' selected; '+str(selection.get('context_rows',0))+' context</td><td>'+_esc(counts_label)+'<br>Original versus supplied KEEP/DROP: '+_esc(audit.get('comparison_status','Not provided'))+'<br>Supplied output rows (whole dataset): KEEP '+_esc(audit.get('comparison_rows',{}).get('keep','Not supplied'))+' · DROP '+_esc(audit.get('comparison_rows',{}).get('drop','Not supplied'))+'</td><td><a href="'+_esc(relative_link(master,path))+'">Compare original → calculated KEEP/DROP → supplied outputs; open row evidence</a></td></tr>')
+    row_section='<section id="record-validation"><h2>Record-based validation</h2><p>Validations run on claim rows and related groups, not on files as indivisible records. Nested lines belong to their parent row. Samples do not certify unselected rows. Supplied file/row totals include unselected files; the collapsed file and transfer sections count only inputs actually processed. Open a dataset for per-file totals and per-row checks.</p><table><tr><th>Stage</th><th>Dataset</th><th>Files</th><th>Input rows</th><th>Row results</th><th>Evidence</th></tr>'+''.join(row_items)+'</table></section>' if row_items else ''
     scope_note = f"<p><strong>Review scope:</strong> {_esc(scope_payload.get('description', ''))}</p>" if scope_payload else ""
     command_cards: list[str] = []
     if executions:
@@ -253,7 +257,8 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
             if connected_step:
                 cards=f"<a href='{_esc(report_link)}'>Open rule counts, expected/observed results and full evidence</a>"
                 inline_files=f"<p><a href='{stage}_volume_files_in.html'>Input-file evidence</a> · <a href='{stage}_volume_files_kept.html'>Kept files</a> · <a href='{stage}_volume_files_dropped.html'>Dropped files</a> · <a href='{stage}_volume_files_stopped.html'>Stopped files</a></p>"
-            count_label=f"{summarize_stage_volume(validations)['files_in']} input files" if connected_step else f"{len(validations)} validations"
+            count_label=f"{connected_step.get('input_records',0)} input rows; {connected_step.get('retained',0)} kept; {connected_step.get('dropped',0)} dropped" if connected_step else f"{len(validations)} validations"
+            if connected_step:command_name=f"Related record group {command_index} — {stage.replace('_',' ').title()}"
             run_info = f"<p><strong>Business processing date:</strong> {_esc(entry['payload'].get('run_date', 'Not recorded'))} · <strong>Validation generated:</strong> {_esc(readable_time(entry['payload'].get('generated_at', 'Not recorded')))}</p>"
             command_sections.append(
                 f"<details class='command-report'><summary>{_esc(command_name)} — {'PASS' if stage_payload.get('passed') else 'FAIL / BLOCKED'} · {count_label}</summary><p><a href='{_esc(report_link)}'>Open full report</a></p>{run_info}{inline_files}<details><summary>Full rule explanations and evidence — open any rule link above</summary>{cards}</details></details>"
@@ -268,19 +273,28 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
             volume=connected_dispositions(items,volume)
             for key in ('files_in','files_kept','files_dropped','files_stopped'):disposition_totals[key]+=volume[key]
         stage_volume_strip = volume_strip(volume, lambda key: f'{stage}_volume_{key}.html')
+        if row_audits.get(stage):
+            decisions=Counter()
+            for audit,_ in row_audits[stage]:decisions.update(audit.get('decision_counts',{}))
+            processed=sum(a.get('selection',{}).get('processed_rows',len(a.get('rows',[]))) for a,_ in row_audits[stage])
+            stage_volume_strip=f" — {processed} processed rows · {decisions.get('KEEP',0)} KEEP · {decisions.get('DROP',0)} DROP · {sum(v for k,v in decisions.items() if k not in ('KEEP','DROP'))} STOPPED / not assessed"
         from .status_navigation import write_volume_navigation
         write_volume_navigation(master, stage, all_stage_checks, volume)
         if 'files_kept' in volume:
             file_conclusions[stage]=f"<section class='stage-conclusion'><h3>File conclusion — {_esc(stage.replace('_',' ').title())}</h3><p>{volume['files_in']} input files: {volume['files_kept']} kept, {volume['files_dropped']} dropped, {volume['files_stopped']} stopped. Open a count above for the corresponding filenames and each file's rule results.</p></section>"
         else:
             file_conclusions[stage]=stage_conclusion(stage,all_stage_checks)
+        if row_audits.get(stage):
+            file_conclusions[stage]='<p>Row decisions and original/keep/drop comparison results are separate. Use the Record-based validation table above for supplied file totals, sampled rows and comparison evidence.</p>'
+        row_links=''.join('<p><a href="'+_esc(relative_link(master,p))+'">Row decisions, original/keep/drop comparison and evidence</a></p>' for _,p in row_audits.get(stage,[]))
         stage_blocks[stage] = (
-            f"<details id='stage-{_esc(stage)}' class='stage'><summary><span class='stage-title'>{_esc(stage.replace('_',' ').title())}</span>{stage_volume_strip}</summary><p><a href='{_esc(stage_index_link)}'>Open stage report index</a></p>{''.join(command_sections)}{file_conclusions[stage]}</details>"
+            f"<details id='stage-{_esc(stage)}' class='stage'><summary><span class='stage-title'>{_esc(stage.replace('_',' ').title())}</span>{stage_volume_strip}</summary>{row_links}<details><summary>Stage index and technical execution details</summary><p><a href='{_esc(stage_index_link)}'>Open stage report index</a></p></details><details><summary>Advanced related-group execution evidence — {len(command_sections)} groups; counts can share source files</summary>{''.join(command_sections)}</details>{file_conclusions[stage]}</details>"
         )
 
     stage_overview_conclusion=''
     if disposition_totals:
         stage_overview_conclusion='<p class="stage-conclusion"><strong>Stage conclusion:</strong> Across the executed stage reviews, '+str(disposition_totals['files_in'])+' input-file events were reviewed: '+str(disposition_totals['files_kept'])+' kept, '+str(disposition_totals['files_dropped'])+' dropped and '+str(disposition_totals['files_stopped'])+' stopped. Stopped inputs did not receive an approved stage output. Kept describes retained records, not complete physical MEDPAR certification. Repeated processing of a generated file in later stages is a separate input-file event.</p>'
+    if row_reviews:stage_overview_conclusion=''
     ordered_stages = ['final_action', 'split', 'stay', 'intermediate', 'final_medpar']
     stage_sections = [stage_blocks.get(stage, f"<details id='stage-{_esc(stage)}' class='stage'><summary>{_esc(stage.replace('_',' ').title())} — Not run</summary><p>No recorded stage report; no file or record acceptance result is available.</p></details>") for stage in ordered_stages]
     from .transfers import independent_transfers
