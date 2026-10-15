@@ -42,18 +42,19 @@ def _read_json(path: Path) -> dict[str, Any] | None:
 def _business_report_entries(session_root: Path) -> list[dict[str, Any]]:
     """Discover saved business-run report entries in the session."""
     entries: list[dict[str, Any]] = []
-    paths=list(session_root.glob("*/*/report.json"))+list(session_root.glob("entries/*/connected/*/*/report.json"))
+    paths=list(session_root.glob("*/*/report.json"))+list(session_root.glob("entries/*/connected/*/*/report.json"))+list(session_root.glob("connected/*/*/report.json"))
     for path in sorted(paths):
         if path.parts[-3] in {"master", "pytest"}:
             continue
         payload = _read_json(path)
         if payload and "stages" in payload:
-            nested=path.is_relative_to(session_root/'entries')
+            entry_nested=path.is_relative_to(session_root/'entries')
+            nested=entry_nested or path.is_relative_to(session_root/'connected')
             if nested and payload.get('context',{}).get('handoff',{}).get('status') in ('BEFORE_START','NOT_REACHED'):
                 continue
             entries.append({"path": path, "payload": payload,
                             "stage_folder":path.parent.name if nested else path.parts[-3],
-                            "command_folder":(path.relative_to(session_root/'entries').parts[0]+' entry — '+path.parent.name) if nested else path.parts[-2]})
+                            "command_folder":(path.relative_to(session_root/'entries').parts[0]+' entry — '+path.parent.name) if entry_nested else ('Source entry — '+path.parent.name) if nested else path.parts[-2]})
     return entries
 
 
@@ -172,6 +173,17 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
     except ValueError:
         session_started = "Not recorded in session ID"
     scope_payload = _read_json(root / "review_scope.json") or {}
+    row_reviews=sorted(root.rglob('row_review.html'))
+    row_items=[]
+    for path in row_reviews:
+        audit=_read_json(path.with_suffix('.json')) or {};selection=audit.get('selection',{})
+        name=path.parent.name.replace('_',' ').title()
+        entry=path.parent.parent.name.replace('_',' ').title()
+        counts=audit.get('row_statuses',{})
+        counts_label=' · '.join(str(v)+' '+k for k,v in counts.items()) or 'No row checks'
+        supplied='Original input' if audit.get('input_kind')=='supplied_original' else 'Forwarded from '+entry+' entry'
+        row_items.append('<tr><td>'+_esc(name)+'</td><td>'+_esc(supplied)+'</td><td>'+str(len(audit.get('files',[])))+'</td><td>'+str(audit.get('original_rows',0))+' total; '+str(selection.get('target_rows',0))+' selected; '+str(selection.get('context_rows',0))+' context</td><td>'+_esc(counts_label)+'<br>Output comparison: '+_esc(audit.get('comparison_status','Not provided'))+'</td><td><a href="'+_esc(relative_link(master,path))+'">Open files, rows and rule evidence</a></td></tr>')
+    row_section='<section><h2>Record-based validation</h2><p>Validations run on claim rows and related groups, not on files as indivisible records. Nested lines belong to their parent row. Samples do not certify unselected rows. Supplied file/row totals include unselected files; the collapsed file and transfer sections count only inputs actually processed. Open a dataset for per-file totals and per-row checks.</p><table><tr><th>Stage</th><th>Dataset</th><th>Files</th><th>Input rows</th><th>Row results</th><th>Evidence</th></tr>'+''.join(row_items)+'</table></section>' if row_items else ''
     scope_note = f"<p><strong>Review scope:</strong> {_esc(scope_payload.get('description', ''))}</p>" if scope_payload else ""
     command_cards: list[str] = []
     if executions:
@@ -272,7 +284,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
     ordered_stages = ['final_action', 'split', 'stay', 'intermediate', 'final_medpar']
     stage_sections = [stage_blocks.get(stage, f"<details id='stage-{_esc(stage)}' class='stage'><summary>{_esc(stage.replace('_',' ').title())} — Not run</summary><p>No recorded stage report; no file or record acceptance result is available.</p></details>") for stage in ordered_stages]
     from .transfers import independent_transfers
-    journey_paths=sorted(root.glob('entries/*/connected/*/journey.json'))
+    journey_paths=sorted([*root.glob('entries/*/connected/*/journey.json'),*root.glob('connected/*/journey.json')])
     if journey_paths:
         from .transfers import connected_transfers
         transfer_table=connected_transfers([(_read_json(path),path.parent) for path in journey_paths],master/'index.html')
@@ -294,7 +306,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
 </style></head>
 <body><header><h1>MEDPAR QA — Master Report</h1><p><strong>Session ID:</strong> {_esc(root.name)}</p><p><strong>Session started (local time):</strong> {_esc(session_started)}</p><p>Report page generated: {_esc(readable_time(datetime.now().astimezone().isoformat(timespec='seconds')))}</p><p>This page contains all generated stage validations, rule outcomes, expected/observed values, explanations, command outputs, and links.</p>{scope_note}</header><main>
 <details class='guide'><summary>How to read file, record and validation counts</summary><p><strong>Business runs:</strong> validation report runs in this session; one run may review many files. <strong>Validations:</strong> individual recorded checks across all stages, including ingestion and stage-summary checks; this is not the number of files or claims.</p><p><strong>Pass:</strong> the recorded check met its expected condition. <strong>Fail:</strong> the check found a discrepancy. <strong>Blocked:</strong> the check could not reach a decision because a required input, reference or prerequisite was missing. <strong>N/A:</strong> the check did not apply to the records or circumstances reviewed; it is not a pass.</p><p><strong>Pytest runs:</strong> automated software test sessions included here, separate from production business validation. Zero means no pytest report was included in this session. Known differences are disclosed deviations and do not count as passing checks. Validations = Pass + Fail + Blocked + N/A + Known differences. Counts may overlap records; they are not unique defective claim counts. The stage headers count discovered source inputs, including files that fail reading; output/reference files are excluded. Connected headers show file dispositions: Kept contains at least one retained record, Dropped has every record removed, and Stopped received no approved output. A failed or blocked batch stops all its input files; isolated passing checks do not establish KEEP. File dispositions add up to input files. Record totals are shown separately in expandable evidence. Each stage may be reviewed independently.</p></details>
-<h2 id="stage-results">Files and records by stage</h2>{stage_overview_conclusion}{''.join(stage_sections) or '<p>No business-stage report JSON files were found.</p>'}
+<h2 id="stage-results">Files and records by stage</h2>{row_section}{stage_overview_conclusion}{''.join(stage_sections) or '<p>No business-stage report JSON files were found.</p>'}
 {transfer_table}
 <details class='overall-conclusion'><summary>Overall conclusion — all stages: {overall_state}</summary><p>{len(by_stage)} stages have recorded results. Acceptance requires every required stage to pass its applicable checks. Stages absent from this session have no acceptance result. File filters do not change the full-run conclusions or dashboard totals.</p>{overall_conclusions}{missing_stage_notes}</details><details><summary>Pytest report index</summary><table><thead><tr><th>Pytest selection</th><th>Passed</th><th>Failed</th><th>Skipped</th></tr></thead><tbody>{pytest_rows or '<tr><td colspan="4">No pytest reports found.</td></tr>'}</tbody></table></details>
 <details class='command'><summary>Command execution summary</summary>{''.join(command_cards) or '<p>No command execution metadata supplied.</p>'}</details></main><script>function openEvidence(){{if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(target){{if(target.tagName==='DETAILS')target.open=true;for(let p=target.parentElement;p;p=p.parentElement){{if(p.tagName==='DETAILS')p.open=true;}}target.classList.remove('hidden');target.scrollIntoView({{block:'start'}});}}}}window.addEventListener('hashchange',openEvidence);window.addEventListener('load',openEvidence);</script>{FILE_FILTER_SCRIPT}</body></html>"""
@@ -314,7 +326,7 @@ def refresh_session_indexes(session_root: str | Path, executions: list[dict[str,
     """Refresh stage and master indexes after artifacts have been written."""
     root = Path(session_root)
     for child in sorted(root.iterdir() if root.exists() else []):
-        if child.is_dir() and child.name not in {"master", "pytest", "entries"}:
+        if child.is_dir() and child.name not in {"master", "pytest", "entries", "connected", "connected_inputs"}:
             write_stage_index(root, child.name)
     if (root/'entries').exists():
         for stage in sorted({entry['stage_folder'] for entry in _business_report_entries(root)}):

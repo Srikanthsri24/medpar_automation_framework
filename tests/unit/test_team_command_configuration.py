@@ -16,4 +16,4 @@ def test_all_entry_stages_reuse_the_same_source_paths():
     for stage in namespace['STAGE_ORDER']:
         _,config,_=namespace['source_run_configuration'](plan,start_stage=stage)
         assert list(config)==[stage]
-        assert config[stage]['single_files'][0]['source']==plan['source_paths']['local'][stage]['files']+plan['source_paths']['local'][stage]['folders']
+        assert config[stage]['single_files'][0]['source']==plan['source_paths']['local'][stage]['original']['files']+plan['source_paths']['local'][stage]['original']['folders']

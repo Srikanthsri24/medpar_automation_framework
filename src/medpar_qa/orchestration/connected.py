@@ -382,15 +382,27 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
                 files.extend(relative_display(path,project_root=root) for path in (matches or [Path(root)/pattern]))
         files=list(dict.fromkeys(files))
         if files:
-            if len(files)==1: working=Path(root)/files[0]
-            else:
-                working=session.root/'connected_inputs'/'source_batch.json'
-                try: rows=[record.data for record in _read(files,Stage(start_stage),FileRole.SOURCE,root)]
-                except Exception: rows=[]  # run_file repeats original reads and records the precise failure.
-                _dump(working,rows)
-                _dump(working.with_name('ingestion.json'),{'source_files':files,'source_file_count':len(files),'working_record_count':len(rows),'purpose':'Aggregate before rule grouping: related claims and bills can span physical files'})
-            try: source_records=_read(files,Stage(start_stage),FileRole.SOURCE,root)
-            except Exception: source_records=None
+            from medpar_qa.ingestion.row_selection import select
+            from medpar_qa.stages.common import record_identity
+            from medpar_qa.stages.final_action.processor import FinalActionProcessor
+            from medpar_qa.stages.final_action.settings import FinalActionSettings
+            fa=FinalActionProcessor(pipeline.resolver,FinalActionSettings.from_mapping((settings or {}).get('final_action',{})))
+            def tokens(row):
+                keys=[]
+                stay=record_identity(row,pipeline.resolver,('hicn','provider_id','admission_date'))
+                if all(v not in (None,'') for v in stay):keys.append(('stay',stay))
+                if start_stage=='final_action':
+                    try:keys.append(('fa',fa.group_key(row)))
+                    except (ValueError,TypeError,KeyError):pass
+                return keys
+            try:
+                source_records,selection=select(files,Stage(start_stage),FileRole.SOURCE,root,(settings or {}).get('_row_selection'),tokens)
+                _dump(session.root/'row_selection.json',selection)
+            except Exception:
+                if (settings or {}).get('_row_selection'):raise
+                source_records=None
+            working=Path(root)/files[0] if len(files)==1 else session.root/'connected_inputs'/'source_batch.json'
+            if len(files)>1:_dump(working,[record.data for record in source_records or []])
             components=processing_components(source_records,pipeline.resolver,start_stage,settings) if source_records else []
             if len(components)>1:
                 _dump(session.root/'connected_inputs'/'components.json',{'source_files':files,'components':len(components),'purpose':'A failure stops only related claims/bills; cross-file FA and Stay identities remain connected'})
@@ -400,7 +412,7 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
                     originals=list(dict.fromkeys(record.source.file_path for record in group))
                     journeys.append(pipeline.run_file(group_path,dates,start_stage=start_stage,generate_outputs=True,original_inputs=originals,initial_records=group))
             else:
-                journeys.append(pipeline.run_file(working,dates,start_stage=start_stage,generate_outputs=True,original_inputs=files))
+                journeys.append(pipeline.run_file(working,dates,start_stage=start_stage,generate_outputs=True,original_inputs=files,initial_records=source_records))
     else:
         seen = set()
         for item in [*seed.get('single_files', []), *seed.get('folder_paths', [])]:
@@ -419,6 +431,8 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
         raise ValueError('No connected input files are configured')
     index = session.root / 'connected' / 'index.html'
     source_file_total=len({path for payload,_ in journeys for path in payload.get('source_files',[payload['source_file']])})
+    selection_file=session.root/'row_selection.json'
+    if selection_file.exists():source_file_total=len(json.loads(selection_file.read_text(encoding='utf-8')).get('files',[]))
     completed = sum(payload['completed'] for payload, _ in journeys)
     stopped = len(journeys) - completed
     generated = datetime.now().astimezone().strftime('%d %B %Y, %I:%M:%S %p %Z (%z)')
@@ -444,4 +458,7 @@ def run_configured(root, session, stage_runs, settings=None, *, start_stage="fin
                       f'<a href="{target}">Open the connected pipeline report</a>', encoding='utf-8')
     from medpar_qa.reporting.connected_review import write_connected_review
     write_connected_review(journeys, index)
+    from medpar_qa.reporting.row_report import write_row_report,write_forwarded_row_reports
+    write_row_report(root,session,journeys,settings or {},start_stage,items,source_records if generating else None)
+    write_forwarded_row_reports(root,session,journeys,settings or {},start_stage)
     return journeys, index

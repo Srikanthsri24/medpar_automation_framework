@@ -47,22 +47,37 @@ SOURCE_RUN: dict[str, Any] = {
     "source_type": "local",  # "local" or "s3"; paths below must match this choice.
     "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
     "run_date": None,  # Resolve today's local business date once at execution.
-    "source_paths": {
-        "local": {
-            "final_action": {"files": [], "folders": ["data/production/q61/1-quarterly-claims-parquet"]},
-            "split": {"files": [], "folders": ["data/production/q61/2-final-action-rules-parquet"]},
-            "stay": {"files": [], "folders": ["data/production/q61/3-4yr-window-parquet"]},
-            "intermediate": {"files": [], "folders": ["data/production/q61/4-stay-processing"]},
-            "final_medpar": {"files": [], "folders": ["data/production/r65/5-intermediate-processing"]},
-        },
-        "s3": {
-            "final_action": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/1-quarterly-claims-parquet/"]},
-            "split": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/2-final-action-rules-parquet/"]},
-            "stay": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/3-4yr-window-parquet/"]},
-            "intermediate": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/4-stay-processing/"]},
-            "final_medpar": {"files": [], "folders": ["s3://YOUR-BUCKET/r65/5-intermediate-processing/"]},
-        },
-    },
+    "row_selection": {"mode": "first_n_total", "limit": 5, "include_related_records": True},  # mode="all" processes all rows.
+    "source_paths": {'local': {'final_action': {'original': {'files': [], 'folders': ['data/production/q61/1-quarterly-claims-parquet']},
+                                'keep': {'files': [], 'folders': ['data/production/q61/2-final-action-rules-parquet']},
+                                'drop': {'files': [], 'folders': ['data/production/q61/2-final-action-rules-dropped']}},
+               'split': {'original': {'files': [], 'folders': ['data/production/q61/2-final-action-rules-parquet']},
+                         'keep': {'files': [], 'folders': ['data/production/q61/3-4yr-window-parquet']},
+                         'drop': {'files': [], 'folders': ['data/production/q61/3-4yr-window-parquet-dropped']}},
+               'stay': {'original': {'files': [], 'folders': ['data/production/q61/3-4yr-window-parquet']},
+                        'keep': {'files': [], 'folders': ['data/production/q61/4-stay-processing']},
+                        'drop': {'files': [], 'folders': []}},
+               'intermediate': {'original': {'files': [], 'folders': ['data/production/q61/4-stay-processing']},
+                                'keep': {'files': [], 'folders': ['data/production/q61/5-intermediate-processing']},
+                                'drop': {'files': [], 'folders': []}},
+               'final_medpar': {'original': {'files': [], 'folders': ['data/production/r65/5-intermediate-processing']},
+                                'keep': {'files': [], 'folders': ['data/production/r65/6-final-processing']},
+                                'drop': {'files': [], 'folders': []}}},
+     's3': {'final_action': {'original': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/1-quarterly-claims-parquet/']},
+                             'keep': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/2-final-action-rules-parquet/']},
+                             'drop': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/2-final-action-rules-dropped/']}},
+            'split': {'original': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/2-final-action-rules-parquet/']},
+                      'keep': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/3-4yr-window-parquet/']},
+                      'drop': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/3-4yr-window-parquet-dropped/']}},
+            'stay': {'original': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/3-4yr-window-parquet/']},
+                     'keep': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/4-stay-processing/']},
+                     'drop': {'files': [], 'folders': []}},
+            'intermediate': {'original': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/4-stay-processing/']},
+                             'keep': {'files': [], 'folders': ['s3://YOUR-BUCKET/q61/5-intermediate-processing/']},
+                             'drop': {'files': [], 'folders': []}},
+            'final_medpar': {'original': {'files': [], 'folders': ['s3://YOUR-BUCKET/r65/5-intermediate-processing/']},
+                             'keep': {'files': [], 'folders': ['s3://YOUR-BUCKET/r65/6-final-processing/']},
+                             'drop': {'files': [], 'folders': []}}}},
     "aws_credentials_file": "config/aws_credentials.local.json",
     "settings": {},  # Optional reference feeds and approved calculation/layout options.
 }
@@ -81,6 +96,9 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
     entry = sources.get(stage) if isinstance(sources,dict) else None
     if not isinstance(entry,dict):
         raise ValueError(f'SOURCE_RUN.source_paths.{source_type}.{stage} must contain files and folders lists')
+    role_entries=entry if 'original' in entry else None
+    entry=entry.get('original',entry)
+    if not isinstance(entry,dict):raise ValueError('original must contain files and folders lists')
     from medpar_qa.ingestion.input_sources import s3_location
     paths=[]
     for role in ('files','folders'):
@@ -113,8 +131,21 @@ def source_run_configuration(plan, *, start_stage=None, run_date=None):
     settings = plan.get("settings", {})
     if not isinstance(settings,dict):
         raise ValueError("SOURCE_RUN.settings must be an object")
+    settings=dict(settings)
+    if 'row_selection' in plan:
+        from medpar_qa.ingestion.row_selection import options as selection_options
+        settings['_row_selection']=selection_options(plan['row_selection'])
     configured = {stage:{"enabled":True,"run_date":str(business_date),"single_files":[
         {"name":f"Source processing from {stage}","source":paths}]}}
+    if role_entries:
+        for name,target in (('keep','actual'),('drop','dropped')):
+            supplied=role_entries.get(name,{})
+            if not isinstance(supplied,dict):raise ValueError(f'{name} must contain files and folders lists')
+            if supplied.get('files') or supplied.get('folders'):
+                from copy import deepcopy
+                role_plan=deepcopy(plan);role_plan['source_paths'][source_type][stage]=supplied
+                _,comparison,_=source_run_configuration(role_plan,start_stage=stage,run_date=business_date)
+                configured[stage]['single_files'][0][target]=comparison[stage]['single_files'][0]['source']
     return stage, configured, settings
 
 
@@ -303,7 +334,10 @@ def run_all_source_entries(options):
             index=PROJECT_ROOT/matched.group(1)
             journeys=[json.loads(path.read_text()) for path in index.parent.glob('*/journey.json')]
             completed=sum(journey.get('completed',False) for journey in journeys)
-            row.update(input_files=len({path for journey in journeys for path in journey.get('source_files',[journey.get('source_file','')])}),
+            selected_inventory=index.parent.parent/'row_selection.json'
+            selection=json.loads(selected_inventory.read_text(encoding='utf-8')) if selected_inventory.exists() else {}
+            processed_files=len({path for journey in journeys for path in journey.get('source_files',[journey.get('source_file','')])})
+            row.update(input_files=len(selection['files']) if selection.get('files') is not None else processed_files,processed_input_files=processed_files,row_selection=selection,
                        conclusion=f'{completed} of {len(journeys)} independent business groups completed. Open evidence for retained, dropped and exception groups.',
                        steps=[step for journey in journeys for step in journey['steps']],
                        report=os.path.relpath(index,session.master_directory).replace(os.sep,'/'))
@@ -405,6 +439,7 @@ def main(argv=None, *, report_session=None) -> int:
         print(f"SOURCE_RUN: {SOURCE_RUN['source_type']} source, starting at {start_stage}",flush=True)
         for number,path in enumerate(configured_stages[start_stage]['single_files'][0]['source'],1):
             print(f"  {number}. {path}",flush=True)
+        print('Row selection: '+str(SOURCE_RUN.get('row_selection',{'mode':'all'})),flush=True)
         print("Automatic route: "+" -> ".join(list(STAGE_ORDER)[list(STAGE_ORDER).index(start_stage):]),flush=True)
     elif options.source:
         if options.config or selected_stage: parser.error("Use --source with --start-stage, without --config or --stage")
@@ -479,7 +514,9 @@ def main(argv=None, *, report_session=None) -> int:
         print(f"Connected pipeline report: {relative_display(index, project_root=PROJECT_ROOT)}")
         for payload, directory in journeys:
             print(f"{payload['source_file']}: {payload['conclusion']}")
-        return 1 if any(any(step['status'] in ('FAIL', 'BLOCKED') for step in payload['steps'])
+        comparison=session.root/start_stage/'row_review.json'
+        comparison_failed=comparison.exists() and json.loads(comparison.read_text(encoding='utf-8')).get('comparison_status') in ('FAIL','BLOCKED')
+        return 1 if comparison_failed or any(any(step['status'] in ('FAIL', 'BLOCKED') for step in payload['steps'])
                         for payload, _ in journeys) else 0
     commands = [command for command in build_commands(session_relative, configured_stages) if command.enabled and (selected_stage is None or command.stage == selected_stage)]
     if not commands:

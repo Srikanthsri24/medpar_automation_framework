@@ -50,35 +50,37 @@ Edit only `SOURCE_RUN` near the top of `run_commands.py`:
 
 ```python
 SOURCE_RUN = {
-    "source_type": "local",  # "local" or "s3"; paths below must match this choice.
-    "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
-    "run_date": None,  # Resolve today's local business date once at execution.
+    "source_type": "local",  # Switch to "s3" to use the saved S3 section.
+    "start_stage": "final_action",  # Or "all", "split", "stay", "intermediate", "final_medpar".
+    "run_date": None,
+    "row_selection": {"mode": "first_n_total", "limit": 5, "include_related_records": True},
     "source_paths": {
         "local": {
-            "final_action": {"files": [], "folders": ["data/production/q61/1-quarterly-claims-parquet"]},
-            "split": {"files": [], "folders": ["data/production/q61/2-final-action-rules-parquet"]},
-            "stay": {"files": [], "folders": ["data/production/q61/3-4yr-window-parquet"]},
-            "intermediate": {"files": [], "folders": ["data/production/q61/4-stay-processing"]},
-            "final_medpar": {"files": [], "folders": ["data/production/r65/5-intermediate-processing"]},
+            "final_action": {
+                "original": {"files": [], "folders": ["data/production/q61/1-quarterly-claims-parquet"]},
+                "keep": {"files": [], "folders": ["data/production/q61/2-final-action-rules-parquet"]},
+                "drop": {"files": [], "folders": ["data/production/q61/2-final-action-rules-dropped"]},
+            },
+            # Keep the other four stage entries from run_commands.py here.
         },
         "s3": {
-            "final_action": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/1-quarterly-claims-parquet/"]},
-            "split": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/2-final-action-rules-parquet/"]},
-            "stay": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/3-4yr-window-parquet/"]},
-            "intermediate": {"files": [], "folders": ["s3://YOUR-BUCKET/q61/4-stay-processing/"]},
-            "final_medpar": {"files": [], "folders": ["s3://YOUR-BUCKET/r65/5-intermediate-processing/"]},
+            "final_action": {
+                "original": {"files": ["s3://YOUR-BUCKET/original-object"], "folders": []},
+                "keep": {"files": [], "folders": ["s3://YOUR-BUCKET/kept/"]},
+                "drop": {"files": [], "folders": ["s3://YOUR-BUCKET/dropped/"]},
+            },
         },
     },
     "aws_credentials_file": "config/aws_credentials.local.json",
-    "settings": {},  # Optional reference feeds and approved calculation/layout options.
+    "settings": {},
 }
 ```
 
-Fill both saved sections once: `SOURCE_RUN.source_paths.local` for local input and `SOURCE_RUN.source_paths.s3` for your S3 links. Each section contains the same five stages with separate `files` and `folders` lists. Select `source_type: "local"` or `source_type: "s3"`, then run `python run_commands.py`. Only the selected section is read. Changing the selector does not overwrite or require re-editing the other section.
+Fill both saved sections once: `SOURCE_RUN.source_paths.local` for local input and `SOURCE_RUN.source_paths.s3` for your S3 links. Each stage has `original`, `keep` and `drop` datasets, each with separate `files` and `folders` lists. The script retains all five stage entries; the short example above shows one stage. Select `source_type: "local"` or `source_type: "s3"`, then run `python run_commands.py`. Only the selected section is read. Changing the selector does not overwrite or require re-editing the other section.
 
 Files only: leave `folders` empty. Folders only: leave `files` empty. Both: populate both lists. Multiple entries are supported and overlapping discoveries are deduplicated. For S3, use object links such as `s3://your-bucket/claim.json` under `files` and prefix links such as `s3://your-bucket/claims/` under `folders`. Replace the S3 bucket examples once before selecting S3. Local Windows paths should use forward slashes or Python raw strings. Keep real AWS credentials in the configured local credentials file or your AWS profile/environment.
 
-One execution creates exactly one timestamped report folder. With `start_stage: "all"`, each entry's evidence is stored under `reports/<timestamp>/entries/<stage>/`, and the main report is `reports/<timestamp>/master/index.html`. These are inner evidence screens, not additional run folders. The main page uses the established MEDPAR QA Master Report dashboard: stage file counts, clickable file filters, collapsed rule explanations, expected/observed evidence and stage conclusions. The entry-source overview is a secondary page linked from the master header. Connected stage headers show physical Input files, Kept, Dropped and Stopped only. A kept file contributed at least one retained record; a dropped file had all its records dropped; a stopped file did not receive an approved output because its batch stopped. Passing an isolated check is not a KEEP decision. Transfer rows show original filenames, entry starts, generated files received, and verified files moved; record totals are expandable evidence. The movement section starts with one aggregate row per stage; supplied stage inputs count as Started here for that stage. Individual journeys remain collapsed below, and unexecuted downstream steps do not create misleading zero-input rows. A short conclusion below the stage heading totals kept, dropped and stopped input-file events. The main page shows file counts only; unique evidence-file inventories and rule/event pass-fail totals appear in inner file and stage evidence screens. Every numeric movement cell opens its exact file-event list, including empty lists for zero. Inner file evidence distinguishes distinct rule/check types from individual validation events and includes each expected/observed result. Stages before a chosen start or not reached after a stop are excluded from executed validation totals; transfer evidence uses actual saved journeys. Input caches are also separated by run and stage so one S3 download cannot overwrite another run's evidence. The overview keeps the existing file counts, conclusions and evidence links.
+One execution creates exactly one timestamped report folder. With `start_stage: "all"`, each entry's evidence is stored under `reports/<timestamp>/entries/<stage>/`, and the main report is `reports/<timestamp>/master/index.html`. These are inner evidence screens, not additional run folders. The main page uses the established MEDPAR QA Master Report dashboard: stage file counts, clickable file filters, collapsed rule explanations, expected/observed evidence and stage conclusions. The entry-source overview is a secondary page linked from the master header. Connected stage headers show physical Input files, Kept, Dropped and Stopped only. A kept file contributed at least one retained record; a dropped file had all its records dropped; a stopped file did not receive an approved output because its batch stopped. Passing an isolated check is not a KEEP decision. Transfer rows show original filenames, entry starts, generated files received, and verified files moved; record totals are expandable evidence. The movement section starts with one aggregate row per stage; supplied stage inputs count as Started here for that stage. Individual journeys remain collapsed below, and unexecuted downstream steps do not create misleading zero-input rows. A short conclusion below the stage heading totals kept, dropped and stopped input-file events. The main page shows separate file and row counts; unique evidence-file inventories and rule/event pass-fail totals appear in inner file and stage evidence screens. Every numeric movement cell opens its exact file-event list, including empty lists for zero. Inner file evidence distinguishes distinct rule/check types from individual validation events and includes each expected/observed result. Stages before a chosen start or not reached after a stop are excluded from executed validation totals; transfer evidence uses actual saved journeys. Input caches are also separated by run and stage so one S3 download cannot overwrite another run's evidence. The overview keeps the existing file counts, conclusions and evidence links.
 
 | `start_stage` | What your source paths must contain | Automatic remaining stages |
 | --- | --- | --- |
@@ -13102,4 +13104,16 @@ python scripts/compact_reports.py reports/20261014_184018
 
 Replace the folder with the completed run’s timestamp. This reuses saved HTML and evidence; stage processing is not repeated. New reports use explicit UTF-8; legacy report encodings detected during packaging are listed in `compact_report.json`.
 
-S3 object names do not need a file extension. Put exact object links in `SOURCE_RUN.source_paths.s3.<stage>.files` and prefix/folder links in `folders`; both accept the supported S3 URI, HTTPS and AWS console URL forms. Folder entries are normalized to prefixes, including links without a trailing slash. For objects with missing or unknown extensions, downloaded content identifies JSON or Parquet and the cache receives the detected extension. The original bucket/key and SHA-256 remain in `input_sources.json`, together with the detection method. Standard success/metadata markers are excluded from folder discovery; unrecognized data content stops with an explicit ingestion error. AWS credentials and the existing automatic stage flow are unchanged.
+S3 object names do not need a file extension. Put exact object links in `SOURCE_RUN.source_paths.s3.<stage>.<original|keep|drop>.files` and prefix/folder links in `folders`; both accept the supported S3 URI, HTTPS and AWS console URL forms. Folder entries are normalized to prefixes, including links without a trailing slash. For objects with missing or unknown extensions, downloaded content identifies JSON or Parquet and the cache receives the detected extension. The original bucket/key and SHA-256 remain in `input_sources.json`, together with the detection method. Standard success/metadata markers are excluded from folder discovery; unrecognized data content stops with an explicit ingestion error. AWS credentials and the existing automatic stage flow are unchanged.
+
+### Select rows and reconcile actual outputs
+
+Install the updated requirements (`python -m pip install -r requirements.txt`). `ijson` streams JSON records; Parquet inputs are read in Arrow batches. Nested diagnosis, procedure, revenue and other line arrays are not counted as additional claim rows.
+
+The default selects the first **five target rows across the supplied original files of each entry stage** (`first_n_total`). Use `row_selection.mode: "first_n_per_file"` for five target rows from every original file instead. Change `row_selection.mode` to `all` to process every row; `limit` is ignored then. The original total row count is still reported in sample mode. `include_related_records: True` also reads related cancellation and stay-group rows across the supplied original files, so a sampled bill is not incorrectly treated as an isolated group. Those additional rows are shown as **context**, separately from the five target rows. Set it to `False` only for a strict isolated sample; missing group context can change rule outcomes and samples are not full-dataset acceptance.
+
+`original` is the stage's input population; `keep` and `drop` are independently supplied observed outputs. Original selection never takes unrelated first-five rows from keep/drop: comparisons scan those datasets for the selected identities and match the calculated decision and fields. Missing or duplicate identities are blocked instead of guessed. Identical record counts alone do not prove correct outputs. Final Action and Split also check `original count = keep count + drop count` when both outputs are supplied. Stay merging and downstream derivations do not assume one output row for every input row. Empty role path lists mean **not supplied**, not an approved zero-row output; supply an empty JSON array file when an actual output is known to be empty.
+
+The master report's **Record-based validation** table opens one dataset at a time. Each file shows total/selected/context rows, unique validation events and row results. Each row expands into its input values, KEEP/DROP/STOPPED decision, PASS/FAIL/BLOCKED check counts, expected/observed values and links to the complete rule/group evidence. Related group checks can appear under multiple rows; file totals count each event once. Generated next-stage inputs have their own row screens and links to the original source files. Output comparisons have a separate explicit result; they do not silently replace the generated workflow or certify unselected rows. The compact report still has exactly one master HTML and one HTML for each stage.
+
+Production keep/drop paths are filled only where the supplied archive provides an identifiable dataset. Empty comparison roles must be filled with the team's actual output paths before those comparisons can be completed. Physical layout/vendor/reference gaps remain disclosed; passing JSON checks does not certify a complete production MEDPAR byte layout.

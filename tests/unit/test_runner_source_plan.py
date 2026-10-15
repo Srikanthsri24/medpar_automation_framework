@@ -20,7 +20,7 @@ def test_selected_backend_accepts_files_folders_and_both(source_type,kind):
     plan=plan_for(source_type=source_type,files=[file] if kind!='folders' else [],folders=[folder] if kind!='files' else [])
     stage,configured,settings=runner.source_run_configuration(plan)
     assert configured[stage]['single_files'][0]['source']==([file] if kind!='folders' else [])+([folder] if kind!='files' else [])
-    assert list(configured)==['stay'] and settings=={}
+    assert list(configured)==['stay'] and settings=={'_row_selection':plan['row_selection']}
 
 
 @pytest.mark.parametrize('source_type,path',[('local','s3://medpar-demo-bucket/input/'),('s3','C:/MEDPAR/input')])
@@ -71,3 +71,22 @@ def test_switching_backend_selects_saved_paths_without_editing_them():
     assert local==local_again
     assert local['stay']['single_files'][0]['source']==['C:/MEDPAR/local']
     assert remote['stay']['single_files'][0]['source']==['s3://medpar-demo-bucket/stay.json']
+
+
+@pytest.mark.parametrize('backend',['local','s3'])
+def test_three_roles_and_five_row_option_map_to_one_stage(backend):
+    prefix='' if backend=='local' else 's3://medpar-demo-bucket/'
+    plan=plan_for(stage='final_action',source_type=backend)
+    plan['source_paths'][backend]['final_action']={role:{'files':[prefix+role+'.json'],'folders':[]} for role in ('original','keep','drop')}
+    _,configured,settings=runner.source_run_configuration(plan)
+    item=configured['final_action']['single_files'][0]
+    assert item['source']==[prefix+'original.json']
+    assert item['actual']==[prefix+'keep.json']
+    assert item['dropped']==[prefix+'drop.json']
+    assert settings['_row_selection']['limit']==5
+
+
+@pytest.mark.parametrize('limit',[0,-1,True,'5',None])
+def test_invalid_row_limits_are_rejected(limit):
+    plan=plan_for(folders=['input']);plan['row_selection']={'mode':'first_n_per_file','limit':limit}
+    with pytest.raises(ValueError,match='positive integer'):runner.source_run_configuration(plan)
