@@ -28,6 +28,8 @@ python -m pip install -e ".[test]"
 
 ## Demo
 
+Team overview: [MedPAR regression framework](presentations/MedPAR_Regression_Framework_Overview.pptx) — scope evolution, architecture, report captures and speaker notes for the team demonstration.
+
 Team presentation: [MedPAR visual demonstration](presentations/MedPAR_Visual_Demonstration.pptx) — plain explanations, editable stage diagrams, worked examples, report evidence and a detailed rule reference.
 
 Run the complete synthetic five-stage example:
