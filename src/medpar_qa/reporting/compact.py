@@ -76,7 +76,7 @@ def compact_reports(root: Path) -> Path:
             (root/name).mkdir(exist_ok=True)
             (Path(temp)/(name+'.html')).replace(root/name/'index.html')
     after=sum(p.stat().st_size for p in root.rglob('*.html'))
-    (root/'compact_report.json').write_text(json.dumps({'legacy_html_encodings':legacy_encodings,'html_files_before':len(files),'html_files_after':6,'html_bytes_before':before,'html_bytes_after':after,'count_basis':'Original-source lineage remains unchanged','navigation':'One master and one page per stage; screen routes open existing rule/file evidence inside the page'},indent=2), encoding="utf-8")
+    (root/'compact_report.json').write_text(json.dumps({'legacy_html_encodings':legacy_encodings,'html_files_before':len(files),'html_files_after':6,'html_bytes_before':before,'html_bytes_after':after,'count_basis':'Processed input rows, generated output rows and verified next-stage reads' if (root/'master/row_flow.json').exists() else 'Original-source lineage remains unchanged','navigation':'One master and one page per stage; screen routes open existing rule/file evidence inside the page'},indent=2), encoding="utf-8")
     return root/'master/index.html'
 
 
