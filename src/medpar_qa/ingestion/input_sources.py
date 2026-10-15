@@ -84,7 +84,7 @@ def aws_client(config_path: Path):
 class InputSources:
     """Stage local/S3 inputs once per run, keeping original paths and file hashes."""
 
-    def __init__(self, root: Path, session_root: Path, *, credentials_file=None, client=None):
+    def __init__(self, root: Path, session_root: Path, *, credentials_file=None, client=None, s3_read_mode="download", row_selection=None):
         self.root = root.resolve()
         self.session_root = session_root
         cache_session = Path(session_root.parent.parent.name)/session_root.name if session_root.parent.name=='entries' else Path(session_root.name)
@@ -93,6 +93,10 @@ class InputSources:
         self.client = client
         self.files = {}
         self.errors = []
+        if s3_read_mode not in ("download","sample_parquet"):raise InputSourceError("s3_read_mode must be download or sample_parquet")
+        self.s3_read_mode=s3_read_mode
+        self.row_selection=row_selection or {}
+        self._sample_source=False
 
     def _record(self, origin, path, **metadata):
         relative = path.resolve().relative_to(self.root).as_posix()
@@ -115,7 +119,13 @@ class InputSources:
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
 
-    def resolve(self, values):
+    def resolve(self, values, *, sample_source=False):
+        previous=self._sample_source
+        self._sample_source=sample_source
+        try:return self._resolve(values)
+        finally:self._sample_source=previous
+
+    def _resolve(self, values):
         if isinstance(values, str): values = [values]
         if not isinstance(values, (list, tuple)) or any(not isinstance(v, str) or not v.strip() for v in values):
             raise InputSourceError('Input paths must be a string or a list of nonempty strings')
@@ -181,11 +191,21 @@ class InputSources:
             result = []
             for obj in objects:
                 origin = f"s3://{bucket}/{obj['Key']}"
-                existing = next((p for p, record in self.files.items() if record['origin'] == origin), None)
+                existing = next((p for p, record in self.files.items() if record['origin'] == origin and (not record.get('access_mode')=='s3_parquet_sample' or self._sample_source)), None)
                 if existing:
                     result.append(existing); continue
                 needs_detection=PurePosixPath(obj['Key']).suffix.lower() not in SUPPORTED
                 path = self._destination('s3', origin if needs_detection else bucket, obj['Key'].split('/'))
+                eligible=(self.s3_read_mode=='sample_parquet' and self._sample_source and self.row_selection.get('mode')=='first_n_per_file' and self.row_selection.get('include_related_records',True) is False and type(self.row_selection.get('limit')) is int and self.row_selection['limit']>0 and hasattr(self.client,'get_object') and bool(obj.get('ETag')) and PurePosixPath(obj['Key']).suffix.lower()!='.json')
+                if eligible:
+                    from .s3_sampling import stage_parquet_sample
+                    sample_path=path.with_name(path.name+'.selected.parquet')
+                    sampled=stage_parquet_sample(self.client,bucket,obj['Key'],obj['Size'],obj.get('ETag'),sample_path,self.row_selection['limit'])
+                    if sampled is not None:
+                        result.append(self._record(origin,sample_path,kind='s3',bucket=bucket,key=obj['Key'],etag=obj.get('ETag'),detected_format='parquet',**sampled))
+                        print(f"S3 Parquet sample: {self.row_selection['limit']} requested; {sampled['cached_rows']} cached / {sampled['source_total_rows']} source rows; {sampled['bytes_transferred']} bytes transferred / {sampled['source_bytes']} object bytes",flush=True)
+                        continue
+                    if PurePosixPath(obj['Key']).suffix.lower()=='.parquet':raise InputSourceError('Parquet object has an invalid header')
                 temporary = path.with_name(path.name + '.download')
                 try:
                     self.client.download_file(bucket, obj['Key'], str(temporary))
@@ -220,6 +240,8 @@ class InputSources:
                 '404': 'S3 object not found: verify the bucket and exact case-sensitive object key',
                 'NoSuchBucket': 'S3 bucket not found: verify bucket name and region',
                 'NoSuchKey': 'S3 object not found: verify the exact case-sensitive object key',
+                'PreconditionFailed': 'The S3 object changed during the range read; retry against a stable extraction snapshot',
+                '412': 'The S3 object changed during the range read; retry against a stable extraction snapshot',
             }.get(str(code), 'Check credentials, read/list permissions, bucket, key and region')
             # No exception payloads or URL query credentials in terminal/report evidence.
             raise InputSourceError(f'S3 input could not be read ({code}): {advice}') from exc
@@ -234,7 +256,7 @@ class InputSources:
                     for item in settings.get(list_name, []):
                         if not item.get('enabled', True): continue
                         for role in ('source', 'actual', 'expected', 'dropped'):
-                            if item.get(role): item[role] = self.resolve(item[role])
+                            if item.get(role): item[role] = self.resolve(item[role],sample_source=role=="source")
                         for target, values in (item.get('pipeline_outputs', {}) if generate_outputs is not True else {}).items():
                             item['pipeline_outputs'][target] = self.resolve(values)
             return configured
@@ -254,6 +276,6 @@ class InputSources:
         payload = dict(generated=datetime.now(timezone.utc).isoformat(), resolved_files=len(files), files=files, errors=self.errors)
         (self.session_root / 'input_sources.json').write_text(json.dumps(payload, indent=2), encoding='utf-8')
         esc = html.escape
-        rows = ''.join(f'<tr><td>{n}</td><td>{esc(r["origin"])}</td><td>{esc(r["local_path"])}</td><td>{r["bytes"]}</td><td>{esc(r["sha256"])}</td></tr>' for n,r in enumerate(files,1))
+        rows = ''.join(f'<tr><td>{n}</td><td>{esc(r["origin"])}</td><td>{esc(r["local_path"])}</td><td>{r["bytes"]}</td><td>{esc(r["sha256"])}</td><td>{esc(r.get("access_mode","Complete local file or download"))}<br>{esc(str(r.get("cached_rows","All")))} cached rows / {esc(str(r.get("source_total_rows","Counted during validation")))} source rows<br>{esc(r.get("hash_scope","Complete cached file"))}</td></tr>' for n,r in enumerate(files,1))
         errors = ''.join('<p>'+esc(message)+'</p>' for message in self.errors)
-        (self.session_root / 'input_sources.html').write_text('<!doctype html><meta charset="utf-8"><title>MEDPAR input sources</title><style>body{font:15px system-ui;margin:32px;color:#172033}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ddd;overflow-wrap:anywhere}summary{cursor:pointer}</style><h1>Input source verification</h1>'+f'<p>Unique resolved files: {len(files)}. This confirms downloaded/local file identity, not business-rule acceptance.</p>'+errors+'<details><summary>Original sources, local files and fingerprints</summary><table><tr><th>No.</th><th>Original source</th><th>File used by validation</th><th>Bytes</th><th>SHA-256</th></tr>'+rows+'</table></details><p><a href="master/index.html">Master report</a> · <a href="input_sources.json">JSON evidence</a></p>', encoding='utf-8')
+        (self.session_root / 'input_sources.html').write_text('<!doctype html><meta charset="utf-8"><title>MEDPAR input sources</title><style>body{font:15px system-ui;margin:32px;color:#172033}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ddd;overflow-wrap:anywhere}summary{cursor:pointer}</style><h1>Input source verification</h1>'+f'<p>Unique resolved files: {len(files)}. This confirms downloaded/local file identity, not business-rule acceptance.</p>'+errors+'<details><summary>Original sources, local files and fingerprints</summary><table><tr><th>No.</th><th>Original source</th><th>File used by validation</th><th>Cached bytes</th><th>Cached file SHA-256</th><th>Read method and scope</th></tr>'+rows+'</table></details><p><a href="master/index.html">Master report</a> · <a href="input_sources.json">JSON evidence</a></p>', encoding='utf-8')

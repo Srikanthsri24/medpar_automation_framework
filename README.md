@@ -46,6 +46,14 @@ python run_commands.py
 
 Edit `SOURCE_RUN` in `run_commands.py` to select the source type, starting stage, date and input paths. The command uses only `SOURCE_RUN`, with its source paths and selected entry stage(s). Missing files, mismatched snapshots and business failures remain visible in reports.
 
+### S3 transfer options and missing dependencies
+
+If a machine reports `No module named 'ijson'`, update that active environment with `python -m pip install -e ".[test]"` or `python -m pip install -r requirements.txt`. The package now declares ijson as a required runtime dependency. The runner checks it before starting S3 downloads.
+
+`SOURCE_RUN.s3_read_mode = "sample_parquet"` uses conditional S3 byte-range requests for original Parquet sources when row selection is `first_n_per_file` and `include_related_records` is false. It reads the Parquet footer for the exact original row count and fetches the first required row batches. Only selected rows are saved locally. This also supports extensionless Parquet objects. S3 transfers compressed row-group data and metadata, so this is not an exact five-row byte transfer and a large single row group may still be expensive. The source manifest records the full object size, transferred bytes, cached row count, source row total, ETag and the scope of the cached sample hash.
+
+Full original-identity population reconciliation is explicitly **NOT ASSESSED** for a partial source cache. Selected-row business validation and full KEEP/DROP reference searches still run. JSON sources, `mode="all"`, related-record selection, and reference files retain complete downloads. JSON has no Parquet footer with a total-row count, so an exact count requires a full scan. Set `s3_read_mode="download"` to retain complete source copies and population audits. This optimization is verified with simulated S3 range requests; client AWS performance still needs a live run.
+
 ### One input configuration
 
 Edit only `SOURCE_RUN` near the top of `run_commands.py`:
@@ -53,9 +61,10 @@ Edit only `SOURCE_RUN` near the top of `run_commands.py`:
 ```python
 SOURCE_RUN = {
     "source_type": "local",  # Switch to "s3" to use the saved S3 section.
+    "s3_read_mode": "sample_parquet",  # Or "download" for complete source copies.
     "start_stage": "final_action",  # Or "all", "split", "stay", "intermediate", "final_medpar".
     "run_date": None,
-    "row_selection": {"mode": "first_n_total", "limit": 5, "include_related_records": True},
+    "row_selection": {"mode": "first_n_per_file", "limit": 5, "include_related_records": False},
     "source_paths": {
         "local": {
             "final_action": {

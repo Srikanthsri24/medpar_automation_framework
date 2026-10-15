@@ -23,7 +23,8 @@ def iter_records(path,stage,role,root):
                     yield row
         values=rows();fmt='parquet'
     elif path.suffix.lower()=='.json':
-        from ijson.backends import python as ijson
+        try:from ijson.backends import python as ijson
+        except ImportError as exc:raise InputReadError('Streaming JSON dependency is missing. Run: python -m pip install -e ".[test]" (or python -m pip install -r requirements.txt)') from exc
         def rows():
             with path.open('rb') as handle:
                 offset=3 if handle.read(3)==b'\xef\xbb\xbf' else 0
@@ -61,9 +62,12 @@ def select(files,stage,role,root,selection,token_function):
     selection=options(selection);selected=[];inventory=[]
     for name in files:
         total=0;chosen=[]
+        from .s3_sampling import sample_metadata
+        remote=sample_metadata(Path(root)/name)
         for row in iter_records(Path(root)/name,stage,role,root):
             total+=1
             if selection['mode']=='all' or (len(chosen) if selection['mode']=='first_n_per_file' else len(selected)+len(chosen))<selection['limit']:chosen.append(row)
+        if remote:total=remote['source_total_rows']
         selected.extend(chosen)
         inventory.append(dict(file=name,total_rows=total,selected_rows=len(chosen),context_rows=0))
     target_ids={r.record_id for r in selected};known=set(target_ids);context=[]

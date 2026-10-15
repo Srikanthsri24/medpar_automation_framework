@@ -138,3 +138,36 @@ def test_opposite_output_conflict_is_explicit_failure_not_duplicate_block(tmp_pa
         assert row['comparison_status']=='FAIL'
         assert any('both KEEP and DROP' in reason for reason in row['comparison_reasons'])
         assert next(c for c in row['checks'] if c['rule_id']=='ROW-OUTPUT-CANDIDATES')['status']=='PASS'
+
+
+def test_s3_sample_retains_source_totals_and_searches_complete_references(tmp_path):
+    import io,shutil
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    from medpar_qa.ingestion.input_sources import InputSources
+    (tmp_path/'config').mkdir();shutil.copy('config/field_aliases.yaml',tmp_path/'config/field_aliases.yaml')
+    base=json.loads(Path('data/demo_source_only/claims.json').read_text())[0]
+    rows=[{**base,'claimCan':f'CAN{i}','claimCanNchEquatable':f'HICN{i}','internalControlNumber':f'ICN{i}'} for i in range(25)]
+    sink=pa.BufferOutputStream();pq.write_table(pa.Table.from_pylist(rows),sink,row_group_size=5)
+    objects={'original':sink.getvalue().to_pybytes(),'keep.json':json.dumps(rows).encode(),'drop.json':b'[]'}
+    class Fake:
+        def head_object(self,Bucket,Key):return {'ContentLength':len(objects[Key]),'ETag':'v1'}
+        def get_object(self,Bucket,Key,Range,IfMatch):
+            assert IfMatch=='v1'
+            start,end=map(int,Range[6:].split('-'));return {'Body':io.BytesIO(objects[Key][start:end+1])}
+        def download_file(self,bucket,key,filename):Path(filename).write_bytes(objects[key])
+    selection={'mode':'first_n_per_file','limit':2,'include_related_records':False}
+    session=ReportSession.create('reports',project_root=tmp_path)
+    resolver=InputSources(tmp_path,session.root,client=Fake(),s3_read_mode='sample_parquet',row_selection=selection)
+    config={'final_action':{'run_date':'2026-04-20','single_files':[dict(source=['s3://medpar-demo-bucket/original'],actual=['s3://medpar-demo-bucket/keep.json'],dropped=['s3://medpar-demo-bucket/drop.json'])]}}
+    for stage in ('split','stay','intermediate','final_medpar'):config[stage]={'run_date':'2026-04-20'}
+    configured=resolver.prepare(config,connected=True)
+    journeys,_=run_configured(tmp_path,session,configured,{'_row_selection':selection})
+    audit=json.loads((session.root/'final_action/row_review.json').read_text())
+    assert audit['original_rows']==25 and len(audit['rows'])==2
+    assert audit['comparison_rows']=={'keep':25,'drop':0}
+    assert audit['comparison_status']=='PASS'
+    assert audit['population_audit'] is None and audit['partial_source_caches']
+    assert 'Full-source identity-population audit: NOT ASSESSED' in (session.root/'final_action/row_review.html').read_text()
+    assert audit['output_rows_outside_processed_identities']['keep']['rows']==23
+    assert all(journey['completed'] for journey,_ in journeys)

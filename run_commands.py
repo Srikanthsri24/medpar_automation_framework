@@ -45,6 +45,7 @@ STAGE_ORDER = ("final_action", "split", "stay", "intermediate", "final_medpar")
 # final_medpar for Intermediate extracts. Generated outputs feed later stages.
 SOURCE_RUN: dict[str, Any] = {
     "source_type": "local",  # "local" or "s3"; paths below must match this choice.
+    "s3_read_mode": "sample_parquet",  # Sample original Parquet through S3 ranges; download keeps the full source.
     "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
     "run_date": None,  # Resolve today's local business date once at execution.
     "row_selection": {"mode": "first_n_per_file", "limit": 5, "include_related_records": False},  # Up to five rows per supplied file; mode="all" processes every row.
@@ -482,17 +483,21 @@ def main(argv=None, *, report_session=None) -> int:
         parser.error("The explicit --aws-config file does not exist; copy the AWS credentials example or use your AWS profile/environment")
     print(f"Selected dataset: {'CONFIGURED' if options.config else 'SOURCE INPUTS'}", flush=True)
     print("Run mode: connected validation" if connected else "Run mode: independent stage validation", flush=True)
+    import importlib.util
+    if importlib.util.find_spec('ijson') is None:
+        print('Missing dependency: ijson. Run python -m pip install -e ".[test]" or python -m pip install -r requirements.txt, then retry. No S3 downloads started.',flush=True)
+        return 2
     session = report_session or ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
     from medpar_qa.ingestion.input_sources import InputSources, InputSourceError
-    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path)
+    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path, s3_read_mode=SOURCE_RUN.get("s3_read_mode","download") if not options.config else "download", row_selection=connected_settings.get("_row_selection",{}))
     try:
         configured_stages = sources.prepare(configured_stages, selected_stage=selected_stage, connected=connected, start_stage=start_stage, generate_outputs=generate_outputs)
     except InputSourceError as exc:
         print(f"Input preparation failed: {exc}", flush=True)
         print(f"Input evidence: {relative_display(session.root / 'input_sources.html', project_root=PROJECT_ROOT)}", flush=True)
         return 2
-    print(f"Unique resolved local/S3 files: {len(sources.files)}", flush=True)
+    print(f"Unique resolved local/S3 files (source and reference datasets): {len(sources.files)}", flush=True)
     backends={"s3" if item["origin"].startswith("s3://") else "local" for item in sources.files.values()}
     print("Source: "+(" / ".join(sorted(backends)) or SOURCE_RUN.get("source_type","local")),flush=True)
     source_stages=[start_stage] if connected else [selected_stage] if selected_stage else list(configured_stages)
@@ -504,6 +509,15 @@ def main(argv=None, *, report_session=None) -> int:
             paths=item.get('source',[])
             given.update([paths] if isinstance(paths,str) else paths or [])
         print(f"Source input count — {source_stage}: {len(given)} resolved files",flush=True)
+        reference_counts={}
+        for role in ('actual','dropped'):
+            references=set()
+            for item in [*configured_entry.get('single_files',[]),*configured_entry.get('folder_paths',[])]:
+                if not item.get('enabled',True):continue
+                values=item.get(role,[])
+                references.update([values] if isinstance(values,str) else values or [])
+            reference_counts[role]=len(references)
+        print(f"Reference input count — {source_stage}: KEEP {reference_counts['actual']} files; DROP {reference_counts['dropped']} files (complete reference reads)",flush=True)
     if connected:
         from medpar_qa.orchestration.connected import run_configured
         journeys, index = run_configured(PROJECT_ROOT, session, configured_stages, connected_settings, **({"start_stage":start_stage} if start_stage != "final_action" else {}), **({"generate_outputs":generate_outputs} if generate_outputs is not None else {}))

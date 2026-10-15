@@ -79,4 +79,7 @@ def test_row_comparison_normalizes_lossless_numeric_text_only():
     assert compare('001',1).status=='FAIL'
     assert compare(1,'2').status=='FAIL'
     assert compare(True,'True').status=='FAIL'
+    assert compare({'code':'0100','ndc':None},{'code':'0100'}).status=='PASS'
+    assert compare({'value':0},{}).status=='FAIL'
+    assert compare({'value':'populated'},{}).status=='FAIL'
     assert compare(1,'1').evidence['representation_normalization']['raw_actual']=='1'
