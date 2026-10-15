@@ -42,3 +42,16 @@ def test_empty_sample_does_not_certify_supplied_output(tmp_path):
     html=comparisons(tmp_path,[(audit,tmp_path/'row_review.html')])
     assert 'NOT ASSESSED — no KEEP decisions in this sample' in html
     assert 'NOT PROVIDED' in html
+
+
+def test_reference_counts_deduplicate_identity_and_keep_full_multiplicity(tmp_path):
+    from medpar_qa.reporting.stage_drilldown import reference_cell
+    row=dict(row=1,decision='KEEP',input_row={'icn':'A'},comparison_status='BLOCKED',checks=[dict(rule_id='ROW-OUTPUT-MEMBERSHIP',actual={'keep':7,'drop':2},evidence={'keep':[{'file':'kept.json','row':1}]})])
+    audit=dict(identity_fields=['icn'],comparison_rows={'keep':100},comparison_files={'keep':[dict(file='kept.json',rows=100)]})
+    html=reference_cell(tmp_path,audit,[row,row],tmp_path/'row_review.html',1,'keep')
+    assert '>7</a>' in html and '100 whole-folder rows' in html
+    evidence=next(tmp_path.glob('reference_*.html')).read_text()
+    assert '7 matching reference rows' in evidence
+    assert 'kept.json' in evidence and 'BLOCKED' in evidence
+    assert 'Count equality alone does not prove a data match' in evidence
+    assert reference_cell(tmp_path,audit,[row],tmp_path/'row_review.html',1,'drop')=='<td>Not supplied</td>'
