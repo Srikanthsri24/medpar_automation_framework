@@ -171,3 +171,41 @@ def test_s3_sample_retains_source_totals_and_searches_complete_references(tmp_pa
     assert 'Full-source identity-population audit: NOT ASSESSED' in (session.root/'final_action/row_review.html').read_text()
     assert audit['output_rows_outside_processed_identities']['keep']['rows']==23
     assert all(journey['completed'] for journey,_ in journeys)
+
+
+def test_final_matching_excludes_removed_routing_indicator_and_reports_real_values(tmp_path):
+    import shutil
+    from medpar_qa.normalization.fields import FieldResolver
+    (tmp_path/'config').mkdir();shutil.copy('config/field_aliases.yaml',tmp_path/'config/field_aliases.yaml')
+    resolver=FieldResolver.from_yaml(tmp_path/'config/field_aliases.yaml')
+    source=json.loads(Path('data/demo_connected/intermediate_candidate.json').read_text())[0]
+    source.update(providerId='990999',medparIntmdNum0580={'id':'01234','approvedDate':20260101},utilization_days=2,medpar_lgth_stay_0260=2)
+    from medpar_qa.stages.output_contracts import remove_fields
+    from medpar_qa.processing.writers import put
+    actual=remove_fields(source, ('split_year_indicator','medparSplitYearIndicator'))
+    put(actual,'medpar_intmd_num_0580','01234',resolver)
+    put(actual,'medpar_ss_ls_snf_ind_0140','S',resolver)
+    (tmp_path/'original.json').write_text(json.dumps([source]))
+    (tmp_path/'keep.json').write_text(json.dumps([actual,actual]))  # CY/FY copies of one logical identity.
+    session=ReportSession.create('reports',project_root=tmp_path)
+    config={stage:{'run_date':'2026-04-20'} for stage in ('final_action','split','stay','intermediate','final_medpar')}
+    config['final_medpar']['single_files']=[dict(source=['original.json'],actual=['keep.json'])]
+    journeys,_=run_configured(tmp_path,session,config,start_stage='final_medpar')
+    audit=json.loads((session.root/'final_medpar/row_review.json').read_text())
+    assert audit['identity_fields']==['hicn','provider_id','admission_date']
+    assert audit['scoped_output_rows']['keep']==2
+    row=audit['rows'][0]
+    membership=next(c for c in row['checks'] if c['rule_id']=='ROW-OUTPUT-MEMBERSHIP')
+    assert membership['status']=='PASS' and membership['actual']['keep']==2
+    candidates=next(c for c in row['checks'] if c['rule_id']=='ROW-OUTPUT-CANDIDATES')
+    assert candidates['status']=='PASS' and candidates['actual']==2
+    assert all(journey['completed'] for journey,_ in journeys)
+    # Actual legacy references are not normalized into a false pass.
+    actual['medparIntmdNum0580']={'id':'01234','approvedDate':20260101}
+    actual['medpar_intmd_num_0580']={'id':'01234','approvedDate':20260101}
+    (tmp_path/'keep.json').write_text(json.dumps([actual]))
+    session2=ReportSession.create('reports',project_root=tmp_path)
+    run_configured(tmp_path,session2,config,start_stage='final_medpar')
+    row=json.loads((session2.root/'final_medpar/row_review.json').read_text())['rows'][0]
+    assert row['comparison_status']=='FAIL'
+    assert any(issue['category']=='Intermediary 0580 format / value discrepancy' for issue in row['issues'])

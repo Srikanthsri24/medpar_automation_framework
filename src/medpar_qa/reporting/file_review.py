@@ -39,6 +39,7 @@ def file_review(stage, validations, anchor_prefix):
             if check.get('rule_id') == 'INGEST-READ-FILE' and check.get('status') == 'PASS':
                 read.add(path)
     sections = []
+    rule_catalog = stage_rule_catalog(stage)
     for path, checks in sorted(files.items()):
         counts = Counter(c.get('status') for _, c in checks)
         if counts['FAIL']:
@@ -57,7 +58,7 @@ def file_review(stage, validations, anchor_prefix):
         rule_counts = defaultdict(Counter)
         for _, check in checks:
             rule_counts[check.get('rule_id')][check.get('status')] += 1
-        catalog = ''.join(f"<tr><td>{esc(rule)}</td><td>{esc(metadata.title)}</td><td>{esc(', '.join(f'{k}: {v}' for k,v in rule_counts[rule].items()) if rule in rule_counts else 'No file-level result recorded; consult stage-wide results / prerequisites')}</td></tr>" for rule, metadata in stage_rule_catalog(stage))
+        catalog = ''.join(f"<tr><td>{esc(rule)}</td><td>{esc(metadata.title)}</td><td>{esc(', '.join(f'{k}: {v}' for k,v in rule_counts[rule].items()) if rule in rule_counts else 'No file-level result recorded; consult stage-wide results / prerequisites')}</td></tr>" for rule, metadata in rule_catalog)
         sections.append(f"<details class='file-review' data-file='{esc(path)}'><summary>#{len(sections)+1} · {esc(path)} — {esc(', '.join(sorted(roles[path])) or 'Evidence file')} · PASS {counts['PASS']} / FAIL {counts['FAIL']} / BLOCKED {counts['BLOCKED']} / N/A {counts['NOT_APPLICABLE']}</summary><p><strong>Read status:</strong> {'Successfully read' if path in read else 'Successful read not recorded'}</p><table><thead><tr><th>Rule — open full explanation</th><th>Result</th><th>Reason</th></tr></thead><tbody>{''.join(rows)}</tbody></table><details><summary>Complete stage rule coverage for this file</summary><table><tr><th>Rule</th><th>Requirement</th><th>File-level outcomes</th></tr>{catalog}</table></details><p class='file-conclusion'><strong>Final conclusion for this file:</strong> {esc(outcome)}</p></details>")
     unassigned = [(i,c) for i,c in enumerate(validations,1) if not c.get('source_files')]
     shared = ''.join(f"<li><a href='#{esc(anchor_prefix)}-{i}'>{esc(c.get('rule_id'))} — {esc(c.get('status'))}</a>: {esc(c.get('message'))}</li>" for i,c in unassigned)

@@ -62,13 +62,11 @@ def _terminal(result):
 
 
 def _not_reached(result, reason):
+    """Record skipped rule IDs as metadata, not fabricated validation events."""
     seen = {r.rule_id for r in result.rule_results}
-    for rule_id in STAGE_RULES.get(result.stage.value, ()):
-        if rule_id not in seen:
-            result.rule_results.append(RuleResult(
-                stage=result.stage, rule_id=rule_id, status=ValidationStatus.NOT_APPLICABLE,
-                message=f'Not reached: {reason}', expected='Earlier stage checks must complete',
-                actual='NOT_REACHED', evidence={'execution_state': 'NOT_REACHED'}))
+    skipped = [rule for rule in STAGE_RULES.get(result.stage.value, ()) if rule not in seen]
+    if result.rule_results:
+        result.rule_results[-1].evidence.update(rules_not_reached=skipped, stopping_reason=reason)
 
 
 def _read(paths, stage, role, root):

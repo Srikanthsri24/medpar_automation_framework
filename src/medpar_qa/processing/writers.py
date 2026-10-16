@@ -194,6 +194,13 @@ def final_medpar(records,processor):
             dropped.append({'record':record.data,'reason':'Covered days exceed LOS / WI04 bypass','source_record_id':record.record_id});continue
         from medpar_qa.stages.output_contracts import remove_fields
         row=remove_fields(deepcopy(record.data),processor.settings.forbidden_fields)
+        # QA-REG-02 explicitly changes legacy object-valued 0580 to its character ID.
+        # This adapts source-generated output only; supplied Final references stay untouched.
+        old_intermediary = resolver.get(row, 'medpar_intmd_num_0580')
+        if isinstance(old_intermediary, dict):
+            from medpar_qa.stages.output_contracts import intermediary_id
+            put(row, 'medpar_intmd_num_0580', intermediary_id(old_intermediary), resolver)
+            notes.append('QA-REG-02: legacy Intermediate 0580 object converted to its id string; leading zeros preserved')
         raw=resolver.get(row,'fixed_width_record')
         if raw is not None:
             encoded=raw if isinstance(raw,bytes) else str(raw).encode(processor.settings.encoding)

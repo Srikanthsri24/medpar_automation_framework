@@ -29,7 +29,7 @@ def page(title, body):
     return f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)}</title><style>body{{font:16px/1.5 system-ui;background:#f4f6f9;color:#172033;margin:24px}}main{{max-width:1400px;margin:auto}}article,section,details{{background:white;padding:16px;border:1px solid #d0d5dd;border-radius:8px;margin:12px 0}}table{{width:100%;border-collapse:collapse}}td,th{{padding:10px;text-align:left;border:1px solid #d0d5dd;overflow-wrap:anywhere}}pre{{white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto}}input{{padding:10px;width:min(90%,600px)}}a{{color:#1864ab}}[hidden]{{display:none!important}}summary{{cursor:pointer}}.three,.two{{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}}.badge,.field{{display:inline-block;padding:4px 8px;border-radius:20px;font-weight:700}}.pass{{background:#d3f9d8}}.fail{{background:#ffe3e3}}.blocked{{background:#fff3bf}}</style></head><body><main><a href="index.html#stage-results">← Master report</a><h1>{e(title)}</h1>{body}</main><script>const fields=document.querySelectorAll('input');fields.forEach(field=>field.addEventListener('input',()=>{{document.querySelectorAll('tr[data-file]').forEach(row=>row.hidden=!row.dataset.file.toLowerCase().includes(field.value.toLowerCase()));}}));</script></body></html>'''
 
 
-def write_status_navigation(master, stage, checks, render):
+def write_status_navigation(master, stage, checks, render, *, deferred_files=None):
     """Count checks once and provide full-file conclusions separately from status links."""
     files = defaultdict(list)
     for index, check in enumerate(checks, 1):
@@ -37,9 +37,12 @@ def write_status_navigation(master, stage, checks, render):
             files[str(path)].append((index, check))
     links = {}
     written_shared = set()
+    rendered_cards = {}
     for path, items in files.items():
         filename = stage + '_file_' + hashlib.sha256(path.encode()).hexdigest()[:20] + '.html'
         links[path] = filename
+        if path in (deferred_files or ()):
+            continue  # Volume navigation writes the same complete input-file screen once.
         states = {check['status'] for _, check in items}
         conclusion = 'FAIL' if 'FAIL' in states else 'BLOCKED' if 'BLOCKED' in states else 'REVIEW DIFFERENCES' if 'KNOWN_DIFFERENCE' in states else 'Recorded applicable checks pass' if 'PASS' in states else 'Not assessed'
         cards = []
@@ -51,7 +54,9 @@ def write_status_navigation(master, stage, checks, render):
                     (master / shared).write_text(page('Shared rule evidence', render(check, stage, index, stage+'-selected')), encoding='utf-8')
                 cards.append(f'<details><summary>{e(check["status"])} · {e(check["rule_id"])}</summary><p>{e(check.get("message", ""))}</p><a href="{shared}">Full shared-check proof</a></details>')
             else:
-                cards.append(render(check, stage, index, stage+'-selected'))
+                if index not in rendered_cards:
+                    rendered_cards[index] = render(check, stage, index, stage+'-selected')
+                cards.append(rendered_cards[index])
         totals = Counter(check['status'] for _, check in items)
         count_summary = ' · '.join(f'{status}: {totals[status]}' for status in ('PASS', 'FAIL', 'BLOCKED', 'NOT_APPLICABLE', 'KNOWN_DIFFERENCE'))
         body = f'<p><strong>Validations: {len(items)} · {count_summary}</strong></p><p>{e(path)}</p><p><strong>File conclusion: {conclusion}</strong> — based on all checks linked to this file, including failed and blocked checks. Stage-wide findings still affect acceptance; this is not physical-byte certification.</p>' + ''.join(cards)
@@ -79,6 +84,13 @@ def write_volume_navigation(master, stage, checks, volume):
         if check.get('rule_id') == 'INGEST-READ-FILE' and isinstance(actual,dict) and actual.get('role') == 'source':
             for path in check.get('source_files',[]):
                 by_file_ids[str(path)].update(str(record) for record in check.get('record_ids',[]))
+    check_numbers_by_file = defaultdict(set)
+    check_numbers_by_id = defaultdict(set)
+    for number, check in enumerate(checks):
+        for path in check.get('source_files', []):
+            check_numbers_by_file[path].add(number)
+        for record_id in check.get('record_ids', []):
+            check_numbers_by_id[record_id].add(number)
     written=set()
     for key in ('files_in','files_passed','files_stopped','files_failed','files_blocked','records_in','kept','dropped','records_stopped')+ (('files_kept','files_dropped') if 'files_kept' in volume else ()):
         if key.startswith('files_'):
@@ -96,7 +108,10 @@ def write_volume_navigation(master, stage, checks, volume):
                 written.add(path)
                 info=volume['disposition_evidence'][path]
                 from .path_utils import relative_link
-                linked=[check for check in checks if path in check.get('source_files',[]) or any(record in by_file_ids[path] for record in check.get('record_ids',[]))]
+                numbers = set(check_numbers_by_file[path])
+                for record_id in by_file_ids[path]:
+                    numbers.update(check_numbers_by_id[record_id])
+                linked = [checks[number] for number in sorted(numbers)]
                 from .session_index import _render_raw_validation
                 detail='<p><strong>Original source:</strong> '+e(info['origin'])+'</p><p><strong>File disposition: '+e(info['outcome'])+'</strong></p><p>'+e(info['reason'])+'</p><p><a href="'+e(relative_link(master,info['report']))+'">Stage result and stopping/transfer proof</a></p>'
                 detail+='<details><summary>All business-group results for this input</summary><ul>'+''.join('<li><a href="'+e(relative_link(master,proof))+'">Group rule and handoff evidence</a></li>' for proof in info.get('reports',[info['report']]))+'</ul></details>'

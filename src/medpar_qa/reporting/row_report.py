@@ -52,7 +52,10 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     cls=getattr(import_module('medpar_qa.stages.'+start_stage+'.settings'),''.join(p.title() for p in start_stage.split('_'))+'Settings')
     config=cls.from_mapping(settings.get(start_stage,{}))
     resolver=FieldResolver.from_yaml(Path(root)/'config/field_aliases.yaml')
-    fields=tuple(settings.get('comparison_identity_fields',config.identity_fields))
+    # The delivered Final contract removes the intermediate routing indicator.
+    # It cannot be required to locate Final CY/FY copies of a source row.
+    default_fields = tuple(field for field in config.identity_fields if start_stage != 'final_medpar' or field != 'split_year_indicator')
+    fields=tuple(settings.get('comparison_identity_fields', default_fields))
     def identity(record):
         values=record_identity(record,resolver,fields)
         return tuple(str(value).strip() for value in values) if all(value not in (None,'') for value in values) else None
@@ -98,20 +101,29 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
         files=list(dict.fromkeys(f for j,_ in journeys for f in j.get('source_files',[j['source_file']])))
         selected_records=[r for f in files for r in iter_records(Path(root)/f,Stage(start_stage),FileRole.SOURCE,root)]
     wanted={identity(r) for r in selected_records};wanted.discard(None)
+    from medpar_qa.ingestion.s3_sampling import sample_metadata
+    from .population_audit import PopulationScan
+    originals=selection.get('files',[])
+    partial_sources=[f['file'] for f in originals if (sample_metadata(Path(root)/f['file']) or {}).get('complete_source') is False]
+    population_scans={}
     role_counts={};role_matches={};role_files={};role_paths={};role_records={};outside_scope={}
     for role,key in (('keep','actual'),('drop','dropped')):
         paths=list(dict.fromkeys(p for item in items for p in item.get(key,[])))
         counts=Counter();locations=defaultdict(list);file_counts=[];matching_records=defaultdict(list);unmatched=0;examples=[]
+        scan = PopulationScan() if selection_override is None and not partial_sources else None
+        if scan is not None: population_scans[role] = scan
         references_progress=Progress(f'{start_stage} {role.upper()} reference files searched',len(paths),'files')
         for path_number,path in enumerate(paths,1):
             emit(f'Searching all {role.upper()} rows in reference file {path_number}/{len(paths)}: {path}')
             scanned=Progress(f'{role.upper()} reference rows scanned',unit='rows')
             total=0
+            if scan is not None: scan.start_file()
             for record in iter_records(Path(root)/path,Stage(start_stage),FileRole.SOURCE,root):
                 total+=1
                 if total%1000==0:scanned.update(total)
                 if isinstance(record.data.get('record'),dict):record.data=record.data['record']
                 value=identity(record)
+                if scan is not None: scan.observe(record, value)
                 if value in wanted:
                     counts[value]+=1
                     matching_records[value].append(record)
@@ -119,6 +131,7 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
                 else:
                     unmatched+=1
                     if len(examples)<10:examples.append({'file':path,'row':record.source.row_number,'identity':value})
+            if scan is not None: scan.finish_file(path)
             scanned.update(total,force=True)
             references_progress.update(path_number,force=True)
             file_counts.append({'file':path,'origin':origins.get(path,path),'rows':total})
@@ -135,7 +148,7 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     population=None
     if selection_override is None and any(role_files.values()) and not partial_sources:
         from .population_audit import audit_populations
-        population=audit_populations(root,start_stage,{'original':[f['file'] for f in originals],'keep':[f['file'] for f in role_files['keep']],'drop':[f['file'] for f in role_files['drop']]},identity,is_exception if start_stage=='split' else None,one_to_one=start_stage in ('final_action','split'))
+        population=audit_populations(root,start_stage,{'original':[f['file'] for f in originals],'keep':[f['file'] for f in role_files['keep']],'drop':[f['file'] for f in role_files['drop']]},identity,is_exception if start_stage=='split' else None,one_to_one=start_stage in ('final_action','split'),pre_scanned=population_scans)
 
     processed_exceptions=sum(is_exception(r) for r in selected_records) if start_stage=='split' else 0
     exception_rows=population['source_exception_rows'] if population else processed_exceptions if len(selected_records)==total_original or start_stage!='split' else None
@@ -149,6 +162,11 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     count_balance['difference']=count_balance['keep_plus_drop_rows']-expected_output_rows if count_balance['keep_plus_drop_rows'] is not None and expected_output_rows is not None else None
     by_file=defaultdict(list);row_payload=[];sample_targets=set(selection.get('target_record_ids',[r.record_id for r in selected_records]))
     duplicate_keys=Counter(identity(r) for r in selected_records)
+    identity_locations=defaultdict(list)
+    for selected in selected_records:
+        key=identity(selected)
+        if key is not None:
+            identity_locations[key].append({'file': selected.source.file_path, 'row': selected.source.row_number})
     comparisons_progress=Progress(f'{start_stage} selected-row comparisons',len(selected_records),'rows')
     for row_number,record in enumerate(selected_records,1):
         if row_number==1 or row_number%25==0:emit(f'Comparing {start_stage} source row {row_number}/{len(selected_records)}; source {record.source.file_path} row {record.source.row_number}')
@@ -221,7 +239,12 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
         counts=Counter(c['status'] for c in events)
         validation_status='FAIL' if counts['FAIL'] else 'BLOCKED' if counts['BLOCKED'] or outcome in ('STOPPED','NOT ASSESSED') else 'PASS' if counts['PASS'] else 'NOT ASSESSED'
         item=dict(validation_status=validation_status,input_row=record.data,file=record.source.file_path,row=record.source.row_number,record_id=record.record_id,selection='selected' if record.record_id in sample_targets else 'related context',decision=outcome,validation_counts=dict(counts),checks=events,reason=reasons.get(record.record_id,'No row-specific decision was emitted; inspect shared file/group evidence.'))
-        item['comparison_status']='FAIL' if any(c['status']=='FAIL' for c in match_checks) else 'BLOCKED' if any(c['status']=='BLOCKED' for c in match_checks) else 'PASS' if match_checks else 'NOT PROVIDED'
+        from .row_diagnostics import diagnose_row
+        item['issues'] = diagnose_row(record, events, resolver, start_stage, fields, identity_locations)
+        if outcome not in ('KEEP', 'DROP') and item['issues']:
+            primary = item['issues'][0]
+            item['reason'] = primary['category'] + ': ' + primary['reason'] + ' Next action: ' + primary['next_action']
+        item['comparison_status']='FAIL'  if any(c['status']=='FAIL' for c in match_checks) else 'BLOCKED' if any(c['status']=='BLOCKED' for c in match_checks) else 'PASS' if match_checks else 'NOT PROVIDED'
         item['comparison_reasons']=[c.get('message','') for c in match_checks if c['status']!='PASS']
         row_payload.append(item);by_file[item['file']].append(item)
         comparisons_progress.update(row_number)
@@ -240,8 +263,10 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
         for evidence_number,row in enumerate(rows,1):
             if evidence_number%1000==0:emit(f'Rendering {path}: row {evidence_number:,}/{len(rows):,}; rule cards and reference evidence')
             rules=''.join('<details><summary>'+html.escape(c['status']+' '+c['rule_id'])+'</summary><p>'+html.escape(c.get('message',''))+'</p><p>Expected</p><pre>'+show(c.get('expected'))+'</pre><p>Observed</p><pre>'+show(c.get('actual'))+'</pre><details><summary>Source evidence</summary><pre>'+show({'source_files':c.get('source_files',[]),'record_ids':c.get('record_ids',[]),'field':c.get('field_name'),'details':c.get('evidence',{})})+'</pre></details></details>' for c in row['checks'])
+            diagnostics = '<details><summary>Why this row failed or was blocked — source facts and next action</summary>' + ''.join(
+                '<section><strong>' + html.escape(issue['category']) + '</strong><p>' + html.escape(issue['scope']) + '</p><p>' + html.escape(issue['reason']) + '</p><p><strong>Next action:</strong> ' + html.escape(issue['next_action']) + '</p><pre>' + show(issue) + '</pre></section>' for issue in row.get('issues', [])) + '</details>' if row.get('issues') else ''
             report=reports.get(row['record_id']);link='<a href="'+html.escape(relative_link(output.parent,report))+'">Full stage / group rule evidence</a>' if report else ''
-            cards.append('<details data-row="'+str(row['row'])+'"><summary>Row '+str(row['row'])+' · '+row['decision']+' · Validation '+row['validation_status']+' · Output comparison '+row['comparison_status']+' · '+str(len(row['checks']))+' validations</summary><p>'+html.escape(row['reason'])+'</p><pre>'+show(row['validation_counts'])+'</pre>'+link+'<details><summary>Input row values</summary><pre>'+show(row['input_row'])+'</pre></details>'+rules+'</details>')
+            cards.append('<details data-row="'+str(row['row'])+'"><summary>Row '+str(row['row'])+' · '+row['decision']+' · Validation '+row['validation_status']+' · Output comparison '+row['comparison_status']+' · '+str(len(row['checks']))+' validations</summary><p>'+html.escape(row['reason'])+'</p><pre>'+show(row['validation_counts'])+'</pre>'+diagnostics+link+'<details><summary>Input row values</summary><pre>'+show(row['input_row'])+'</pre></details>'+rules+'</details>')
         info=inventory.get(path,{});total=info.get('total_rows',len(rows));selected=sum(r['selection']=='selected' for r in rows)
         row_statuses=Counter(r['validation_status'] for r in rows)
         file_summaries.append(dict(origin=origins.get(path,path),decisions=dict(Counter(r['decision'] for r in rows)),comparison_outcomes=dict(Counter(r['comparison_status'] for r in rows)),file=path,not_processed_rows=max(total-len(rows),0),total_rows=total,selected_rows=selected,context_rows=len(rows)-selected,processed_rows=len(rows),validation_events=len(unique),event_statuses=dict(totals),row_statuses=dict(row_statuses)))
@@ -255,9 +280,10 @@ def write_row_report(root,session,journeys,settings,start_stage,items,selected_r
     decision_counts=dict(Counter(r['decision'] for r in row_payload))
     comparison_outcomes=dict(Counter(r['comparison_status'] for r in row_payload))
     scoped_outputs={role:sum(role_matches[role].values()) for role in ('keep','drop')}
-    data=dict(partial_source_caches=partial_sources,population_audit=population,output_rows_outside_processed_identities=outside_scope,decision_counts=decision_counts,comparison_outcomes=comparison_outcomes,scoped_output_rows=scoped_outputs,count_balance=count_balance,row_statuses=dict(Counter(r['validation_status'] for r in row_payload)),files=file_summaries,source_origins=source_origins,input_kind='generated_previous_stage' if selection_override is not None else 'supplied_original',comparison_status=comparison_status,stage=start_stage,selection=selection,identity_fields=fields,original_rows=total_original,comparison_rows=role_counts,comparison_files=role_files,full_count_conservation=conservation,rows=row_payload,assessment_scope='A limited sample is not full-dataset acceptance. Only selected source rows are processed. Group decisions apply to the sample and may differ from full-input processing. Source-only generated outputs are not independent golden evidence.')
+    from .row_diagnostics import summarize_issues
+    data=dict(failure_summary=summarize_issues(row_payload),partial_source_caches=partial_sources,population_audit=population,output_rows_outside_processed_identities=outside_scope,decision_counts=decision_counts,comparison_outcomes=comparison_outcomes,scoped_output_rows=scoped_outputs,count_balance=count_balance,row_statuses=dict(Counter(r['validation_status'] for r in row_payload)),files=file_summaries,source_origins=source_origins,input_kind='generated_previous_stage' if selection_override is not None else 'supplied_original',comparison_status=comparison_status,stage=start_stage,selection=selection,identity_fields=fields,original_rows=total_original,comparison_rows=role_counts,comparison_files=role_files,full_count_conservation=conservation,rows=row_payload,assessment_scope='A limited sample is not full-dataset acceptance. Only selected source rows are processed. Group decisions apply to the sample and may differ from full-input processing. Source-only generated outputs are not independent golden evidence.')
     output.with_suffix('.json').write_text(json.dumps(data,separators=(',',':'),default=str),encoding='utf-8')
-    overview=render_file_flow(data)+render_overview(data)+'<details><summary>Output rows outside processed identities</summary><p>'+('Unexpected output identities: the complete original dataset was processed.' if selection.get('full_dataset',False) else 'Outside sampled identities: these output rows are not individually assessed by this sample.')+'</p><pre>'+show(outside_scope)+'</pre></details>'
+    overview='<details><summary>Reasons requiring action — affected selected rows</summary><p>A row can have several causes; these category counts can overlap. Open a row below for exact source values, rule evidence and next action.</p><pre>'+show(data['failure_summary'])+'</pre></details>'+render_file_flow(data)+render_overview(data)+'<details><summary>Output rows outside processed identities</summary><p>'+('Unexpected output identities: the complete original dataset was processed.' if selection.get('full_dataset',False) else 'Outside sampled identities: these output rows are not individually assessed by this sample.')+'</p><pre>'+show(outside_scope)+'</pre></details>'
     if population:
         from .population_audit import render_population
         overview+=render_population(population)

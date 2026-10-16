@@ -91,7 +91,7 @@ class IntermediateProcessor(BaseStageProcessor):
             from medpar_qa.stages.output_contracts import intermediary_type
             results.append(intermediary_type(record,self.resolver,self.stage))
         results.extend(
-            validate_age_and_ndc(record, self.resolver, self.settings.ndc_length)
+            validate_age_and_ndc(record, self.resolver, self.settings.ndc_length, source=source)
         )
         results.append(
             validate_accommodation_totals(

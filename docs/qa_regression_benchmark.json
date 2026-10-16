@@ -78,5 +78,7 @@
       "navigation": "One master and one page per stage; screen routes open existing rule/file evidence inside the page"
     },
     "business_acceptance": "Failed: existing source/reference defects remain visible, including old struct-valued 0580. Not a production pass."
-  }
+  },
+  "latest_followup": "production_followup_evidence.json",
+  "historical_scope_note": "This is the earlier preparation/local measurement. Use production_followup_evidence.json for the latest fully compared source run and corrected Final matching."
 }

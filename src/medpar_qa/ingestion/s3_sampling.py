@@ -46,8 +46,33 @@ class S3RangeReader(io.RawIOBase):
         data=self.read(len(buffer));buffer[:len(data)]=data;return len(data)
 
 
-def stage_parquet_sample(client,bucket,key,size,etag,destination,limit):
+def stage_parquet_sample(client,bucket,key,size,etag,destination,limit,*,cache_directory=None):
     """Persist only the first N rows; row totals come from the Parquet footer."""
+    import hashlib
+    import shutil
+    destination = Path(destination)
+    cached = marker = None
+    def sha256(path):
+        digest = hashlib.sha256()
+        with path.open('rb') as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b''):
+                digest.update(block)
+        return digest.hexdigest()
+    if cache_directory is not None and etag:
+        identity = json.dumps([bucket, key, size, etag, limit, 'parquet-sample-v1'])
+        folder = Path(cache_directory) / hashlib.sha256(identity.encode()).hexdigest()
+        cached, marker = folder / 'sample.parquet', folder / 'sample.json'
+        try:
+            saved = json.loads(marker.read_text(encoding='utf-8'))
+            if cached.is_file() and sha256(cached) == saved['sha256']:
+                shutil.copyfile(cached, destination)
+                metadata = {**saved['metadata'], 'cache_reused': True,
+                            'bytes_transferred': 0, 'range_requests': 0}
+                Path(str(destination) + '.source_sample.json').write_text(json.dumps(metadata), encoding='utf-8')
+                emit(f'Reusing verified Parquet sample: s3://{bucket}/{key}; {metadata["cached_rows"]} rows, no range downloads')
+                return metadata
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
     import pyarrow as pa
     import pyarrow.parquet as pq
     with S3RangeReader(client,bucket,key,size,etag) as stream:
@@ -68,4 +93,14 @@ def stage_parquet_sample(client,bucket,key,size,etag,destination,limit):
         destination=Path(destination)
         pq.write_table(table,destination)
         Path(str(destination)+'.source_sample.json').write_text(json.dumps(metadata),encoding='utf-8')
+        if cached is not None:
+            import tempfile
+            cached.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryDirectory(dir=cached.parent) as temp:
+                copy = Path(temp)/'sample.parquet'
+                shutil.copyfile(destination, copy)
+                snapshot = Path(temp)/'sample.json'
+                snapshot.write_text(json.dumps({'sha256': sha256(copy), 'metadata': metadata}), encoding='utf-8')
+                copy.replace(cached)
+                snapshot.replace(marker)
         return metadata

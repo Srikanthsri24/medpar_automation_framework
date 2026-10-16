@@ -83,13 +83,13 @@ def _report_summary(payload: dict[str, Any]) -> dict[str, int]:
     }
 
 
-def write_stage_index(session_root: str | Path, stage_name: str) -> Path:
+def write_stage_index(session_root: str | Path, stage_name: str, *, business_entries=None) -> Path:
     """Write a stage index combining its run/file summaries and links."""
     root = Path(session_root)
     stage_dir = root / stage_name
     stage_dir.mkdir(parents=True, exist_ok=True)
     reports: list[dict[str, Any]] = []
-    for entry in _business_report_entries(root):
+    for entry in (_business_report_entries(root) if business_entries is None else business_entries):
         if entry['stage_folder']==stage_name:
             reports.append({'json':entry['path'],'payload':entry['payload']})
 
@@ -149,14 +149,14 @@ def _render_raw_validation(validation: dict[str, Any], stage: str, number: int, 
     </details>"""
 
 
-def write_master_index(session_root: str | Path, executions: list[dict[str, Any]] | None = None) -> Path:
+def write_master_index(session_root: str | Path, executions: list[dict[str, Any]] | None = None, *, business_entries=None) -> Path:
     """Write the session dashboard, metric definitions, command outcomes, all-stage conclusions and
     rule evidence.
     """
     root = Path(session_root)
     master = root / "master"
     master.mkdir(parents=True, exist_ok=True)
-    business_entries = _business_report_entries(root)
+    business_entries = _business_report_entries(root) if business_entries is None else business_entries
     pytest_entries = _pytest_report_entries(root)
 
     by_stage: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -247,11 +247,12 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
                 stage_count[str(validation.get("status", "UNKNOWN")).lower()] += 1
             report_link = relative_link(master, entry["path"].parent / "report.html")
             command_name = (entry["payload"].get("context") or {}).get("command_name") or entry["command_folder"].replace("_", " ").title()
-            cards = "" if len(validations) >= 1000 else "".join(
+            connected_step=entry['payload'].get('context',{}).get('handoff')
+            cards = "" if connected_step or len(validations) >= 1000 else "".join(
                 _render_raw_validation(validation, stage, number, f"{stage}-{command_index}")
                 for number, validation in enumerate(validations, start=1)
             )
-            inline_files = f"<p><a href='{stage}_pass_files.html'>Passed-check files</a> · <a href='{stage}_fail_files.html'>Failed-check files</a> · <a href='{stage}_blocked_files.html'>Blocked-check files</a></p>" + (file_review(stage, validations, stage + '-' + str(command_index)) if len(validations) < 1000 else '')
+            inline_files = f"<p><a href='{stage}_pass_files.html'>Passed-check files</a> · <a href='{stage}_fail_files.html'>Failed-check files</a> · <a href='{stage}_blocked_files.html'>Blocked-check files</a></p>" + (file_review(stage, validations, stage + '-' + str(command_index)) if not connected_step and len(validations) < 1000 else '')
             if len(validations) >= 1000:
                 cards = f"<a href='{_esc(report_link)}'>Open complete original rule report</a> — or use the file links above for individual file proof."
             connected_step=entry['payload'].get('context',{}).get('handoff')
@@ -268,7 +269,6 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
             )
         from .status_navigation import write_status_navigation
         all_stage_checks = [c for item in items for c in item['stage'].get('rule_results', [])]
-        write_status_navigation(master, stage, all_stage_checks, _render_raw_validation)
         stage_index_link = relative_link(master, root / stage / "index.html")
         volume = summarize_stage_volume(all_stage_checks, [d for item in items for d in item['stage'].get('decisions', [])])
         if any(item['entry']['payload'].get('context',{}).get('handoff') for item in items):
@@ -283,6 +283,7 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
             stage_volume_strip=f" — {processed} processed rows · {decisions.get('KEEP',0)} KEEP · {decisions.get('DROP',0)} DROP · {sum(v for k,v in decisions.items() if k not in ('KEEP','DROP'))} STOPPED / not assessed"
         from .status_navigation import write_volume_navigation
         write_volume_navigation(master, stage, all_stage_checks, volume)
+        write_status_navigation(master, stage, all_stage_checks, _render_raw_validation, deferred_files=set(volume.get('disposition_evidence', {})))
         if 'files_kept' in volume:
             file_conclusions[stage]=f"<section class='stage-conclusion'><h3>File conclusion — {_esc(stage.replace('_',' ').title())}</h3><p>{volume['files_in']} input files: {volume['files_kept']} kept, {volume['files_dropped']} dropped, {volume['files_stopped']} stopped. Open a count above for the corresponding filenames and each file's rule results.</p></section>"
         else:
@@ -345,12 +346,13 @@ def write_master_index(session_root: str | Path, executions: list[dict[str, Any]
 def refresh_session_indexes(session_root: str | Path, executions: list[dict[str, Any]] | None = None) -> Path:
     """Refresh stage and master indexes after artifacts have been written."""
     root = Path(session_root)
-    for child in sorted(root.iterdir() if root.exists() else []):
-        if child.is_dir() and child.name not in {"master", "pytest", "entries", "connected", "connected_inputs"}:
-            write_stage_index(root, child.name)
-    if (root/'entries').exists():
-        for stage in sorted({entry['stage_folder'] for entry in _business_report_entries(root)}):
-            write_stage_index(root,stage)
-    if (root / "pytest").exists():
-        write_stage_index(root, "pytest")
-    return write_master_index(root, executions=executions)
+    # Parse every saved report once per refresh, rather than once per stage and twice again.
+    entries = _business_report_entries(root)
+    stages = {child.name for child in root.iterdir() if child.is_dir() and child.name not in
+              {"master", "pytest", "entries", "connected", "connected_inputs"}} if root.exists() else set()
+    stages.update(entry['stage_folder'] for entry in entries)
+    if (root / 'pytest').exists():
+        stages.add('pytest')
+    for stage in sorted(stages):
+        write_stage_index(root, stage, business_entries=entries)
+    return write_master_index(root, executions=executions, business_entries=entries)

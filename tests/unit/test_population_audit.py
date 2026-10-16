@@ -41,3 +41,26 @@ def test_merging_stages_do_not_require_equal_physical_row_counts(tmp_path):
     assert data['missing_output_occurrences'] is None
     assert not data['count_comparison_applicable']
     assert 'merging' in data['conclusion']
+
+
+def test_reused_reference_scan_has_identical_full_population_proof(tmp_path,monkeypatch):
+    from medpar_qa.reporting.population_audit import PopulationScan
+    from medpar_qa.ingestion.row_selection import iter_records
+    from medpar_qa.enums import Stage,FileRole
+    import medpar_qa.reporting.population_audit as module
+    for name,rows in {'original':[{'id':1},{'id':2}], 'keep':[{'id':1}], 'drop':[{'id':2}]}.items():
+        (tmp_path/(name+'.json')).write_text(json.dumps(rows))
+    paths={role:[role+'.json'] for role in ('original','keep','drop')}
+    identity=lambda record:(record.data['id'],)
+    baseline=audit_populations(tmp_path,'final_action',paths,identity)
+    scans={}
+    for role in ('keep','drop'):
+        scan=PopulationScan();scan.start_file()
+        for record in iter_records(tmp_path/(role+'.json'),Stage.FINAL_ACTION,FileRole.SOURCE,tmp_path):scan.observe(record,identity(record))
+        scan.finish_file(role+'.json');scans[role]=scan
+    reads=[];original=module.iter_records
+    def tracked(path,*args):reads.append(Path(path).name);return original(path,*args)
+    from pathlib import Path
+    monkeypatch.setattr(module,'iter_records',tracked)
+    assert audit_populations(tmp_path,'final_action',paths,identity,pre_scanned=scans)==baseline
+    assert reads==['original.json']

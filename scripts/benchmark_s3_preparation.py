@@ -53,17 +53,26 @@ def benchmark(count=100,rows=1000,latency_ms=20,workers=8):
         resolver=fields.FieldResolver({'sample':['nested.externalValue']})
         payload={f'unrelatedField{i}':i for i in range(100)}
         payload['Nested']={'External_Value':123}
-        cached=fields._key_form
+        indexed_get=fields.nested_get
+        def previous_get(data,path,default=None):
+            current=data
+            for part in path.split('.'):
+                if not isinstance(current,dict):return default
+                if part in current:current=current[part];continue
+                matches=[key for key in current if fields._key_form(key)==fields._key_form(part)]
+                if len(matches)!=1:return default
+                current=current[matches[0]]
+            return current
         timings={}
         try:
-            for label,function in [('uncached',cached.__wrapped__),('cached',cached)]:
-                fields._key_form=function;start=perf_counter()
+            for label,function in [('previous_normalized_key_scan',previous_get),('indexed_key_shapes',indexed_get)]:
+                fields.nested_get=function;start=perf_counter()
                 for _ in range(5000):assert resolver.get(payload,'sample')==123
                 timings[label]=round(perf_counter()-start,4)
-        finally:fields._key_form=cached
+        finally:fields.nested_get=indexed_get
     return {'scope':'Synthetic complete-object preparation and field-resolution benchmark; no live AWS calls or business-rule runtime SLA',
         'objects':count,'rows_per_object':rows,'total_rows':count*rows,'simulated_request_latency_ms':latency_ms,'workers':workers,
-        'object_preparation':results,'identical_ordered_sha256':True,'normalization_5000_lookups_seconds':timings,
+        'object_preparation':results,'identical_ordered_sha256':True,'field_resolution_5000_lookups_seconds':timings,
         'cold_preparation_speedup':round(results['serial_cold']['seconds']/results['parallel_cold']['seconds'],2),
         'note':'Five-minute end-to-end acceptance requires a representative team S3 run; object sizes, network, full reference scans and reports affect runtime.'}
 

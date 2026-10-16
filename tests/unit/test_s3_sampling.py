@@ -100,3 +100,37 @@ def test_changed_remote_snapshot_fails_without_full_download_fallback(tmp_path):
     with pytest.raises(InputSourceError,match='stable extraction snapshot'):
         resolver.resolve(['s3://medpar-demo-bucket/source.parquet'],sample_source=True)
     assert not client.downloads
+
+
+def test_verified_partial_sample_reused_across_runs_and_limit_change_invalidates(tmp_path):
+    client=RangeS3(parquet_bytes())
+    def run(name,limit):
+        sources=InputSources(tmp_path,tmp_path/'reports'/name,client=client,s3_read_mode='sample_parquet',
+            row_selection={'mode':'first_n_per_file','limit':limit,'include_related_records':False})
+        return tmp_path/sources.resolve('s3://medpar-demo-bucket/object.parquet',sample_source=True)[0]
+    first=run('first',5);requests=len(client.ranges)
+    second=run('second',5)
+    assert len(client.ranges)==requests
+    assert sample_metadata(second)['bytes_transferred']==0
+    assert sample_metadata(second)['cache_reused'] is True
+    assert sample_metadata(second)['source_total_rows']==50000
+    assert pq.read_table(second).to_pylist()==pq.read_table(first).to_pylist()
+    assert sample_metadata(second)['complete_source'] is False
+    third=run('third',7)
+    assert len(client.ranges)>requests
+    assert pq.ParquetFile(third).metadata.num_rows==7
+    assert not client.downloads
+
+
+def test_corrupt_sample_cache_is_rebuilt_and_never_used_as_full_reference(tmp_path):
+    client=RangeS3(parquet_bytes())
+    def source(name):return InputSources(tmp_path,tmp_path/'reports'/name,client=client,s3_read_mode='sample_parquet',row_selection={'mode':'first_n_per_file','limit':5,'include_related_records':False})
+    source('first').resolve('s3://medpar-demo-bucket/object.parquet',sample_source=True)
+    next((tmp_path/'data/.input_cache/samples').glob('*/sample.parquet')).write_bytes(b'corrupt')
+    requests=len(client.ranges)
+    sources=source('second');path=sources.resolve('s3://medpar-demo-bucket/object.parquet',sample_source=True)[0]
+    assert len(client.ranges)>requests
+    assert pq.ParquetFile(tmp_path/path).metadata.num_rows==5
+    ref=sources.resolve('s3://medpar-demo-bucket/object.parquet',sample_source=False)[0]
+    assert pq.ParquetFile(tmp_path/ref).metadata.num_rows==50000
+    assert sample_metadata(tmp_path/ref) is None

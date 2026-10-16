@@ -265,7 +265,7 @@ class InputSources:
                 if eligible:
                     from .s3_sampling import stage_parquet_sample
                     sample_path=path.with_name(path.name+'.selected.parquet')
-                    sampled=stage_parquet_sample(self.client,bucket,obj['Key'],obj['Size'],obj.get('ETag'),sample_path,self.row_selection['limit'])
+                    sampled=stage_parquet_sample(self.client,bucket,obj['Key'],obj['Size'],obj.get('ETag'),sample_path,self.row_selection['limit'],cache_directory=self.root/'data/.input_cache/samples')
                     if sampled is not None:
                         resolved = self._record(origin,sample_path,kind='s3',bucket=bucket,key=obj['Key'],etag=obj.get('ETag'),detected_format='parquet',**sampled)
                         print(f"S3 Parquet sample: {self.row_selection['limit']} requested; {sampled['cached_rows']} cached / {sampled['source_total_rows']} source rows; {sampled['bytes_transferred']} bytes transferred / {sampled['source_bytes']} object bytes",flush=True)

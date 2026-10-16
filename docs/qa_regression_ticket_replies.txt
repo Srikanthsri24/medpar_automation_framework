@@ -27,8 +27,9 @@ excludes the intermediary date object. Stay retains the full intermediary object
 its date rules are checked separately from the first-bill ID. JSON/Parquet type
 checks reject object/struct output, and Final carry-forward checks verify that
 the string value is unchanged. Multi-bill and Intermediate-to-Final tests pass.
-Existing Q61/R65 files with the old struct remain failures until the producing
-application regenerates them; they are not accepted as the new format. Legacy
+Source-generated Final output can convert the legacy 0580 object to its ID
+string. Supplied Q61/R65 comparison outputs with the old struct still fail
+until the producing application regenerates them. Legacy
 padding/length is not invented. Glue/Athena partition migration remains a team
 acceptance/deployment action.
 
@@ -85,11 +86,11 @@ Measured evidence is in qa_regression_benchmark.json. It explicitly separates:
 1) simulated S3 preparation, using 100 complete objects / 100,000 rows and a
    declared 20ms request latency, from
 2) the actual configured local Q61/R65 run with five selected rows per file.
-The local run completed in 233.256 seconds (3m 53s). It returned exit code 1
+The latest fully compared local run completed in 211.829 seconds (3m 32s). It returned exit code 1
 because supplied production data has genuine validation failures, including
-old object-valued 0580. This is not a software-test failure or a production pass.
-The resulting report has six HTML files, 22,183 internal evidence screens and
-100,089 checked HTML links with zero unresolved targets.
+old object-valued 0580 in supplied comparison outputs. This is not a software-test failure or a production pass.
+The resulting report has six HTML files, 22,735 internal evidence screens and
+102,661 checked HTML links with zero unresolved targets.
 
 The synthetic preparation benchmark showed 5.56x faster cold preparation and
 zero object downloads on the verified warm-cache run. This is NOT a live AWS
@@ -97,8 +98,11 @@ end-to-end benchmark. The requested under-five-minute S3 target must be timed
 against the team's actual object sizes, network, credentials and full comparison
 workload. No live AWS access was provided for that acceptance check.
 
-Software test outcome: 661 tests passed in 95.10 seconds on 16 October 2026.
+Software test outcome: 672 tests passed in 114.28 seconds on 16 October 2026.
 No failing software tests remain in this run; production acceptance dependencies
 listed above remain open.
 Repeat benchmark: python scripts/benchmark_s3_preparation.py --output /tmp/benchmark.json
 Repeat regression suite: python -m pytest -q
+
+Latest production follow-up: production_followup_summary.txt and
+production_followup_evidence.json contain current matching/performance evidence.

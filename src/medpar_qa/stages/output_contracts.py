@@ -52,10 +52,20 @@ def carry_forward_contracts(source, target, resolver):
         expected, actual = resolver.get(source.data, field), resolver.get(target.data, field)
         if expected is None:
             continue
+        original_expected = expected
+        if field == 'medpar_intmd_num_0580' and isinstance(expected, dict):
+            try:
+                expected = intermediary_id(expected)
+            except (LookupError, ValueError) as exc:
+                checks.append(RuleResult(Stage.FINAL_MEDPAR, rule, ValidationStatus.BLOCKED,
+                    str(exc), expected='Source 0580.id', actual=original_expected,
+                    record_ids=[source.record_id], source_files=[source.source.file_path]))
+                continue
         checks.append(RuleResult(Stage.FINAL_MEDPAR, rule,
             ValidationStatus.PASS if actual == expected else ValidationStatus.FAIL,
-            'Final field must preserve the Intermediate value and type',
+            'Final field preserves the Intermediate value; QA-REG-02 converts legacy 0580 objects to their id string',
             expected=expected, actual=actual, field_name=field,
+            evidence={'source_value': original_expected, 'approved_conversion': 'QA-REG-02 object.id to string' if isinstance(original_expected, dict) else 'None'},
             record_ids=[source.record_id, target.record_id],
             source_files=list(dict.fromkeys([source.source.file_path, target.source.file_path]))))
     return checks

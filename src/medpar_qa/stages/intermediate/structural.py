@@ -312,6 +312,7 @@ def validate_age_and_ndc(
     record: SourceRecord,
     resolver: FieldResolver,
     ndc_length: int,
+    source: SourceRecord | None = None,
 ) -> list[RuleResult]:
     """Check populated age and NDC fields, including independent numeric NDC content/width and
     occurrence limits.
@@ -324,12 +325,16 @@ def validate_age_and_ndc(
     except (TypeError, ValueError):
         normalized_age = age
         age_valid = False
+    from medpar_qa.normalization.dates import is_missing_date
+    birth = resolver.get(source.data, 'beneficiary_date_of_birth') if source is not None else None
+    missing_operand = source is not None and age in (None, '') and is_missing_date(birth)
     results.append(
         RuleResult(
             stage=Stage.INTERMEDIATE,
             rule_id="INT-AGE",
-            status=ValidationStatus.PASS if age_valid else ValidationStatus.FAIL,
-            message="Age is valid" if age_valid else "Age must be an integer from 0 through 120",
+            status=ValidationStatus.PASS if age_valid else ValidationStatus.BLOCKED if missing_operand else ValidationStatus.FAIL,
+            message="Age is valid" if age_valid else "Age cannot be calculated: source birth date is missing or zero. Supply the approved beneficiary birth-date reference; no age was invented." if missing_operand else "Age must be an integer from 0 through 120",
+            evidence={'source_birth_date': birth, 'source_admission_date': resolver.get(source.data, 'admission_date') if source is not None else None},
             expected="0..120",
             actual=normalized_age,
             field_name="medpar_age_0030",

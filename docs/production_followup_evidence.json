@@ -1,0 +1,256 @@
+{
+  "report": "reports/20261016_201510/master/index.html",
+  "software_tests_passed": 672,
+  "local_runtime_seconds": 211.829,
+  "previous_same_workload_seconds": 301.937,
+  "speedup": 1.43,
+  "row_outcomes_unchanged_by_performance_optimizations": true,
+  "scope": "Configured local Q61/R65 files; first five rows per file, no context expansion, complete supplied KEEP/DROP reference scans. Not a live S3 timing or production acceptance pass.",
+  "original_input_stages": [
+    {
+      "stage": "final_action",
+      "supplied_files": 15,
+      "selected_rows": 75,
+      "decisions": {
+        "KEEP": 9,
+        "STOPPED": 36,
+        "DROP": 30
+      },
+      "comparison_outcomes": {
+        "FAIL": 25,
+        "BLOCKED": 36,
+        "PASS": 14
+      },
+      "causes_affected_selected_rows": {
+        "Calculated decision and supplied output membership disagree": 61,
+        "Invalid Final Action claim code": 36
+      },
+      "identity_matched_reference_occurrences": {
+        "keep": 33,
+        "drop": 168
+      }
+    },
+    {
+      "stage": "split",
+      "supplied_files": 65,
+      "selected_rows": 249,
+      "decisions": {
+        "DROP": 62,
+        "STOPPED": 147,
+        "KEEP": 40
+      },
+      "comparison_outcomes": {
+        "FAIL": 208,
+        "BLOCKED": 41
+      },
+      "causes_affected_selected_rows": {
+        "Supplied output comparison discrepancy": 73,
+        "Calculated decision and supplied output membership disagree": 176,
+        "Split transaction-code exception": 106,
+        "Repeated claim identity": 66
+      },
+      "identity_matched_reference_occurrences": {
+        "keep": 775,
+        "drop": 157
+      }
+    },
+    {
+      "stage": "stay",
+      "supplied_files": 12,
+      "selected_rows": 60,
+      "decisions": {
+        "KEEP": 46,
+        "STOPPED": 14
+      },
+      "comparison_outcomes": {
+        "FAIL": 46,
+        "BLOCKED": 14
+      },
+      "causes_affected_selected_rows": {
+        "Calculated decision and supplied output membership disagree": 39,
+        "Occurrence-span input unavailable": 14,
+        "Supplied output comparison discrepancy": 21
+      },
+      "identity_matched_reference_occurrences": {
+        "keep": 15,
+        "drop": 0
+      }
+    },
+    {
+      "stage": "intermediate",
+      "supplied_files": 83,
+      "selected_rows": 83,
+      "decisions": {
+        "STOPPED": 83
+      },
+      "comparison_outcomes": {
+        "BLOCKED": 83
+      },
+      "causes_affected_selected_rows": {
+        "Calculated decision and supplied output membership disagree": 83,
+        "Date outside selected business window": 83
+      },
+      "identity_matched_reference_occurrences": {
+        "keep": 166,
+        "drop": 0
+      }
+    },
+    {
+      "stage": "final_medpar",
+      "supplied_files": 552,
+      "selected_rows": 552,
+      "decisions": {
+        "KEEP": 552
+      },
+      "comparison_outcomes": {
+        "FAIL": 552
+      },
+      "causes_affected_selected_rows": {
+        "Supplied output comparison discrepancy": 552,
+        "Intermediary 0580 format / value discrepancy": 552
+      },
+      "identity_matched_reference_occurrences": {
+        "keep": 914,
+        "drop": 0
+      }
+    }
+  ],
+  "all_stage_row_arithmetic_and_handoffs_verified": true,
+  "row_flow": [
+    {
+      "supplied_input_files": 15,
+      "selected_target_rows": 75,
+      "context_rows": 0,
+      "stage": "final_action",
+      "started_rows": 75,
+      "received_rows": 0,
+      "input_rows": 75,
+      "kept_input_rows": 9,
+      "dropped_input_rows": 30,
+      "stopped_input_rows": 36,
+      "generated_output_rows": 9,
+      "forwarded_rows": 9,
+      "input_balance_verified": true,
+      "received_verified": true,
+      "output_handoff_verified": true
+    },
+    {
+      "supplied_input_files": 65,
+      "selected_target_rows": 249,
+      "context_rows": 0,
+      "stage": "split",
+      "started_rows": 249,
+      "received_rows": 9,
+      "input_rows": 258,
+      "kept_input_rows": 44,
+      "dropped_input_rows": 65,
+      "stopped_input_rows": 149,
+      "generated_output_rows": 44,
+      "forwarded_rows": 44,
+      "input_balance_verified": true,
+      "received_verified": true,
+      "output_handoff_verified": true
+    },
+    {
+      "supplied_input_files": 12,
+      "selected_target_rows": 60,
+      "context_rows": 0,
+      "stage": "stay",
+      "started_rows": 60,
+      "received_rows": 44,
+      "input_rows": 104,
+      "kept_input_rows": 82,
+      "dropped_input_rows": 0,
+      "stopped_input_rows": 22,
+      "generated_output_rows": 56,
+      "forwarded_rows": 56,
+      "input_balance_verified": true,
+      "received_verified": true,
+      "output_handoff_verified": true
+    },
+    {
+      "supplied_input_files": 83,
+      "selected_target_rows": 83,
+      "context_rows": 0,
+      "stage": "intermediate",
+      "started_rows": 83,
+      "received_rows": 56,
+      "input_rows": 139,
+      "kept_input_rows": 0,
+      "dropped_input_rows": 0,
+      "stopped_input_rows": 139,
+      "generated_output_rows": 0,
+      "forwarded_rows": 0,
+      "input_balance_verified": true,
+      "received_verified": true,
+      "output_handoff_verified": true
+    },
+    {
+      "supplied_input_files": 552,
+      "selected_target_rows": 552,
+      "context_rows": 0,
+      "stage": "final_medpar",
+      "started_rows": 552,
+      "received_rows": 0,
+      "input_rows": 552,
+      "kept_input_rows": 552,
+      "dropped_input_rows": 0,
+      "stopped_input_rows": 0,
+      "generated_output_rows": 552,
+      "forwarded_rows": 0,
+      "input_balance_verified": true,
+      "received_verified": true,
+      "output_handoff_verified": true
+    }
+  ],
+  "navigation": {
+    "html_wrappers": 6,
+    "evidence_screens": 22735,
+    "html_links_checked": 102661,
+    "unresolved_html_links": 0,
+    "all_routes_have_screens": true,
+    "unresolved_examples": [],
+    "scope": "Static compact screen and HTML target verification; not a browser execution or business acceptance test."
+  },
+  "compaction": {
+    "legacy_html_encodings": [],
+    "html_files_before": 22735,
+    "html_files_after": 6,
+    "html_bytes_before": 1000615420,
+    "html_bytes_after": 69926804,
+    "count_basis": "Processed input rows, generated output rows and verified next-stage reads",
+    "navigation": "One master and one page per stage; screen routes open existing rule/file evidence inside the page"
+  },
+  "synthetic_preparation_benchmark": {
+    "scope": "Synthetic complete-object preparation and field-resolution benchmark; no live AWS calls or business-rule runtime SLA",
+    "objects": 100,
+    "rows_per_object": 1000,
+    "total_rows": 100000,
+    "simulated_request_latency_ms": 20,
+    "workers": 8,
+    "object_preparation": {
+      "serial_cold": {
+        "seconds": 2.6016,
+        "downloads": 100,
+        "files": 100
+      },
+      "parallel_cold": {
+        "seconds": 0.5982,
+        "downloads": 100,
+        "files": 100
+      },
+      "parallel_verified_cache": {
+        "seconds": 0.2837,
+        "downloads": 0,
+        "files": 100
+      }
+    },
+    "identical_ordered_sha256": true,
+    "field_resolution_5000_lookups_seconds": {
+      "previous_normalized_key_scan": 0.2228,
+      "indexed_key_shapes": 0.0288
+    },
+    "cold_preparation_speedup": 4.35,
+    "note": "Five-minute end-to-end acceptance requires a representative team S3 run; object sizes, network, full reference scans and reports affect runtime."
+  }
+}

@@ -9,14 +9,14 @@ from .status_navigation import e
 from .path_utils import relative_link
 
 
-def reference_cell(master,audit,records,path,number,role):
+def reference_cell(master,audit,records,path,number,role,*,resolver=None):
     """Count reference occurrences once per identity within this file's selected scope."""
     from .status_navigation import page
     from medpar_qa.normalization.fields import FieldResolver
     from medpar_qa.stages.common import record_identity
     refs=audit.get('comparison_files',{}).get(role,[])
     if not refs:return '<td>Not supplied</td>'
-    resolver=FieldResolver.from_yaml(Path(__file__).resolve().parents[3]/'config/field_aliases.yaml')
+    resolver=resolver or FieldResolver.from_yaml(Path(__file__).resolve().parents[3]/'config/field_aliases.yaml')
     fields=tuple(audit.get('identity_fields',[]))
     records=[r for r in records if r.get('decision')==role.upper()]
     outcomes=Counter(r.get('comparison_status','NOT ASSESSED') for r in records)
@@ -46,6 +46,9 @@ def reference_cell(master,audit,records,path,number,role):
 
 def file_rows(master,sources,moved_reports):
     rows=[];serial=0
+    # One immutable alias catalog per table, not a YAML parse for each file/role cell.
+    from medpar_qa.normalization.fields import FieldResolver
+    resolver=FieldResolver.from_yaml(Path(__file__).resolve().parents[3]/'config/field_aliases.yaml')
     sources=sorted(sources,key=lambda pair:pair[0].get('input_kind')!='supplied_original')
     for audit,path in sources:
         by_file=defaultdict(list)
@@ -59,7 +62,7 @@ def file_rows(master,sources,moved_reports):
             def cell(value):return '<td><a href="'+e(target)+'">'+e(value)+'</a></td>'
             stopped=sum(v for k,v in decisions.items() if k not in ('KEEP','DROP'))
             name=item.get('origin',item['file'])
-            rows.append('<tr><td>'+str(serial)+'</td><td>'+e(kind)+'</td><td><a href="'+e(target)+'">'+e(Path(name).name)+'</a><details><summary>Source path</summary>'+e(name)+'</details></td>'+''.join(cell(v) for v in (item['total_rows'],len(records),decisions.get('KEEP',0)))+reference_cell(master,audit,records,path,number,'keep')+cell(decisions.get('DROP',0))+reference_cell(master,audit,records,path,number,'drop')+cell(stopped)+cell(continued)+'</tr>')
+            rows.append('<tr><td>'+str(serial)+'</td><td>'+e(kind)+'</td><td><a href="'+e(target)+'">'+e(Path(name).name)+'</a><details><summary>Source path</summary>'+e(name)+'</details></td>'+''.join(cell(v) for v in (item['total_rows'],len(records),decisions.get('KEEP',0)))+reference_cell(master,audit,records,path,number,'keep',resolver=resolver)+cell(decisions.get('DROP',0))+reference_cell(master,audit,records,path,number,'drop',resolver=resolver)+cell(stopped)+cell(continued)+'</tr>')
     supplied=sum(len(a.get('files',[])) for a,_ in sources if a.get('input_kind')=='supplied_original')
     generated=serial-supplied
     headings=('No.','Input origin','File — open row evidence','Total rows','Rows taken','Rows kept','KEEP comparison — found / kept','Rows dropped','DROP comparison — found / dropped','STOPPED / exceptions','Kept source rows continued*')

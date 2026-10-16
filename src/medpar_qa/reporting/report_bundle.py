@@ -39,16 +39,33 @@ def write_report_bundle(
     for result in stage_results:
         write_stage_audit(result, directory)
 
-    html_path = write_html_report(
-        run_id,
-        manifest.run_date if manifest else "Not supplied",
-        stage_results,
-        directory,
-        manifest=manifest,
-        title=title,
-        filename="report.html",
-        parent_link=parent_link,
-    )
+    handoff = (context or {}).get('handoff', {})
+    if handoff.get('status') in ('BEFORE_START', 'NOT_REACHED'):
+        # No validators ran. Retain the route and reason without rendering hundreds
+        # of duplicate, inapplicable rule cards for every downstream group.
+        import html
+        from .status_navigation import page
+        state = handoff['status']
+        body = '<p><strong>' + html.escape(state) + '</strong> — no rows were processed in this stage.</p>'
+        body += '<p>' + html.escape(handoff.get('reason', 'Stage not requested')) + '</p>'
+        if parent_link:
+            body += '<p><a href="' + html.escape(parent_link, quote=True) + '">Open input journey and upstream stopping evidence</a></p>'
+        html_path = directory / 'report.html'
+        document = page(title, body)
+        if parent_link:
+            document = document.replace('href="index.html#stage-results"', 'href="' + html.escape(parent_link, quote=True) + '"')
+        html_path.write_text(document, encoding='utf-8')
+    else:
+        html_path = write_html_report(
+            run_id,
+            manifest.run_date if manifest else "Not supplied",
+            stage_results,
+            directory,
+            manifest=manifest,
+            title=title,
+            filename="report.html",
+            parent_link=parent_link,
+        )
     json_path = write_json_report(
         run_id,
         stage_results,

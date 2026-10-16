@@ -16,6 +16,20 @@ def _key_form(value: str) -> str:
     return "".join(character.lower() for character in str(value) if character.isalnum())
 
 
+@lru_cache(maxsize=2048)
+def _key_index(keys: tuple) -> dict[str, tuple]:
+    """Cache key shapes only. Read values from the current dictionary on every lookup.
+
+    A changed key set/order has a different cache key, so added aliases and
+    collisions are never hidden by a stale record/value cache.
+    """
+    index = {}
+    for key in keys:
+        normalized = _key_form(key)
+        index.setdefault(normalized, []).append(key)
+    return {key: tuple(matches) for key, matches in index.items()}
+
+
 def nested_get(data: dict[str, Any], path: str, default: Any = None) -> Any:
     """Read a dotted path through nested dictionaries, returning the default when any part is
     absent.
@@ -27,7 +41,7 @@ def nested_get(data: dict[str, Any], path: str, default: Any = None) -> Any:
         if part in current:
             current = current[part]
             continue
-        matches = [key for key in current if _key_form(key) == _key_form(part)]
+        matches = _key_index(tuple(current)).get(_key_form(part), ())
         if len(matches) != 1:
             return default
         current = current[matches[0]]
