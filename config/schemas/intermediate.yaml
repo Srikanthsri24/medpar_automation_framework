@@ -19,3 +19,7 @@ revenue_line_subfields:
   - rev_cntr_ptnt_add_on_pmt_amt
   - rev_cntr_rp_ind_cd
   - rev_cntr_model_reimbrsmt_amt
+
+field_types:
+  medparIntmdNum0580: string
+  medparDeathAfterAdm0611: signed_integer

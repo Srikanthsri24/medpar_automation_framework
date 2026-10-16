@@ -1,6 +1,12 @@
 version: 1
 reviewed_on: '2026-10-14'
 entries:
+  DOD_REALTIME_BIC_API:
+    scope: BIC death dates and dependent 0230/0240/0611/WI08/0640 fields
+    status: EXPLICIT_CUTOFF_POLICY_REQUIRED
+    source: QA_Regression_Tickets.docx QA-REG-03
+    reason: Apply approved dod_data_cutoff_date; ignore later DOD and indicator, then apply discharge-status fallback. This scenario is not ACCEPT_BOTH.
+    next_action: Confirm claims coverage date and equality policy; raw cached API date remains evidence in Intermediate.
   FA-TC-DEFERRED:
     scope: Final Action transaction-code domain validation only; Split still validates
       0-4

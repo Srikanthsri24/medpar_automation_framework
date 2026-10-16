@@ -22,6 +22,8 @@ class FinalMedparSettings:
         "hicn", "provider_id", "split_year_indicator",
         "medpar_ss_ls_snf_ind_0140",
     )
+    forbidden_fields: tuple[str,...] = ("cacheDataInternal",)
+    expected_removed_fields: tuple[str,...] = ("splitYearIndicator","medparSplitYearIndicator","cacheDataInternal")
     expected_bytes: int = 3000
     split_indicator_in_output: bool = True
     encoding: str = "ascii"
@@ -85,6 +87,8 @@ class FinalMedparSettings:
         """
         raw = raw or {}
         return cls(
+            forbidden_fields=tuple(raw.get("forbidden_fields",cls.forbidden_fields)),
+            expected_removed_fields=tuple(raw.get("expected_removed_fields",cls.expected_removed_fields)),
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),
             sort_fields=tuple(raw.get("sort_fields") or cls.sort_fields),
             expected_bytes=int(raw.get("expected_bytes", 3000)),

@@ -29,3 +29,6 @@ selected_fields:
   - MEDPAR-HIMASTER-DOD-0230
   - medparProvider0130
 open_specification: Approved field offsets and 3050-to-3000 transformation map are still required for full byte-position validation
+
+forbidden_fields: [cacheDataInternal]
+expected_removed_fields: [splitYearIndicator, medparSplitYearIndicator, cacheDataInternal]

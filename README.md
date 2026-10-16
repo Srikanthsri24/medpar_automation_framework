@@ -2,9 +2,27 @@
 
 Validate Final Action, Four-Year Split, Stay, Intermediate and Final MEDPAR using JSON or Parquet inputs. The framework compares production outputs with source rules and approved expected outputs, and produces reports explaining every recorded result.
 
-**Current verification:** The 543-test full suite and focused source-provenance/link checks passed on 15 October 2026. The connected synthetic example runs all five real stage validators. Supplied production validation remains failing or blocked; a passing software test suite does not establish production acceptance.
+**Current verification:** All 661 software tests passed on 16 October 2026. The configured local Q61/R65 run completed in 3m 53s with six compact HTML report files and 100,089 checked HTML links, with no unresolved targets. Supplied production data still has validation failures; this is not production acceptance. See [ticket-wise replies](docs/qa_regression_ticket_replies.txt) and [measured performance evidence](docs/qa_regression_benchmark.json).
 
 For your team demo, start with [how one run works](#how-one-run-works), [stage logic](#stage-logic-to-explain-first), [common questions](#questions-your-team-is-likely-to-ask) and [Python concepts](#python-concepts-used-here). Use the expandable [file/function reference](#every-python-file-class-and-function) for coding questions and the [rule reference](#rule-explanation-reference) for validation questions. Search the exact function or file name to jump to its detailed explanation.
+
+## Regression ticket configuration
+
+The QA-REG-01 through QA-REG-04 framework changes are implemented and tested. The team still needs to confirm the claims coverage date and provide regenerated/before-and-after outputs for production acceptance. The existing old struct-valued 0580 outputs correctly fail the new string contract.
+
+Set the approved date in **one place**, in `run_commands.py`:
+
+```python
+SOURCE_RUN["settings"]["intermediate"]["dod_data_cutoff_date"] = "YYYY-MM-DD"
+```
+
+It remains `None` until confirmed. Connected Stay and Intermediate share the date. `dod_cutoff_inclusive=True` retains a DOD equal to the cutoff; the team can change this boundary. A missing approved date blocks affected BIC death-date checks rather than substituting the current run date.
+
+S3 preparation uses `SOURCE_RUN["s3_workers"] = 8` (range 1–32), complete-object cache reuse with checksum validation, and the existing original-Parquet range sampling. Full KEEP/DROP references remain complete. The measured five-row local run finished under five minutes; a live S3 runtime requires the team's representative dataset and network. Reproduce the explicitly synthetic preparation benchmark with:
+
+```sh
+python scripts/benchmark_s3_preparation.py --output /tmp/medpar-benchmark.json
+```
 
 ## Setup
 

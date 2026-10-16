@@ -3,12 +3,14 @@ Ambiguous conflicting aliases must not be silently selected.
 """
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 
+@lru_cache(maxsize=65536)
 def _key_form(value: str) -> str:
     """Case/separator insensitive lookup for external Parquet and COBOL names."""
     return "".join(character.lower() for character in str(value) if character.isalnum())

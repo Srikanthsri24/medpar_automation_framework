@@ -91,11 +91,11 @@ def validate_intermediate_direct_fields(
             window_end=window_end,
         )
     )
-    # Apply the calendar-aligned five-year window to every populated business date.
+    # Claim/service dates use the claims window. Historical EDB death dates may
+    # precede it (QA-REG-04); DOD parsing and cutoff have independent checks.
     for field_name in (
         "admission_date",
         "discharge_date",
-        "date_of_death",
         "medpar_snf_qual_from_date_0180",
         "medpar_snf_qual_thru_date_0190",
         "medpar_hosp_home_from_dt_1630",

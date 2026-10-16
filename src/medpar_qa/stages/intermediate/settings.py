@@ -19,6 +19,8 @@ class IntermediateSettings:
         "admission_date",
         "split_year_indicator",
     )
+    dod_data_cutoff_date: str | None = None
+    dod_cutoff_inclusive: bool = True
     decimal_scale: Decimal = Decimal("0.001")
     window_years: int = 5
     revenue_category_ranges: dict | None = None
@@ -166,7 +168,9 @@ class IntermediateSettings:
             )
         else:
             switch_mappings = cls.condition_switch_mappings
+        from medpar_qa.stages.death_policy import cutoff_options
         return cls(
+            **cutoff_options(raw),
             deduplicate_filename_exports=bool(raw.get("deduplicate_filename_exports", False)),
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),
             decimal_scale=Decimal(str(raw.get("decimal_scale", "0.001"))),

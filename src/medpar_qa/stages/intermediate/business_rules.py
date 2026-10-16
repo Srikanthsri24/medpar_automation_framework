@@ -243,7 +243,7 @@ DIRECT_MOVES = {
 
 
 def validate_business_rules(source: SourceRecord, target: SourceRecord,
-                            resolver: FieldResolver, *, revenue_category_ranges=None, calculation_sink=None) -> list[RuleResult]:
+                            resolver: FieldResolver, *, revenue_category_ranges=None, calculation_sink=None, dod_data_cutoff_date=None, dod_cutoff_inclusive=True) -> list[RuleResult]:
     """Calculate supported Intermediate expectations from source operands and compare them with the
     matched target, emitting field-specific evidence.
     """
@@ -292,27 +292,44 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
                 calculation_sink(field, expected, None)
                 return
             if observed in (None, ""):
-                status = ValidationStatus.PASS if expected is None else ValidationStatus.NOT_APPLICABLE
+                status = ValidationStatus.PASS if expected is None else ValidationStatus.FAIL if rule in ("INT-DEATH-DAYS-CALCULATION", "INT-DOD-CALCULATION", "INT-DOD-VERIFY") or field == "medpar_intmd_num_0580" else ValidationStatus.NOT_APPLICABLE
             else:
                 comparable = parse_date(observed) if date_value else to_decimal(observed) if numeric else str(observed).strip()
                 expected_value = parse_date(expected) if date_value else to_decimal(expected) if numeric and expected is not None else (str(expected).strip() if expected is not None else None)
-                status = ValidationStatus.PASS if comparable == expected_value else ValidationStatus.FAIL
+                status = ValidationStatus.PASS if comparable == expected_value or (rule == "INT-DEATH-DAYS-CALCULATION" and expected is None and comparable == 0) else ValidationStatus.FAIL
             message = "Derived value matches" if status == ValidationStatus.PASS else "Calculated expectation; output field absent" if status == ValidationStatus.NOT_APPLICABLE else "Derived value mismatch"
         except LookupError as exc:
             calculated=False
-            expected, status, message = str(exc), ValidationStatus.BLOCKED if observed not in (None, "") else ValidationStatus.NOT_APPLICABLE, str(exc)
+            expected, status, message = str(exc), ValidationStatus.BLOCKED if observed not in (None, "") or "dod_data_cutoff_date" in str(exc) else ValidationStatus.NOT_APPLICABLE, str(exc)
         except (ValueError, TypeError, ArithmeticError) as exc:
             calculated=False
             expected, status, message = "Valid source operands", ValidationStatus.FAIL, str(exc)
         if calculation_sink is not None:
             calculation_sink(field, None, message)
             return
+        death_evidence = {}
+        if rule in ("INT-DEATH-DAYS-CALCULATION", "INT-DOD-CALCULATION", "INT-DOD-VERIFY") or field == "warning_indicator_08":
+            death_evidence = {"raw_matched_dod": get("matched_date_of_death"),
+                              "raw_verification": get("matched_dod_verify_switch"),
+                              "approved_cutoff": dod_data_cutoff_date,
+                              "cutoff_inclusive": dod_cutoff_inclusive,
+                              "discharge_status": get("discharge_status", "patientStatus"),
+                              "claim_thru_date": get("stay_thru_date")}
+            try:
+                from medpar_qa.stages.death_policy import effective_death
+                policy = effective_death(source.data, resolver, dod_data_cutoff_date=dod_data_cutoff_date,
+                                         dod_cutoff_inclusive=dod_cutoff_inclusive)
+                death_evidence.update(effective_dod=policy.death.isoformat() if policy.death else None,
+                                      ignored_after_cutoff=policy.ignored_after_cutoff)
+            except (LookupError, ValueError, TypeError) as exc:
+                death_evidence['policy_not_verified'] = str(exc)
         results.append(RuleResult(stage=Stage.INTERMEDIATE, rule_id=rule, field_name=field,
                                   status=status, message=message, expected=str(expected) if isinstance(expected, Decimal) else expected,
                                   actual=observed, record_ids=list(dict.fromkeys([source.record_id, target.record_id])),
                                   source_files=list(dict.fromkeys([source.source.file_path, target.source.file_path])),
                                   evidence={"source_record_id": source.record_id, "target_record_id": target.record_id,
                                             "calculation_completed": calculated,
+                                            **({"death_policy": death_evidence} if death_evidence else {}),
                                             "specification": "V3 pp26–34; Byte-by-Byte pp4–6"}))
 
     def admission() -> date:
@@ -337,15 +354,9 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         """Use the actual DOD lookup/source date or dead-status thru-date fallback; distinguish a
         confirmed no-match from an unavailable feed.
         """
-        from medpar_qa.normalization.dates import is_missing_date
-        death = get("matched_date_of_death") if get("dod_reference_available") else get("date_of_death")
-        if not is_missing_date(death):
-            return parse_date(death, allow_none=False)
-        if str(status()).strip() in {"20","B"}:
-            return thru()
-        if get("dod_reference_available"):
-            return None
-        raise LookupError("DOD requires EDB reference; an absent source date is not a confirmed no-match")
+        from medpar_qa.stages.death_policy import effective_death
+        return effective_death(source.data, resolver, dod_data_cutoff_date=dod_data_cutoff_date,
+                               dod_cutoff_inclusive=dod_cutoff_inclusive).death
 
     check("INT-DEATH-DAYS-CALCULATION", "medpar_death_after_adm_0611", lambda: death_after_admission(admission(), dod()), True)
     check("INT-DOD-CALCULATION", "medpar_himaster_dod_0230", lambda: dod().strftime("%Y%j") if dod() else None, date_value=True)
@@ -353,13 +364,13 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         """Use the matched DOD verification switch, dead-status fallback B, or confirmed absent
         match; missing lookup evidence blocks the calculation.
         """
-        if get("dod_reference_matched"):
-            return required("matched_dod_verify_switch")
-        if str(status()).strip() in {"20","B"}:
-            return "B"
-        if get("dod_reference_available"):
-            return None
-        raise LookupError("DOD verify requires matched EDB reference or dead-status fallback")
+        from medpar_qa.stages.death_policy import effective_death
+        value = effective_death(source.data, resolver, dod_data_cutoff_date=dod_data_cutoff_date,
+                                dod_cutoff_inclusive=dod_cutoff_inclusive)
+        if value.death is not None and value.verification is None and get("dod_reference_matched"):
+            raise LookupError("Matched death date requires verification indicator")
+        return value.verification
+
     check("INT-DOD-VERIFY", "medpar_dod_ind_0240", death_verify)
     from medpar_qa.reference_data import ssi_days
     def ssi_count() -> int:
@@ -503,9 +514,10 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         return "R" if any(str(line_value(line,"rpInd","rpIndicator","revCntrRpIndCd")).strip()=="R" for line in lines) else ""
     check("INT-REVENUE-RP-INDICATOR", "medpar_rev_cntr_rp_ind_cd_1400", revenue_rp)
 
+    from medpar_qa.stages.output_contracts import intermediary_id
     for input_field, output_field in DIRECT_MOVES.items():
         if get(input_field, output_field) is not None or resolver.get(target.data, output_field) not in (None, ""):
-            check("INT-DOCUMENTED-DIRECT-MOVE", output_field, lambda input_field=input_field, output_field=output_field: required(input_field, output_field))
+            check("INT-DOCUMENTED-DIRECT-MOVE", output_field, lambda input_field=input_field, output_field=output_field: intermediary_id(required(input_field, output_field)) if output_field=="medpar_intmd_num_0580" else required(input_field, output_field))
     aco = get("ngAcoIndicatorCodes")
     if aco is not None:
         for index, field in enumerate(("medpar_ng_aco_ind_1_cd_1330", "medpar_ng_aco_ind_2_cd_1340",
@@ -585,7 +597,15 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         return "0" if state and county else "1" if not state and not county else "2" if not state else "3"
     check("INT-WARNING-07-CALCULATION", "warning_indicator_07", warning07)
     for number in (1, 5, 6, 8):
-        check("INT-WARNING-CARRY-FORWARD", f"warning_indicator_{number:02}", lambda number=number: required(f"warning_indicator_{number:02}"))
+        def expected_warning(number=number):
+            original = required(f"warning_indicator_{number:02}")
+            if number != 8:
+                return original
+            if dod_data_cutoff_date is None and not isinstance(get("cacheDataInternal"), dict) and get("matched_date_of_death", "date_of_death") is None:
+                return original  # No new BIC policy: preserve the independently validated Stay flag.
+            from medpar_qa.stages.death_policy import warning08_death_bit
+            return warning08_death_bit(original, dod(), admission())
+        check("INT-WARNING-CARRY-FORWARD", f"warning_indicator_{number:02}", expected_warning)
     for number in range(11,18):
         check("INT-WARNING-ZERO", f"warning_indicator_{number:02}", lambda: "0")
     return results

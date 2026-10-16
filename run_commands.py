@@ -82,7 +82,13 @@ SOURCE_RUN: dict[str, Any] = {
                              'keep': {'files': [], 'folders': ['s3://YOUR-BUCKET/r65/6-final-processing/']},
                              'drop': {'files': [], 'folders': []}}}},
     "aws_credentials_file": "config/aws_credentials.local.json",
-    "settings": {},  # Optional reference feeds and approved calculation/layout options.
+    "s3_workers": 8,  # Bounded concurrent object preparation (1..32).
+    "settings": {
+        "intermediate": {
+            "dod_data_cutoff_date": None,  # Team-approved claims coverage date, YYYY-MM-DD.
+            "dod_cutoff_inclusive": True,  # Equality retained; configurable for team confirmation.
+        },
+    },  # Stay shares the same death-date policy automatically.
 }
 
 
@@ -493,7 +499,7 @@ def main(argv=None, *, report_session=None) -> int:
     session = report_session or ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
     from medpar_qa.ingestion.input_sources import InputSources, InputSourceError
-    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path, s3_read_mode=SOURCE_RUN.get("s3_read_mode","download") if not options.config else "download", row_selection=connected_settings.get("_row_selection",{}))
+    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path, s3_read_mode=SOURCE_RUN.get("s3_read_mode","download") if not options.config else "download", row_selection=connected_settings.get("_row_selection",{}), s3_workers=SOURCE_RUN.get("s3_workers",8))
     try:
         configured_stages = sources.prepare(configured_stages, selected_stage=selected_stage, connected=connected, start_stage=start_stage, generate_outputs=generate_outputs)
     except InputSourceError as exc:

@@ -83,7 +83,7 @@ class StayProcessor(BaseStageProcessor):
         """
         results: list[RuleResult] = []
         from .merge_rules import validate_merge_rules
-        results.extend(validate_merge_rules(source_group, actual, self.resolver, self.settings.decimal_scale))
+        results.extend(validate_merge_rules(source_group, actual, self.resolver, self.settings.decimal_scale, **(dict(dod_data_cutoff_date=self.settings.dod_data_cutoff_date, dod_cutoff_inclusive=self.settings.dod_cutoff_inclusive) if self.settings.dod_data_cutoff_date is not None else {})))
         for canonical, rule_id in (
             ("condition_codes", "ST-LATEST-CONDITION-CODES"),
             ("occurrence_codes", "ST-LATEST-OCCURRENCE-CODES"),

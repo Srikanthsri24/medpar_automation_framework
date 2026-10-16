@@ -1,0 +1,104 @@
+MEDPAR QA REGRESSION — TICKET-WISE REPLIES
+16 October 2026
+
+Scope: regression-framework changes and verification. This does not certify a
+separate team's Lambda, Glue/Athena tables, IDR deployment or production rerun.
+
+QA-REG-01 — Remove cacheDataInternal from Final MEDPAR
+Reply:
+Implemented in the framework. Source-generated Final output recursively removes
+configured internal fields. FM-NO-INTERNAL-FIELDS detects forbidden fields in
+JSON and nested Parquet schemas, including mixed case, separators, null values
+and zero-row Parquet files. Intermediate retains its original cache evidence.
+Archive lineage ignores only configured expected removals; other field changes
+still fail. The existing SSA0021 + BIC0022 identity fallback remains available.
+Verification covers removal, unchanged source data, preserved non-cache values,
+schema-only failures, exact fingerprints and a connected Intermediate-to-Final run.
+Acceptance still required: before/after Final files for the SAME rundate20260709
+SS/SNF CY/FY inputs, and the delivered IDR location. Those files/deployment were
+not supplied. Glue/Athena partition refresh and IDR cleanup are deployment tasks;
+the framework has not performed or certified them.
+
+QA-REG-02 — 0580 must be the first claim's intermediary ID as a string
+Reply:
+Implemented. Intermediate 0580 uses the intermediary ID from the first bill under
+the documented Stay ordering. It preserves leading zeros such as '01234' and
+excludes the intermediary date object. Stay retains the full intermediary object;
+its date rules are checked separately from the first-bill ID. JSON/Parquet type
+checks reject object/struct output, and Final carry-forward checks verify that
+the string value is unchanged. Multi-bill and Intermediate-to-Final tests pass.
+Existing Q61/R65 files with the old struct remain failures until the producing
+application regenerates them; they are not accepted as the new format. Legacy
+padding/length is not invented. Glue/Athena partition migration remains a team
+acceptance/deployment action.
+
+QA-REG-03 — Apply the approved claims-data cutoff to BIC death dates
+Reply:
+Implemented with a configurable cutoff. Set only:
+SOURCE_RUN['settings']['intermediate']['dod_data_cutoff_date'] = 'YYYY-MM-DD'
+after the team confirms the approved claims coverage date. The setting is None
+for now. Execution date and quarter end are NOT substituted automatically.
+Connected Stay and Intermediate share this policy. Death dates after the cutoff
+and their indicators are ignored. Status 20 then uses claim thru date and switch
+B; non-dead records have no effective DOD/indicator/day count. Zero is accepted
+for an absent day count. No-match scenarios use the same fallback. WI08's death
+bit and the 0640 summary are recalculated consistently; raw cached dates remain
+in Intermediate evidence. Missing approval blocks BIC-dependent verification.
+Equality is configurable with dod_cutoff_inclusive; the default retains equality,
+consistent with the ticket's <= scenario. The team must confirm this boundary
+and date before production acceptance. The known-differences entry now requires
+this explicit policy, rather than accepting both outcomes for this scenario.
+Tests cover before/equal/after cutoff, equality excluded, no match, dead fallback,
+missing/invalid settings, independent calculations and connected Final delivery.
+The separately owned cache-manager Lambda was not changed by this repository.
+
+QA-REG-04 — Preserve signed death-after-admission days (0611)
+Reply:
+Verified and strengthened. Admission 2023-12-21 / death 2019-02-09 produces -1776;
+same-day death produces 1; later death produces the positive difference. A real
+DOD with output zero fails. Absent/ignored DOD allows blank or zero; dead-status
+thru-date fallback is also tested. Historical EDB death dates are not incorrectly
+rejected by the claims/service-date window. Negative values require WI08 = 2/3,
+and Final must preserve the Intermediate value/sign. Parquet schema checks
+require a signed integer type. Connected tests verify actual negative values
+through the real Intermediate and Final processors.
+Production acceptance still requires regenerated affected Q61 outputs. Physical
+3000-byte width and sign representation require the approved copybook/layout;
+passing JSON/Parquet tests does not certify that unavailable byte specification.
+
+S3 PERFORMANCE — IMPLEMENTED AND MEASURED
+- Bounded concurrent object preparation, default 8 workers; change s3_workers
+  in SOURCE_RUN (valid range 1..32).
+- Complete objects are cached across runs using bucket/key, ETag, size and
+  modification metadata. Cached bytes are SHA-256 checked before reuse.
+  Changed versions or corrupt cached files trigger a fresh download.
+- Existing range-based original-Parquet sampling remains available. Partial
+  samples are kept separate from complete KEEP/DROP comparison references.
+- Complete comparison references are still scanned. The selected five source
+  rows are not compared only with the first five reference rows.
+- Direct Arrow Parquet loading avoids the pandas-to-Arrow round trip.
+- Bounded field-name normalization cache avoids repeated string work; rule
+  evidence is serialized for event capture only when a capture consumer exists.
+- Compact report compression uses level 6; evidence screens are preserved.
+
+Measured evidence is in qa_regression_benchmark.json. It explicitly separates:
+1) simulated S3 preparation, using 100 complete objects / 100,000 rows and a
+   declared 20ms request latency, from
+2) the actual configured local Q61/R65 run with five selected rows per file.
+The local run completed in 233.256 seconds (3m 53s). It returned exit code 1
+because supplied production data has genuine validation failures, including
+old object-valued 0580. This is not a software-test failure or a production pass.
+The resulting report has six HTML files, 22,183 internal evidence screens and
+100,089 checked HTML links with zero unresolved targets.
+
+The synthetic preparation benchmark showed 5.56x faster cold preparation and
+zero object downloads on the verified warm-cache run. This is NOT a live AWS
+end-to-end benchmark. The requested under-five-minute S3 target must be timed
+against the team's actual object sizes, network, credentials and full comparison
+workload. No live AWS access was provided for that acceptance check.
+
+Software test outcome: 661 tests passed in 95.10 seconds on 16 October 2026.
+No failing software tests remain in this run; production acceptance dependencies
+listed above remain open.
+Repeat benchmark: python scripts/benchmark_s3_preparation.py --output /tmp/benchmark.json
+Repeat regression suite: python -m pytest -q

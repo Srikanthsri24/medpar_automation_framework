@@ -1,0 +1,82 @@
+{
+  "scope": "Synthetic complete-object preparation and field-resolution benchmark; no live AWS calls or business-rule runtime SLA",
+  "objects": 100,
+  "rows_per_object": 1000,
+  "total_rows": 100000,
+  "simulated_request_latency_ms": 20,
+  "workers": 8,
+  "object_preparation": {
+    "serial_cold": {
+      "seconds": 2.7371,
+      "downloads": 100,
+      "files": 100
+    },
+    "parallel_cold": {
+      "seconds": 0.4919,
+      "downloads": 100,
+      "files": 100
+    },
+    "parallel_verified_cache": {
+      "seconds": 0.165,
+      "downloads": 0,
+      "files": 100
+    }
+  },
+  "identical_ordered_sha256": true,
+  "normalization_5000_lookups_seconds": {
+    "uncached": 2.5254,
+    "cached": 0.1273
+  },
+  "cold_preparation_speedup": 5.56,
+  "note": "Five-minute end-to-end acceptance requires a representative team S3 run; object sizes, network, full reference scans and reports affect runtime.",
+  "configured_local_production_run": {
+    "seconds": 233.256,
+    "exit_code": 1,
+    "scope": "Configured Q61/R65 local entries; first five rows per source file, no context expansion; complete comparison references",
+    "report": "reports/20261016_194232_02/master/index.html",
+    "stages": {
+      "final_action": {
+        "supplied_files": 15,
+        "source_total_rows": 1419,
+        "selected_rows": 75
+      },
+      "split": {
+        "supplied_files": 65,
+        "source_total_rows": 797,
+        "selected_rows": 249
+      },
+      "stay": {
+        "supplied_files": 12,
+        "source_total_rows": 1403,
+        "selected_rows": 60
+      },
+      "intermediate": {
+        "supplied_files": 83,
+        "source_total_rows": 83,
+        "selected_rows": 83
+      },
+      "final_medpar": {
+        "supplied_files": 552,
+        "source_total_rows": 552,
+        "selected_rows": 552
+      }
+    },
+    "report_navigation": {
+      "wrappers": 6,
+      "evidence_screens": 22183,
+      "html_links_checked": 100089,
+      "unresolved_html_links": 0,
+      "examples": []
+    },
+    "compaction": {
+      "legacy_html_encodings": [],
+      "html_files_before": 22183,
+      "html_files_after": 6,
+      "html_bytes_before": 625127153,
+      "html_bytes_after": 53401770,
+      "count_basis": "Processed input rows, generated output rows and verified next-stage reads",
+      "navigation": "One master and one page per stage; screen routes open existing rule/file evidence inside the page"
+    },
+    "business_acceptance": "Failed: existing source/reference defects remain visible, including old struct-valued 0580. Not a production pass."
+  }
+}

@@ -32,6 +32,7 @@ class SourceRecord:
     data: dict[str, Any]
     source: SourceLocation
     record_id: str
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -91,11 +92,12 @@ class RuleResult:
                     ]
                 self.evidence["validator_call_chain"] = call_chain
         try:
-            from .reporting.event_recorder import record_event
+            from .reporting.event_recorder import capture_active, record_event
 
-            payload = self.to_dict()
-            payload["event_type"] = "validation"
-            record_event(payload)
+            if capture_active():
+                payload = self.to_dict()
+                payload["event_type"] = "validation"
+                record_event(payload)
         except Exception:
             # Reporting must never alter business-rule execution.
             pass

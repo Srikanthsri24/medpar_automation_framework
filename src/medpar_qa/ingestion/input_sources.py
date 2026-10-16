@@ -2,6 +2,7 @@
 from __future__ import annotations
 from medpar_qa.progress import tracked, emit, Progress
 
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from datetime import datetime, timezone
 from fnmatch import fnmatchcase
@@ -85,7 +86,10 @@ def aws_client(config_path: Path):
 class InputSources:
     """Stage local/S3 inputs once per run, keeping original paths and file hashes."""
 
-    def __init__(self, root: Path, session_root: Path, *, credentials_file=None, client=None, s3_read_mode="download", row_selection=None):
+    def __init__(self, root: Path, session_root: Path, *, credentials_file=None, client=None, s3_read_mode="download", row_selection=None, s3_workers=8):
+        if type(s3_workers) is not int or not 1 <= s3_workers <= 32:
+            raise InputSourceError("s3_workers must be an integer from 1 to 32")
+        self.s3_workers = s3_workers
         self.root = root.resolve()
         self.session_root = session_root
         cache_session = Path(session_root.parent.parent.name)/session_root.name if session_root.parent.name=='entries' else Path(session_root.name)
@@ -168,6 +172,53 @@ class InputSources:
             result.append(self._record(str(source), path, kind='local'))
         return result
 
+    def _download_cached(self, bucket, obj, destination, kwargs):
+        """Reuse complete ETag-pinned objects; verify local bytes before reuse.
+
+        Partial Parquet samples are deliberately excluded from this shared cache.
+        Corrupt cache entries are replaced with a fresh download.
+        """
+        etag = obj.get('ETag')
+        if not etag:
+            return self.client.download_file(bucket, obj['Key'], str(destination), **kwargs)
+        identity = json.dumps([bucket, obj['Key'], etag, obj['Size'], str(obj.get('LastModified') or '')])
+        cache_dir = self.root/'data/.input_cache/shared'/hashlib.sha256(identity.encode()).hexdigest()
+        payload, manifest = cache_dir/'object.bin', cache_dir/'snapshot.json'
+        def digest(path):
+            value = hashlib.sha256()
+            with path.open('rb') as stream:
+                for block in iter(lambda: stream.read(1024*1024), b''):
+                    value.update(block)
+            return value.hexdigest()
+        if payload.exists() and manifest.exists():
+            try:
+                saved = json.loads(manifest.read_text(encoding='utf-8'))
+                valid = payload.stat().st_size == obj['Size'] and digest(payload) == saved['sha256']
+            except (OSError, ValueError, KeyError):
+                valid = False
+            if valid:
+                emit(f"Reusing verified S3 cache: s3://{bucket}/{obj['Key']}; no object download")
+                shutil.copyfile(payload, destination)
+                return
+        self.client.download_file(bucket, obj['Key'], str(destination), **kwargs)
+        if destination.stat().st_size != obj['Size']:
+            raise InputSourceError('Downloaded object size differs from S3 metadata')
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        # Separate temporary names keep simultaneous processes from sharing partial bytes.
+        import tempfile
+        with tempfile.NamedTemporaryFile(dir=cache_dir, delete=False) as handle:
+            temporary = Path(handle.name)
+        try:
+            shutil.copyfile(destination, temporary)
+            fingerprint = digest(temporary)
+            temporary.replace(payload)
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=cache_dir, delete=False) as handle:
+                json.dump({'sha256': fingerprint, 'etag': etag, 'bytes': obj['Size']}, handle)
+                metadata_tmp = Path(handle.name)
+            metadata_tmp.replace(manifest)
+        finally:
+            temporary.unlink(missing_ok=True)
+
     def _s3(self, bucket, key):
         if self.client is None:
             try: self.client = aws_client(self.credentials_file)
@@ -202,12 +253,12 @@ class InputSources:
             if not objects: raise InputSourceError(f'No JSON or Parquet objects found at {uri}')
             result = []
             objects_progress=Progress('S3 objects prepared',len(objects),'objects')
-            for object_number,obj in enumerate(objects,1):
-                emit(f"S3 object {object_number}/{len(objects)}: s3://{bucket}/{obj['Key']} ({obj['Size']:,} bytes)")
+            def prepare_object(obj):
+                emit(f"S3 object: s3://{bucket}/{obj['Key']} ({obj['Size']:,} bytes)")
                 origin = f"s3://{bucket}/{obj['Key']}"
-                existing = next((p for p, record in self.files.items() if record['origin'] == origin and (not record.get('access_mode')=='s3_parquet_sample' or self._sample_source)), None)
+                existing = next((p for p, record in self.files.copy().items() if record['origin'] == origin and (not record.get('access_mode')=='s3_parquet_sample' or self._sample_source)), None)
                 if existing:
-                    result.append(existing); objects_progress.update(object_number,force=True); continue
+                    return existing
                 needs_detection=PurePosixPath(obj['Key']).suffix.lower() not in SUPPORTED
                 path = self._destination('s3', origin if needs_detection else bucket, obj['Key'].split('/'))
                 eligible=(self.s3_read_mode=='sample_parquet' and self._sample_source and self.row_selection.get('mode')=='first_n_per_file' and self.row_selection.get('include_related_records',True) is False and type(self.row_selection.get('limit')) is int and self.row_selection['limit']>0 and hasattr(self.client,'get_object') and bool(obj.get('ETag')) and PurePosixPath(obj['Key']).suffix.lower()!='.json')
@@ -216,10 +267,9 @@ class InputSources:
                     sample_path=path.with_name(path.name+'.selected.parquet')
                     sampled=stage_parquet_sample(self.client,bucket,obj['Key'],obj['Size'],obj.get('ETag'),sample_path,self.row_selection['limit'])
                     if sampled is not None:
-                        result.append(self._record(origin,sample_path,kind='s3',bucket=bucket,key=obj['Key'],etag=obj.get('ETag'),detected_format='parquet',**sampled))
+                        resolved = self._record(origin,sample_path,kind='s3',bucket=bucket,key=obj['Key'],etag=obj.get('ETag'),detected_format='parquet',**sampled)
                         print(f"S3 Parquet sample: {self.row_selection['limit']} requested; {sampled['cached_rows']} cached / {sampled['source_total_rows']} source rows; {sampled['bytes_transferred']} bytes transferred / {sampled['source_bytes']} object bytes",flush=True)
-                        objects_progress.update(object_number,force=True)
-                        continue
+                        return resolved
                     if PurePosixPath(obj['Key']).suffix.lower()=='.parquet':raise InputSourceError('Parquet object has an invalid header')
                 temporary = path.with_name(path.name + '.download')
                 try:
@@ -228,7 +278,7 @@ class InputSources:
                     parameters=inspect.signature(self.client.download_file).parameters
                     callback_supported='Callback' in parameters or any(v.kind==inspect.Parameter.VAR_KEYWORD for v in parameters.values())
                     kwargs={'Callback':transfer.advance} if callback_supported else {}
-                    self.client.download_file(bucket, obj['Key'], str(temporary),**kwargs)
+                    self._download_cached(bucket, obj, temporary, kwargs)
                     transfer.finish()
                     if temporary.stat().st_size != obj['Size']: raise InputSourceError('Downloaded object size differs from S3 metadata; rerun using a stable extraction snapshot')
                     detected=None
@@ -243,10 +293,15 @@ class InputSources:
                     temporary.replace(path)
                 finally:
                     temporary.unlink(missing_ok=True)
-                result.append(self._record(origin, path, kind='s3', etag=obj.get('ETag'),
+                return self._record(origin, path, kind='s3', etag=obj.get('ETag'),
                     last_modified=str(obj.get('LastModified') or ''), bucket=bucket, key=obj['Key'],
-                    detected_format=detected, format_detection='content' if needs_detection else 'extension'))
-                objects_progress.update(object_number,force=True)
+                    detected_format=detected, format_detection='content' if needs_detection else 'extension')
+            # map preserves sorted discovery order; each worker owns a distinct object.
+            # Iteration raises any worker error, so a partial folder is never accepted.
+            with ThreadPoolExecutor(max_workers=self.s3_workers, thread_name_prefix='medpar-s3') as pool:
+                for object_number, resolved in enumerate(pool.map(prepare_object, objects), 1):
+                    result.append(resolved)
+                    objects_progress.update(object_number, force=True)
             return result
         except InputSourceError: raise
         except Exception as exc:

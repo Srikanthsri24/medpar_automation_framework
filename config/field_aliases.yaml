@@ -507,7 +507,6 @@ state_code:
 - MEDPAR-STATE-CD
 - medparBeneSt0071
 fiscal_intermediary:
-- fiscalIntermediary.id
 - fiscalIntermediary
 - MEDPAR-FI-NUM
 medicare_status:
@@ -927,3 +926,19 @@ ric:
 - recordIdentificationCode
 - nchNearLineRIC.code
 - nchNearLineRIC
+
+fiscal_intermediary_id:
+- fiscalIntermediary.id
+- fiscal_intermediary.id
+- MEDPAR-FI-NUM
+matched_date_of_death:
+- matchedDateOfDeath
+- cacheDataInternal.deathDate
+matched_dod_verify_switch:
+- matchedDodVerifySwitch
+- cacheDataInternal.isDeathDateVerified
+
+fiscal_intermediary_approved_date:
+- fiscalIntermediary.approvedDate
+fiscal_intermediary_received_date:
+- fiscalIntermediary.receivedDate

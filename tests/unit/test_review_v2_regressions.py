@@ -74,10 +74,10 @@ def test_latest_duplicate_code_uses_query_then_icn(resolver, make_record):
 def test_final_delivered_extract_omits_indicator(resolver, make_record):
     data = base_claim(admissionDate='20260101', medparSSLSSNFIND0140='S')
     processor = FinalMedparProcessor(resolver, settings=FinalMedparSettings(split_indicator_in_output=False))
-    check = processor._validate_record(make_record(data, stage=Stage.FINAL_MEDPAR))[0]
+    check = next(r for r in processor._validate_record(make_record(data, stage=Stage.FINAL_MEDPAR)) if r.rule_id == "FM-SPLIT-YEAR-INDICATOR")
     assert check.status == ValidationStatus.PASS
     data['medparSplitYearIndicator']='Y00109'
-    assert processor._validate_record(make_record(data,stage=Stage.FINAL_MEDPAR))[0].status == ValidationStatus.FAIL
+    assert next(r for r in processor._validate_record(make_record(data,stage=Stage.FINAL_MEDPAR)) if r.rule_id == "FM-SPLIT-YEAR-INDICATOR").status == ValidationStatus.FAIL
 
 
 def test_archive_exact_lineage_and_route_defect_detection(tmp_path,resolver):

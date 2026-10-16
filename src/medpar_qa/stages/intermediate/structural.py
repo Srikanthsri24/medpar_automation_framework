@@ -421,3 +421,32 @@ def validate_accommodation_totals(
         },
     )
 
+
+
+def validate_warning_summary(record, resolver):
+    """0640 concatenates warning 01..17; negative 0611 requires death warning 08."""
+    results = []
+    days = resolver.get(record.data, 'medpar_death_after_adm_0611')
+    wi08 = resolver.get(record.data, 'warning_indicator_08')
+    try:
+        negative = days not in (None, '') and int(days) < 0
+    except (ValueError, TypeError):
+        negative = False  # The independent numeric rule reports malformed day counts.
+    if negative:
+        valid = str(wi08) in ('2', '3')
+        results.append(RuleResult(Stage.INTERMEDIATE, 'INT-DEATH-WARNING-08',
+            ValidationStatus.PASS if valid else ValidationStatus.FAIL,
+            'Negative 0611 requires death-before-admission warning 08 = 2 or 3',
+            expected=['2', '3'], actual=wi08, record_ids=[record.record_id],
+            source_files=[record.source.file_path]))
+    observed = resolver.get(record.data, 'medpar_warning_ind_0640')
+    if observed not in (None, ''):
+        flags = [resolver.get(record.data, f'warning_indicator_{n:02}') for n in range(1, 18)]
+        complete = all(value is not None and len(str(value)) == 1 for value in flags)
+        expected = ''.join(str(value) for value in flags) if complete else 'All 17 one-character warning operands'
+        results.append(RuleResult(Stage.INTERMEDIATE, 'INT-WARNING-SUMMARY-0640',
+            ValidationStatus.PASS if complete and observed == expected else ValidationStatus.FAIL if complete else ValidationStatus.BLOCKED,
+            '0640 must equal warning indicators 01 through 17 in order',
+            expected=expected, actual=observed, record_ids=[record.record_id],
+            source_files=[record.source.file_path]))
+    return results

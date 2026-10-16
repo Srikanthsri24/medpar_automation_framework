@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
-from medpar_qa.enums import Stage, ValidationStatus
+from medpar_qa.enums import FileRole, Stage, ValidationStatus
 from medpar_qa.ingestion.discovery import discover_files
 from medpar_qa.ingestion.readers import read_records
 from medpar_qa.models import RuleResult, RunManifest, SourceRecord, StageResult
@@ -127,6 +127,11 @@ class Pipeline:
 
             for path in paths:
                 try:
+                    if path.suffix.lower() == '.parquet' and entry.stage.value in ('intermediate', 'final_medpar') and entry.role != FileRole.SOURCE:
+                        from medpar_qa.stages.output_contracts import parquet_contracts
+                        options = self.manifest.settings.get(entry.stage.value, {})
+                        stage_result.rule_results.extend(parquet_contracts(path, entry.stage,
+                            options.get('forbidden_fields', ('cacheDataInternal',))))
                     records = read_records(
                         path,
                         entry.stage,

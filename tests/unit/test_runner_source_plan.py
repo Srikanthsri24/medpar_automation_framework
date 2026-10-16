@@ -20,7 +20,7 @@ def test_selected_backend_accepts_files_folders_and_both(source_type,kind):
     plan=plan_for(source_type=source_type,files=[file] if kind!='folders' else [],folders=[folder] if kind!='files' else [])
     stage,configured,settings=runner.source_run_configuration(plan)
     assert configured[stage]['single_files'][0]['source']==([file] if kind!='folders' else [])+([folder] if kind!='files' else [])
-    assert list(configured)==['stay'] and settings=={'_row_selection':plan['row_selection']}
+    assert list(configured)==['stay'] and settings=={**plan['settings'],'_row_selection':plan['row_selection']}
 
 
 @pytest.mark.parametrize('source_type,path',[('local','s3://medpar-demo-bucket/input/'),('s3','C:/MEDPAR/input')])

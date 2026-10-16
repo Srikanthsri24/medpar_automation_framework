@@ -1,5 +1,6 @@
 """Exercise mocked S3 downloads through the real command runner and stage validator."""
 import json
+import uuid
 from pathlib import Path
 import re
 import sys
@@ -19,9 +20,10 @@ def test_s3_input_reaches_real_final_action_report(tmp_path,monkeypatch,capsys):
     import run_commands as runner
     import medpar_qa.ingestion.input_sources as sources
     downloads=[]
+    etag=str(uuid.uuid4())  # Isolate this cold-download test from the persistent cache.
     content=(runner.PROJECT_ROOT/'data/demo_connected/claims.json').read_bytes()
     class FakeS3:
-        def head_object(self,**kwargs):return {'ContentLength':len(content),'ETag':'mock-etag'}
+        def head_object(self,**kwargs):return {'ContentLength':len(content),'ETag':etag}
         def download_file(self,bucket,key,filename):
             downloads.append((bucket,key));Path(filename).write_bytes(content)
     monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
@@ -218,7 +220,7 @@ def test_all_entries_share_one_timestamp_folder_with_live_report_links(tmp_path,
         def download_file(self,bucket,key,filename):Path(filename).write_bytes(objects[key])
     monkeypatch.setattr(sources,'aws_client',lambda path:FakeS3())
     monkeypatch.setattr(runner,'SOURCE_RUN',plan)
-    report_root=runner.PROJECT_ROOT/'reports'/f'test_single_root_{tmp_path.parent.name}_{tmp_path.name}_{backend}'
+    report_root=runner.PROJECT_ROOT/'reports'/f'test_single_root_{tmp_path.parent.name}_{tmp_path.name}_{backend}_{uuid.uuid4().hex[:8]}'
     monkeypatch.setattr(runner,'REPORTS_ROOT',report_root.relative_to(runner.PROJECT_ROOT).as_posix())
     monkeypatch.setattr(sys,'argv',['run_commands.py'])
     assert runner.main()==0

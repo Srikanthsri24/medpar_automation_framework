@@ -4,3 +4,9 @@ fixed_width_field: fixed_width_record
 expected_encoded_bytes: 3000
 encoding: ascii
 field_layout: configurable one-based start and length; official 3050-to-3000 offset map not supplied
+
+field_types:
+  medparIntmdNum0580: string
+  medparDeathAfterAdm0611: signed_integer
+
+forbidden_fields: [cacheDataInternal]

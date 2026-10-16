@@ -91,7 +91,7 @@ def stay(records, processor):
         put(row,'warning_indicator_01',str(('0' in qcs)+2*('5' in qcs)),resolver)
         put(row,'warning_indicator_05','0' if len(group)==1 else '2' if str(get(first,'transaction_code')) in ('0','4') and str(get(last,'discharge_status') or get(last,'patientStatus'))=='30' else '1',resolver)
         for number,function in ((6,warning06),(8,warning08)):
-            try:put(row,f'warning_indicator_{number:02}',function(group,resolver),resolver)
+            try:put(row,f'warning_indicator_{number:02}',function(group,resolver, **(dict(dod_data_cutoff_date=processor.settings.dod_data_cutoff_date,dod_cutoff_inclusive=processor.settings.dod_cutoff_inclusive) if number==8 and processor.settings.dod_data_cutoff_date is not None else {})),resolver)
             except LookupError as exc:notes.append(str(exc))
         # 0380 needs all six monetary operands: no fabricated zero defaults.
         try:
@@ -134,7 +134,7 @@ def intermediate(records,processor):
                 if resolver.get(source.data,field) not in (None,''):raise GenerationBlocked('Cannot regenerate populated field '+field+': '+error)
             else:put(row,field,'' if value is None else value,resolver)
         target=SourceRecord({},source.source,source.record_id)
-        validate_business_rules(source,target,resolver,revenue_category_ranges=processor.settings.revenue_category_ranges,calculation_sink=calculation)
+        validate_business_rules(source,target,resolver,dod_data_cutoff_date=processor.settings.dod_data_cutoff_date, dod_cutoff_inclusive=processor.settings.dod_cutoff_inclusive, revenue_category_ranges=processor.settings.revenue_category_ranges,calculation_sink=calculation)
         def clinical(collection, code_source, version_source, extra_source, code_field, version_field, extra_field):
             lines=resolver.get(source.data,collection)
             if lines is not None and any(isinstance(line,dict) for line in lines):
@@ -177,6 +177,11 @@ def intermediate(records,processor):
         if accommodation is not None:put(row,'medpar_tot_acc_chrg_0430',whole_dollars(sum(map(to_decimal,accommodation),Decimal(0))),resolver)
         ndcs=[line_value(line,'ndcNumber','ndc','ndc_code') for line in (resolver.get(source.data,'revenue_lines') or [])]
         if any(ndcs):put(row,'medpar_rev_cntr_ndc_num_1550',[value for value in ndcs if value not in (None,'')][:10],resolver)
+        warnings = [resolver.get(row, f'warning_indicator_{n:02}') for n in range(1, 18)]
+        if all(value is not None and str(value) != '' for value in warnings):
+            put(row, 'medpar_warning_ind_0640', ''.join(str(value) for value in warnings), resolver)
+        elif resolver.get(source.data, 'medpar_warning_ind_0640') not in (None, ''):
+            raise GenerationBlocked('0640 requires all 17 warning operands; stale summary cannot be retained')
         output.append(row)
     return output,notes
 
@@ -187,7 +192,8 @@ def final_medpar(records,processor):
     for record in records:
         if bypass_required(record,resolver):
             dropped.append({'record':record.data,'reason':'Covered days exceed LOS / WI04 bypass','source_record_id':record.record_id});continue
-        row=deepcopy(record.data)
+        from medpar_qa.stages.output_contracts import remove_fields
+        row=remove_fields(deepcopy(record.data),processor.settings.forbidden_fields)
         raw=resolver.get(row,'fixed_width_record')
         if raw is not None:
             encoded=raw if isinstance(raw,bytes) else str(raw).encode(processor.settings.encoding)

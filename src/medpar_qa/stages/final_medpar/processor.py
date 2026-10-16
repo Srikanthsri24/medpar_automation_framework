@@ -43,7 +43,10 @@ class FinalMedparProcessor(BaseStageProcessor):
 
     def _validate_record(self, record: SourceRecord) -> list[RuleResult]:
         """Run Final record classification, selected-field and optional physical-layout checks."""
-        results: list[RuleResult] = []
+        from medpar_qa.stages.output_contracts import forbidden_result,intermediary_type
+        results: list[RuleResult] = [forbidden_result(record,self.settings.forbidden_fields)]
+        if self.resolver.get(record.data,"medpar_intmd_num_0580") is not None:
+            results.append(intermediary_type(record,self.resolver,self.stage))
         split_indicator = self.resolver.get(record.data, "split_year_indicator")
         split_valid = bool(
             split_indicator
@@ -287,6 +290,9 @@ class FinalMedparProcessor(BaseStageProcessor):
                 continue
 
             result.rule_results.extend(self._validate_record(target))
+            if actual is not None:
+                from medpar_qa.stages.output_contracts import carry_forward_contracts
+                result.rule_results.extend(carry_forward_contracts(source, actual, self.resolver))
             if actual is not None:
                 result.rule_results.append(validate_trailer_removal(source, actual, self.resolver, self.settings.encoding))
             if expected is not None and actual is not None:

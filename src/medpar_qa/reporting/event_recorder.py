@@ -27,6 +27,11 @@ def finish_capture(token: Token) -> list[dict[str, Any]]:
     return events
 
 
+def capture_active() -> bool:
+    """Avoid serializing rule evidence when no event consumer is present."""
+    return _CAPTURED_EVENTS.get() is not None
+
+
 def record_event(event: dict[str, Any]) -> None:
     """Append an evidence event when capture is active; this does not determine the business
     outcome.

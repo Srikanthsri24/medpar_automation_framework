@@ -55,7 +55,7 @@ def compact_reports(root: Path) -> Path:
                 for key in batch:screen_blocks[key]=len(blocks)
                 emit(f'Compressing {name} block {len(blocks)+1}: {len(batch):,} screens, {size:,} source bytes')
                 archive=Path(temp)/(name+str(len(blocks))+'.gz')
-                with gzip.open(archive,'wt',encoding='utf-8',compresslevel=9) as out:json.dump(batch,out,separators=(',',':'))
+                with gzip.open(archive,'wt',encoding='utf-8',compresslevel=6) as out:json.dump(batch,out,separators=(',',':'))
                 blocks.append(archive);batch={};size=0
             for path in paths:
                 if size>=4_000_000:flush()
@@ -69,7 +69,7 @@ def compact_reports(root: Path) -> Path:
             flush()
             default=name+'/index.html'
             if default not in screen_blocks:default=next(iter(screen_blocks))
-            metadata=gzip.compress(json.dumps({'routes':routes,'blocks':screen_blocks},separators=(',',':')).encode(),compresslevel=9)
+            metadata=gzip.compress(json.dumps({'routes':routes,'blocks':screen_blocks},separators=(',',':')).encode(),compresslevel=6)
             output=Path(temp)/(name+'.html')
             with output.open('w',encoding='utf-8') as out:
                 out.write('<!doctype html><html><head><meta charset="utf-8"><title>MEDPAR '+name.replace('_',' ').title()+'</title><style>html,body{margin:0;height:100%;font:16px system-ui}iframe{width:100%;height:100%;border:0}#loading{padding:24px}</style></head><body><div id="loading">Opening report evidence…</div><iframe title="MEDPAR report" hidden></iframe><script id="archive" type="application/octet-stream">'+base64.b64encode(metadata).decode('ascii')+'</script>')

@@ -131,7 +131,16 @@ class ConnectedPipeline:
         self.root = Path(root)
         self.session = session
         self.resolver = resolver or FieldResolver.from_yaml(self.root / 'config/field_aliases.yaml')
-        self.settings = settings or {}
+        self.settings = copy.deepcopy(settings or {})
+        # One shared approval setting governs Stay warning 08 and Intermediate DOD.
+        for name in ('dod_data_cutoff_date', 'dod_cutoff_inclusive'):
+            values = [self.settings.get(stage, {}).get(name) for stage in ('stay', 'intermediate')]
+            specified = [value for value in values if value is not None]
+            if len(specified) == 2 and specified[0] != specified[1]:
+                raise ValueError(f'{name} must agree between Stay and Intermediate')
+            if specified:
+                for stage in ('stay', 'intermediate'):
+                    self.settings.setdefault(stage, {})[name] = specified[0]
 
     @tracked('Process a connected record group through the requested stages')
     def run_file(self, source, run_dates, outputs=None, *, start_stage="final_action", generate_outputs=None, original_inputs=None, initial_records=None):

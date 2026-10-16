@@ -21,7 +21,7 @@ def warning06(records, resolver):
     return '0'
 
 
-def warning08(records, resolver):
+def warning08(records, resolver, **death_options):
     """Duplicate bill identity and death before admission combine into a two-bit warning."""
     fields = ('hicn', 'admission_date', 'provider_id', 'stay_from_date', 'stay_thru_date', 'processing_date', 'query_code')
     identities = []
@@ -34,8 +34,14 @@ def warning08(records, resolver):
                 raise LookupError(f'Warning 08 missing duplicate-identity operand: {field}')
             values.append(parse_date(value).isoformat() if field.endswith('_date') else str(value).strip())
         identities.append(tuple(values))
-        death = record.data.get('matched_date_of_death') if record.data.get('dod_reference_available') else resolver.get(record.data, 'date_of_death')
-        if death not in (None, '', 0, '00000000'):
-            death_before |= parse_date(death) < parse_date(resolver.get(record.data, 'admission_date'))
+        from medpar_qa.stages.death_policy import effective_death
+        try:
+            death = effective_death(record.data, resolver, **death_options).death
+        except LookupError:
+            if death_options or isinstance(resolver.get(record.data, 'cacheDataInternal'), dict):
+                raise
+            death = None  # Existing warning-only inputs need not have an EDB match.
+        if death is not None:
+            death_before |= death < parse_date(resolver.get(record.data, 'admission_date'))
     duplicate = any(count > 1 for count in Counter(identities).values())
     return str(int(duplicate) + 2 * int(death_before))

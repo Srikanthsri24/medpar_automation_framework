@@ -17,20 +17,21 @@ from medpar_qa.normalization.fields import _key_form, FieldResolver
 from medpar_qa.normalization.decimal_values import to_decimal
 
 
-def payload_fingerprint(data):
-    """Hash unchanged fields after deleting only the Intermediate split indicator."""
-    payload = {key: value for key, value in data.items() if _key_form(key) != 'medparsplityearindicator'}
+def payload_fingerprint(data,expected_removed_fields=("split_year_indicator","splitYearIndicator","medparSplitYearIndicator","cacheDataInternal")):
+    """Hash unchanged fields after removing the explicitly configured output exclusions."""
+    from medpar_qa.stages.output_contracts import remove_fields
+    payload=remove_fields(data,expected_removed_fields)
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
-def audit_archive(root, *, current_year, resolver):
+def audit_archive(root, *, current_year, resolver, expected_removed_fields=("split_year_indicator","splitYearIndicator","medparSplitYearIndicator","cacheDataInternal")):
     """Return source-linked proof for M1–M7 without granting acceptance to partial FYs."""
     root = Path(root)
     result = StageResult(Stage.FINAL_MEDPAR)
     source_index = defaultdict(list)
     for path in sorted((root / '5-intermediate-processing').rglob('*.json')):
         data = json.loads(path.read_text())
-        source_index[payload_fingerprint(data)].append((path, data))
+        source_index[payload_fingerprint(data,expected_removed_fields)].append((path, data))
     finals = sorted((root / '6-final-processing').rglob('*.json'))
     delivered_by_source = defaultdict(list)
     routes = Counter()
@@ -49,15 +50,18 @@ def audit_archive(root, *, current_year, resolver):
 
     for path in finals:
         data = json.loads(path.read_text())
+        from medpar_qa.stages.output_contracts import forbidden_paths
+        forbidden=forbidden_paths(data)
+        check('FM-NO-INTERNAL-FIELDS',not forbidden,'No cacheDataInternal at any nesting level',forbidden,[path],'Final deliverable excludes internal cache data')
         parts = path.relative_to(root / '6-final-processing').parts
         folder, period, year = parts[:3]
         classification = str(resolver.get(data, 'medpar_ss_ls_snf_ind_0140')).strip()
         expected_folder = 'MEDPAR_FINAL_SNF_FILES' if classification == 'N' else 'MEDPAR_FINAL_SS_FILES' if classification in ('S', 'L') else None
         check('FM-ARCHIVE-CLASSIFICATION-ROUTE', folder == expected_folder, expected_folder, folder, [path], 'S/L route to SS; N routes to SNF')
         routes[(folder, period, int(year))] += 1
-        digest = payload_fingerprint(data)
+        digest = payload_fingerprint(data,expected_removed_fields)
         matches = source_index[digest]
-        check('FM-ARCHIVE-EXACT-LINEAGE', len(matches) == 1, 'Exactly one Intermediate record identical except removed Split-Year Indicator',
+        check('FM-ARCHIVE-EXACT-LINEAGE', len(matches) == 1, 'Exactly one Intermediate record identical except configured removed fields',
               {'matching_sources': len(matches), 'sha256': digest}, [path, *[p for p, _ in matches]], 'Exact JSON field preservation against Intermediate')
         if len(matches) != 1:
             continue

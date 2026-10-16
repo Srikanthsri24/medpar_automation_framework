@@ -12,7 +12,7 @@ from medpar_qa.stages.intermediate.business_rules import codes
 
 
 FIRST_FIELDS = (
-    "state_code", "county_code", "fiscal_intermediary", "beneficiary_zip_code",
+    "state_code", "county_code", "fiscal_intermediary_id", "beneficiary_zip_code",
     "beneficiary_gender", "beneficiary_race", "beneficiary_date_of_birth", "medicare_status",
     "claimCanNchEquatable", "patient_surname", "patient_first_initial", "patientMiddleInitial", "claim_can", "hicn", "bic",
     "action_code", "provider_id", "providerStateCode", "medicaidProvider", "medicaidInformation",
@@ -34,7 +34,7 @@ FIRST_FOUND_FIELDS = (
     "residualPaymentIndicatorCode", "rpIndicator", "initialMedicareSeverityDrgCode", "acoId",
     "mbiId", "beneIdTypeCode",
 )
-HIGH_DATES = ("stay_thru_date", "processing_date", "accrete_date", "forwarded_date", "hcfa_received",
+HIGH_DATES = ("fiscal_intermediary_approved_date", "fiscal_intermediary_received_date", "stay_thru_date", "processing_date", "accrete_date", "forwarded_date", "hcfa_received",
               "procFromDate", "mqaDate", "approvedDate", "proProcessDate", "qualifiedStayThruDate", "nonCoverageThruDate",
               "outPatientPhysicalTherapyDate", "activeCareEndsDate", "benefits_exhausted_date")
 LOW_DATES = ("stay_from_date", "qualifiedStayFromDate", "nonCoverageFromDate")
@@ -51,7 +51,7 @@ SUM_FIELDS = (
 
 
 def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | None,
-                         resolver: FieldResolver, scale: Decimal) -> list[RuleResult]:
+                         resolver: FieldResolver, scale: Decimal, **death_options) -> list[RuleResult]:
     """Order bills and independently derive supported first/last/nonblank/date/sum/revenue/warning
     expectations; retain per-field source lineage.
     """
@@ -150,7 +150,7 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
     for number, calculation in ((6, warning06), (8, warning08)):
         field = f"warning_indicator_{number:02}"
         try:
-            check(field, calculation(records, resolver), f"ST-WARNING-{number:02}", True)
+            check(field, calculation(records, resolver, **(death_options if number == 8 else {})), f"ST-WARNING-{number:02}", True)
         except LookupError as exc:
             observed = get(actual, field) if actual else None
             results.append(RuleResult(stage=Stage.STAY, rule_id=f"ST-WARNING-{number:02}",
@@ -160,10 +160,10 @@ def _validate_merge_rules(records: list[SourceRecord], actual: SourceRecord | No
     return results
 
 
-def validate_merge_rules(records, actual, resolver, scale):
+def validate_merge_rules(records, actual, resolver, scale, **death_options):
     """Wrap merge derivation and convert invalid numeric/date operands into a reportable failure."""
     try:
-        return _validate_merge_rules(records,actual,resolver,scale)
+        return _validate_merge_rules(records,actual,resolver,scale, **death_options)
     except (ValueError,TypeError,ArithmeticError,LookupError) as exc:
         return [RuleResult(stage=Stage.STAY,rule_id="ST-MERGE-OPERANDS",status=ValidationStatus.FAIL,
             message=str(exc),record_ids=[r.record_id for r in records])]

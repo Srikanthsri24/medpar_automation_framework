@@ -44,9 +44,11 @@ def iter_records(path,stage,role,root):
                 for row in ijson.items(handle,prefix,use_float=True):yield row
         values=rows();fmt='json'
     else:raise InputReadError(f'Unsupported input format: {display}')
+    from .schema_metadata import parquet_schema
+    metadata={'parquet_schema':parquet_schema(path)} if fmt=='parquet' else {}
     for number,row in enumerate(values,1):
         if not isinstance(row,dict):raise InputReadError(f'Input row {number} must be an object in {display}')
-        yield SourceRecord(dict(row),SourceLocation(display,number,fmt,stage,role),_record_id(path,number,row))
+        yield SourceRecord(dict(row),SourceLocation(display,number,fmt,stage,role),_record_id(path,number,row),metadata=metadata)
 
 
 def options(value):

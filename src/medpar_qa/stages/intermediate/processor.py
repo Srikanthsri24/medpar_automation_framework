@@ -85,6 +85,11 @@ class IntermediateProcessor(BaseStageProcessor):
         )
         results.extend(validate_repeated_alignment(record, self.resolver))
         results.append(validate_death_after_admission(record, self.resolver))
+        from .structural import validate_warning_summary
+        results.extend(validate_warning_summary(record, self.resolver))
+        if self.resolver.get(record.data,"medpar_intmd_num_0580") is not None or (source is not None and self.resolver.get(source.data,"fiscal_intermediary") is not None):
+            from medpar_qa.stages.output_contracts import intermediary_type
+            results.append(intermediary_type(record,self.resolver,self.stage))
         results.extend(
             validate_age_and_ndc(record, self.resolver, self.settings.ndc_length)
         )
@@ -267,7 +272,7 @@ class IntermediateProcessor(BaseStageProcessor):
 
             from .business_rules import validate_business_rules
             result.rule_results.extend(self._validate_actual_structure(target, source=source))
-            result.rule_results.extend(validate_business_rules(source, target, self.resolver, revenue_category_ranges=self.settings.revenue_category_ranges))
+            result.rule_results.extend(validate_business_rules(source, target, self.resolver, dod_data_cutoff_date=self.settings.dod_data_cutoff_date, dod_cutoff_inclusive=self.settings.dod_cutoff_inclusive, revenue_category_ranges=self.settings.revenue_category_ranges))
             from medpar_qa.stages.v3_fields import validate_whole_dollar_fields
             result.rule_results.extend(validate_whole_dollar_fields(source,target,self.resolver))
             if actual is not None:

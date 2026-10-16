@@ -19,6 +19,8 @@ class StaySettings:
         "stay_from_date", "stay_thru_date", "processing_date",
         "accrete_date", "source_sequence",
     )
+    dod_data_cutoff_date: str | None = None
+    dod_cutoff_inclusive: bool = True
     decimal_scale: Decimal = Decimal("0.001")
     require_actual_output: bool = False
     require_expected_output: bool = False
@@ -47,7 +49,9 @@ class StaySettings:
         defaults for omitted options.
         """
         raw = raw or {}
+        from medpar_qa.stages.death_policy import cutoff_options
         return cls(
+            **cutoff_options(raw),
             identity_fields=tuple(raw.get("identity_fields") or cls.identity_fields),
             sort_fields=tuple(raw.get("sort_fields") or cls.sort_fields),
             decimal_scale=Decimal(str(raw.get("decimal_scale", "0.001"))),

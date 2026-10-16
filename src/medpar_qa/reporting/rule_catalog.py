@@ -345,3 +345,47 @@ KNOWN_STAGE_RULE_IDS['stay'] = tuple(rule for rule in KNOWN_STAGE_RULE_IDS['stay
 # Superseded by source formula and span-date checks; do not display retired rules.
 for _retired in ("ST-DTE-CR-ENDED-LATEST-RECORD", "ST-DRG-PRICE-LATEST-RECORD"):
     CATALOG.pop(_retired, None)
+
+# QA_Regression_Tickets.docx: explicit contracts and claim-coverage evidence.
+CATALOG.update({
+    'FM-NO-INTERNAL-FIELDS': _meta('Final internal-field exclusion',
+        'QA-REG-01: delivered Final JSON and Parquet must not contain cacheDataInternal at any depth.',
+        'Inspect normalized JSON keys and nested Parquet schema paths, including empty or null columns.',
+        'PASS when all configured forbidden fields are absent; FAIL lists the offending paths.',
+        'Regenerate Final output with the internal fields removed; retain Intermediate source evidence.'),
+    'INT-TYPE-0580': _meta('Intermediary number as a flat string',
+        'QA-REG-02: 0580 is the first Stay claim fiscalIntermediary.id, preserving leading zeros.',
+        'Inspect the JSON value and available Parquet logical type; compare the source id independently.',
+        'PASS for a string with the source value; objects, structs and incorrect values fail.',
+        'Regenerate 0580 as the character id, without the intermediary date object.'),
+    'FM-TYPE-0580': _meta('Final intermediary number type',
+        'QA-REG-02: Final 0580 must remain a flat string.',
+        'Inspect JSON value type and Parquet schema.',
+        'PASS for string; FAIL for struct, object or numeric type.',
+        'Regenerate Final from the corrected Intermediate string field.'),
+    'FM-CARRY-0580': _meta('Intermediate to Final intermediary value',
+        'QA-REG-02: Final must preserve Intermediate 0580, including leading zeros.',
+        'Compare the matched source and delivered value and type.',
+        'PASS for exact value/type preservation.', 'Correct Final field mapping.'),
+    'FM-CARRY-0611': _meta('Intermediate to Final signed death days',
+        'QA-REG-04: Final must preserve the signed Intermediate death-day count.',
+        'Compare source and delivered 0611, including sign.',
+        'PASS for exact value preservation; replacing a negative count with zero fails.',
+        'Preserve the source signed integer; use the approved layout for physical export.'),
+    'INT-DEATH-WARNING-08': _meta('Death days and warning 08 agreement',
+        'QA-REG-04: negative 0611 requires death-before-admission warning 08 = 2 or 3.',
+        'Check warning 08 when the signed day count is negative.',
+        'PASS when warning 08 includes its death bit.',
+        'Apply the same approved death-date policy to the count and warning.'),
+    'INT-WARNING-SUMMARY-0640': _meta('Ordered warning summary',
+        'QA-REG-03: 0640 must reflect warning indicators 01 through 17, including corrected WI08.',
+        'Concatenate the 17 individual flags and compare with 0640.',
+        'PASS for equality; BLOCKED when required individual flags are missing.',
+        'Regenerate the summary after recalculating the individual warnings.'),
+})
+for _rule in ('INT-DEATH-DAYS-CALCULATION', 'INT-DOD-CALCULATION', 'INT-DOD-VERIFY'):
+    CATALOG[_rule] = _meta('Claims-coverage death-date calculation',
+        'QA-REG-03/04: ignore BIC DOD beyond the approved cutoff; status 20 falls back to claim thru date and switch B.',
+        'Use raw source DOD, explicit cutoff and discharge status to derive 0230, 0240 and signed 0611.',
+        'PASS when delivered values match; missing approved BIC cutoff blocks verification. Same-day 0611 is 1.',
+        'Set the team-approved dod_data_cutoff_date and regenerate affected fields; do not substitute the run date.')

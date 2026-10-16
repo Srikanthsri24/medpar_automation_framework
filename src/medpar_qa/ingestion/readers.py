@@ -114,24 +114,15 @@ def read_parquet_records(
     lineage.
     """
     try:
-        import pandas as pd
-
-        frame = pd.read_parquet(path)
-    except Exception as exc:  # pandas exposes engine-specific exception types
+        import pyarrow.parquet as pq
+        # Read the file directly. A pandas -> Arrow round trip duplicated nested
+        # structures and memory; partition values are injected explicitly below.
+        raw_records = pq.ParquetFile(path).read().to_pylist()
+    except Exception as exc:
         raise InputReadError(
             f"Unable to read Parquet file {_display_path(path, display_base)}. Install pyarrow and verify the file: {exc}"
         ) from exc
 
-    # Arrow list/struct columns contain arrays and dictionaries: DataFrame.notna()
-    # cannot safely be applied to nested cells. Convert via Arrow's native pylist.
-    try:
-        import pyarrow as pa
-        raw_records = pa.Table.from_pandas(frame, preserve_index=False).to_pylist()
-    except (ImportError, TypeError, ValueError):
-        raw_records = [
-            {key: _nested_to_python(value) for key, value in row.items()}
-            for row in frame.to_dict(orient="records")
-        ]
     # Hive partition columns can live only in directory names. Reading a single
     # parquet file does not load them, so preserve their literal values and lineage.
     from urllib.parse import unquote
@@ -152,9 +143,12 @@ def read_parquet_records(
                     item[matches[0]] = value
             else:
                 item[key] = value
+    from .schema_metadata import parquet_schema
+    metadata={'parquet_schema':parquet_schema(path)}
     return [
         SourceRecord(
             data=dict(item),
+            metadata=metadata,
             source=SourceLocation(
                 file_path=(
                     _display_path(path, display_base)
