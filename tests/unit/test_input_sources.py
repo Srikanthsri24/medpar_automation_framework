@@ -241,3 +241,76 @@ def test_unknown_object_content_stops_without_registering_partial_input(tmp_path
     with pytest.raises(InputSourceError,match='not recognizable JSON or Parquet'):
         resolver.resolve('s3://'+bucket+'/opaque')
     assert not resolver.files and not list(resolver.cache.rglob('*.download'))
+
+
+def test_original_file_cap_stops_s3_pagination_and_preserves_full_references(tmp_path):
+    class Paged(FakeS3):
+        pages_read = 0
+        def paginate(self, Bucket, Prefix):
+            for page in super().paginate(Bucket, Prefix):
+                self.pages_read += 1
+                yield page
+    fake = Paged({('bucket', f'input/{i:03}.json'): b'[{"id":1}]' for i in range(20)})
+    resolver = InputSources(tmp_path, tmp_path/'reports/run', client=fake,
+                            file_selection={'mode':'first_n','limit':5})
+    selected = resolver.resolve(['s3://bucket/input/', 's3://bucket/never-list/'], sample_source=True)
+    assert len(selected) == len(fake.downloads) == fake.pages_read == 5
+    references = resolver.resolve(['s3://bucket/input/'])
+    assert len(references) == 20
+    resolver.write_inventory()
+    evidence = json.loads((tmp_path/'reports/run/input_sources.json').read_text())
+    assert evidence['file_discovery'][0]['total_available_files'] == 'not enumerated'
+    assert evidence['file_discovery'][1]['selection'] == {'mode':'all'}
+
+
+def test_local_file_limit_is_shared_across_paths_and_all_mode(tmp_path):
+    for folder in ('a', 'b'):
+        (tmp_path/folder).mkdir()
+        for number in range(4):
+            (tmp_path/folder/f'{number}.json').write_text('[1,2,3,4,5,6]')
+    limited = InputSources(tmp_path, tmp_path/'reports/run', file_selection={'mode':'first_n','limit':5})
+    paths = limited.resolve(['a','a','b'], sample_source=True)
+    assert paths == ['a/0.json','a/1.json','a/2.json','a/3.json','b/0.json']
+    unlimited = InputSources(tmp_path, tmp_path/'reports/all', file_selection={'mode':'all'})
+    assert len(unlimited.resolve(['a','b'], sample_source=True)) == 8
+
+
+@pytest.mark.parametrize('selection', [{'mode':'first_n','limit':0}, {'mode':'first_n','limit':True}, {'mode':'other'}])
+def test_invalid_file_selection_rejected(tmp_path, selection):
+    with pytest.raises(InputSourceError, match='file_selection'):
+        InputSources(tmp_path, tmp_path/'reports/run', file_selection=selection)
+
+
+def test_five_files_and_five_rows_combine_without_changing_reference_scope(tmp_path):
+    from medpar_qa.ingestion.row_selection import select
+    from medpar_qa.models import Stage, FileRole
+    for i in range(9):
+        (tmp_path/f'{i}.json').write_text(json.dumps([{'id':f'{i}-{n}'} for n in range(12)]))
+    resolver = InputSources(tmp_path,tmp_path/'reports/run',file_selection={'mode':'first_n','limit':5})
+    files = resolver.resolve([str(tmp_path)], sample_source=True)
+    selected, inventory = select(files,Stage.FINAL_ACTION,FileRole.SOURCE,tmp_path,
+        {'mode':'first_n_per_file','limit':5,'include_related_records':False},lambda row: set())
+    assert len(files) == 5
+    assert len(selected) == 25
+    assert len(inventory['files'] if isinstance(inventory,dict) else inventory) == 5
+
+
+def test_s3_limit_does_not_request_next_large_page_and_all_mode_does(tmp_path):
+    class LargePage(FakeS3):
+        pages_read = 0
+        def paginate(self, Bucket, Prefix):
+            keys = sorted(self.objects)
+            for offset in range(0,len(keys),1000):
+                self.pages_read += 1
+                yield {'Contents':[dict(Key=key,Size=len(self.objects[(bucket,key)]),ETag='fake-etag')
+                                   for bucket,key in keys[offset:offset+1000]]}
+    fake = LargePage({('bucket',f'input/{i:04}.json'): b'[]' for i in range(1001)})
+    limited = InputSources(tmp_path,tmp_path/'reports/limited',client=fake,
+                          file_selection={'mode':'first_n','limit':5})
+    assert len(limited.resolve('s3://bucket/input/',sample_source=True)) == 5
+    assert fake.pages_read == 1 and len(fake.downloads) == 5
+    # A small all-files fixture proves pagination remains enabled without preparing 1001 files.
+    all_fake = FakeS3({('bucket',f'input/{i}.json'):b'[]' for i in range(7)})
+    unlimited = InputSources(tmp_path,tmp_path/'reports/all',client=all_fake,file_selection={'mode':'all'})
+    assert len(unlimited.resolve('s3://bucket/input/',sample_source=True)) == 7
+    assert len(all_fake.downloads) == 7

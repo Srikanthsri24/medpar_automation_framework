@@ -86,7 +86,7 @@ def aws_client(config_path: Path):
 class InputSources:
     """Stage local/S3 inputs once per run, keeping original paths and file hashes."""
 
-    def __init__(self, root: Path, session_root: Path, *, credentials_file=None, client=None, s3_read_mode="download", row_selection=None, s3_workers=8):
+    def __init__(self, root: Path, session_root: Path, *, credentials_file=None, client=None, s3_read_mode="download", row_selection=None, s3_workers=8, file_selection=None):
         if type(s3_workers) is not int or not 1 <= s3_workers <= 32:
             raise InputSourceError("s3_workers must be an integer from 1 to 32")
         self.s3_workers = s3_workers
@@ -102,6 +102,15 @@ class InputSources:
         self.s3_read_mode=s3_read_mode
         self.row_selection=row_selection or {}
         self._sample_source=False
+        selection = file_selection or {"mode": "all"}
+        if not isinstance(selection, dict) or selection.get("mode") not in ("all", "first_n"):
+            raise InputSourceError('file_selection.mode must be all or first_n')
+        if selection['mode'] == 'first_n' and (type(selection.get('limit')) is not int or selection['limit'] < 1):
+            raise InputSourceError('file_selection.limit must be a positive integer')
+        self.file_selection = dict(selection)
+        self.discovery = []
+        self._remaining_files = None
+        self._selected_origins = set()
 
     def _record(self, origin, path, **metadata):
         relative = path.resolve().relative_to(self.root).as_posix()
@@ -131,8 +140,18 @@ class InputSources:
     def resolve(self, values, *, sample_source=False):
         previous=self._sample_source
         self._sample_source=sample_source
-        try:return self._resolve(values)
-        finally:self._sample_source=previous
+        self._remaining_files = self.file_selection.get('limit') if sample_source and self.file_selection['mode'] == 'first_n' else None
+        self._selected_origins = set()
+        try:
+            result = self._resolve(values)
+            self.discovery.append(dict(paths=values, role='original' if sample_source else 'comparison',
+                selection=self.file_selection if sample_source else {'mode':'all'}, selected_files=len(result),
+                total_available_files='not enumerated' if self._remaining_files == 0 else 'discovered'))
+            return result
+        finally:
+            self._sample_source=previous
+            self._remaining_files=None
+            self._selected_origins=set()
 
     def _resolve(self, values):
         if isinstance(values, str): values = [values]
@@ -140,6 +159,9 @@ class InputSources:
             raise InputSourceError('Input paths must be a string or a list of nonempty strings')
         result = []
         for value in values:
+            if self._remaining_files == 0:
+                emit('Original file limit reached; remaining configured paths are not listed. Total available files not enumerated.')
+                break
             location = s3_location(value)
             if location:
                 result.extend(self._s3(*location))
@@ -151,8 +173,13 @@ class InputSources:
         candidate = Path(value).expanduser()
         if not candidate.is_absolute(): candidate = self.root / candidate
         if candidate.is_dir():
-            matches = sorted(p for p in candidate.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED)
-            if not matches: raise InputSourceError('Local folder contains no supported JSON or Parquet inputs')
+            def walk(folder):
+                for child in sorted(folder.iterdir()):
+                    if child.is_dir() and not child.is_symlink():
+                        yield from walk(child)
+                    elif child.is_file() and child.suffix.lower() in SUPPORTED:
+                        yield child
+            matches = walk(candidate)
         else:
             matches = sorted(Path(p).resolve() for p in glob(str(candidate), recursive=True) if Path(p).is_file())
         if not matches:
@@ -160,7 +187,15 @@ class InputSources:
             if not Path(value).is_absolute() and candidate.resolve().is_relative_to(self.root): return [value]
             raise InputSourceError('Local input file or wildcard does not exist')
         result = []
+        matched_existing = False
         for source in matches:
+            if self._remaining_files == 0: break
+            origin = str(source.resolve())
+            if origin in self._selected_origins:
+                matched_existing = True
+                continue
+            self._selected_origins.add(origin)
+            if self._remaining_files is not None: self._remaining_files -= 1
             if source.suffix.lower() not in SUPPORTED:
                 raise InputSourceError('Input files must be JSON or Parquet')
             path = source.resolve()
@@ -170,6 +205,8 @@ class InputSources:
                 emit(f'Copying external local input into run cache: {source} ({source.stat().st_size:,} bytes)')
                 shutil.copy2(source, path)
             result.append(self._record(str(source), path, kind='local'))
+        if not result and not matched_existing:
+            raise InputSourceError('Local folder contains no supported JSON or Parquet inputs')
         return result
 
     def _download_cached(self, bucket, obj, destination, kwargs):
@@ -243,11 +280,33 @@ class InputSources:
                     for page_number,page in enumerate(self.client.get_paginator('list_objects_v2').paginate(Bucket=bucket, Prefix=prefix),1):
                         emit(f'S3 listing page {page_number}: s3://{bucket}/{prefix}; {len(page.get("Contents",[]))} keys returned on this page')
                         yield page
-                objects = [obj for page in pages()
-                    for obj in page.get('Contents', []) if not obj['Key'].endswith('/') and PurePosixPath(obj['Key']).name not in ('_SUCCESS','_metadata','_common_metadata')
-                    and not PurePosixPath(obj['Key']).name.startswith(('_started_','_committed_'))
-                    and PurePosixPath(obj['Key']).suffix.lower() not in ('.txt','.md','.log','.crc')
-                    and (wildcard is None or fnmatchcase(obj['Key'], key))]
+                objects = []
+                matched_existing = False
+                seen = set(self._selected_origins)
+                for page in pages():
+                    for obj in page.get('Contents', []):
+                        name = PurePosixPath(obj['Key'])
+                        origin = f"s3://{bucket}/{obj['Key']}"
+                        if origin in seen:
+                            matched_existing = True
+                            continue
+                        if (obj['Key'].endswith('/') or name.name in ('_SUCCESS','_metadata','_common_metadata')
+                            or name.name.startswith(('_started_','_committed_'))
+                            or name.suffix.lower() in ('.txt','.md','.log','.crc')
+                            or (wildcard is not None and not fnmatchcase(obj['Key'], key))):
+                            continue
+                        seen.add(origin)
+                        objects.append(obj)
+                        if self._remaining_files is not None and len(objects) >= self._remaining_files: break
+                    if self._remaining_files is not None and len(objects) >= self._remaining_files:
+                        emit(f'Original file limit reached ({self.file_selection["limit"]}); S3 listing stopped. Total available objects not enumerated.')
+                        break
+            if exact and f"s3://{bucket}/{key}" in self._selected_origins: return []
+            if not exact and not objects and matched_existing: return []
+            objects = [obj for obj in objects if f"s3://{bucket}/{obj['Key']}" not in self._selected_origins]
+            for obj in objects:
+                self._selected_origins.add(f"s3://{bucket}/{obj['Key']}")
+            if self._remaining_files is not None: self._remaining_files -= len(objects)
             emit(f'S3 discovery: {len(objects)} object(s) at {uri}')
             objects = sorted({obj['Key']: obj for obj in objects}.values(), key=lambda obj: obj['Key'])
             if not objects: raise InputSourceError(f'No JSON or Parquet objects found at {uri}')
@@ -353,9 +412,9 @@ class InputSources:
     def write_inventory(self):
         self.session_root.mkdir(parents=True, exist_ok=True)
         files = sorted(self.files.values(), key=lambda item: item['local_path'])
-        payload = dict(generated=datetime.now(timezone.utc).isoformat(), resolved_files=len(files), files=files, errors=self.errors)
+        payload = dict(generated=datetime.now(timezone.utc).isoformat(), resolved_files=len(files), files=files, errors=self.errors, file_discovery=self.discovery)
         (self.session_root / 'input_sources.json').write_text(json.dumps(payload, indent=2), encoding='utf-8')
         esc = html.escape
         rows = ''.join(f'<tr><td>{n}</td><td>{esc(r["origin"])}</td><td>{esc(r["local_path"])}</td><td>{r["bytes"]}</td><td>{esc(r["sha256"])}</td><td>{esc(r.get("access_mode","Complete local file or download"))}<br>{esc(str(r.get("cached_rows","All")))} cached rows / {esc(str(r.get("source_total_rows","Counted during validation")))} source rows<br>{esc(r.get("hash_scope","Complete cached file"))}</td></tr>' for n,r in enumerate(files,1))
         errors = ''.join('<p>'+esc(message)+'</p>' for message in self.errors)
-        (self.session_root / 'input_sources.html').write_text('<!doctype html><meta charset="utf-8"><title>MEDPAR input sources</title><style>body{font:15px system-ui;margin:32px;color:#172033}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ddd;overflow-wrap:anywhere}summary{cursor:pointer}</style><h1>Input source verification</h1>'+f'<p>Unique resolved files: {len(files)}. This confirms downloaded/local file identity, not business-rule acceptance.</p>'+errors+'<details><summary>Original sources, local files and fingerprints</summary><table><tr><th>No.</th><th>Original source</th><th>File used by validation</th><th>Cached bytes</th><th>Cached file SHA-256</th><th>Read method and scope</th></tr>'+rows+'</table></details><p><a href="master/index.html">Master report</a> · <a href="input_sources.json">JSON evidence</a></p>', encoding='utf-8')
+        (self.session_root / 'input_sources.html').write_text('<!doctype html><meta charset="utf-8"><title>MEDPAR input sources</title><style>body{font:15px system-ui;margin:32px;color:#172033}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ddd;overflow-wrap:anywhere}summary{cursor:pointer}</style><h1>Input source verification</h1>'+f'<p>Unique resolved files: {len(files)}. This confirms downloaded/local file identity, not business-rule acceptance.</p>'+errors+'<p>Original file selection: '+esc(str(self.file_selection))+'. Comparison files are fully searched. A limited run does not enumerate the total available source files.</p><details><summary>Original sources, local files and fingerprints</summary><table><tr><th>No.</th><th>Original source</th><th>File used by validation</th><th>Cached bytes</th><th>Cached file SHA-256</th><th>Read method and scope</th></tr>'+rows+'</table></details><p><a href="master/index.html">Master report</a> · <a href="input_sources.json">JSON evidence</a></p>', encoding='utf-8')

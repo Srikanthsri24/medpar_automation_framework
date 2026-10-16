@@ -50,6 +50,7 @@ SOURCE_RUN: dict[str, Any] = {
     "s3_read_mode": "sample_parquet",  # Sample original Parquet through S3 ranges; download keeps the full source.
     "start_stage": "all",  # "all" reviews each supplied entry; or choose one stage.
     "run_date": None,  # Resolve today's local business date once at execution.
+    "file_selection": {"mode": "first_n", "limit": 5},  # Original files per stage across paths; mode="all" selects every file. Comparisons remain complete.
     "row_selection": {"mode": "first_n_per_file", "limit": 5, "include_related_records": False},  # Up to five rows per supplied file; mode="all" processes every row.
     "source_paths": {'local': {'final_action': {'original': {'files': [], 'folders': ['data/production/q61/1-quarterly-claims-parquet']},
                                 'keep': {'files': [], 'folders': ['data/production/q61/2-final-action-rules-parquet']},
@@ -449,6 +450,8 @@ def main(argv=None, *, report_session=None) -> int:
         print(f"SOURCE_RUN: {SOURCE_RUN['source_type']} source, starting at {start_stage}",flush=True)
         for number,path in enumerate(configured_stages[start_stage]['single_files'][0]['source'],1):
             print(f"  {number}. {path}",flush=True)
+        print('File selection (original inputs per stage): '+str(SOURCE_RUN.get('file_selection',{'mode':'all'})),flush=True)
+        print('Keep/drop comparison scope: all supplied reference files; source file/row limits do not clip comparison searches.',flush=True)
         print('Row selection: '+str(SOURCE_RUN.get('row_selection',{'mode':'all'})),flush=True)
         print("Automatic route: "+" -> ".join(list(STAGE_ORDER)[list(STAGE_ORDER).index(start_stage):]),flush=True)
     elif options.source:
@@ -499,7 +502,7 @@ def main(argv=None, *, report_session=None) -> int:
     session = report_session or ReportSession.create(REPORTS_ROOT, project_root=PROJECT_ROOT)
     session_relative = relative_display(session.root, project_root=PROJECT_ROOT)
     from medpar_qa.ingestion.input_sources import InputSources, InputSourceError
-    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path, s3_read_mode=SOURCE_RUN.get("s3_read_mode","download") if not options.config else "download", row_selection=connected_settings.get("_row_selection",{}), s3_workers=SOURCE_RUN.get("s3_workers",8))
+    sources = InputSources(PROJECT_ROOT, session.root, credentials_file=aws_path, s3_read_mode=SOURCE_RUN.get("s3_read_mode","download") if not options.config else "download", row_selection=connected_settings.get("_row_selection",{}), s3_workers=SOURCE_RUN.get("s3_workers",8), file_selection=SOURCE_RUN.get("file_selection") if not options.config else None)
     try:
         configured_stages = sources.prepare(configured_stages, selected_stage=selected_stage, connected=connected, start_stage=start_stage, generate_outputs=generate_outputs)
     except InputSourceError as exc:

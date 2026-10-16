@@ -84,6 +84,7 @@ SOURCE_RUN = {
     "s3_read_mode": "sample_parquet",  # Or "download" for complete source copies.
     "start_stage": "final_action",  # Or "all", "split", "stay", "intermediate", "final_medpar".
     "run_date": None,
+    "file_selection": {"mode": "first_n", "limit": 5},  # Original files per stage; mode="all" removes the cap.
     "row_selection": {"mode": "first_n_per_file", "limit": 5, "include_related_records": False},
     "source_paths": {
         "local": {
@@ -13141,7 +13142,9 @@ S3 object names do not need a file extension. Put exact object links in `SOURCE_
 
 Install the updated requirements (`python -m pip install -r requirements.txt`). `ijson` streams JSON records; Parquet inputs are read in Arrow batches. Nested diagnosis, procedure, revenue and other line arrays are not counted as additional claim rows.
 
-The default selects the first **five target rows across the supplied original files of each entry stage** (`first_n_total`). Use `row_selection.mode: "first_n_per_file"` for five target rows from every original file instead. Change `row_selection.mode` to `all` to process every row; `limit` is ignored then. The original total row count is still reported in sample mode. `include_related_records: True` also reads related cancellation and stay-group rows across the supplied original files, so a sampled bill is not incorrectly treated as an isolated group. Those additional rows are shown as **context**, separately from the five target rows. Set it to `False` only for a strict isolated sample; missing group context can change rule outcomes and samples are not full-dataset acceptance.
+The default selects up to **five original input files per entry stage and five rows per selected file** (up to 25 starting rows per stage). `file_selection: {"mode": "first_n", "limit": 5}` shares one file budget across the stage's configured original paths, in path order; overlapping files count once. Local folders use sorted directory traversal; S3 uses listing order. S3 stops requesting listing pages as soon as five candidate input objects are found, without listing remaining source folders. Extensionless objects still require content detection; invalid content fails visibly. The undiscovered total is unknown, not five. A response page can contain more keys than selected, but only the selected objects are prepared. Generated downstream outputs are not subject to this original-file cap.
+
+Use `file_selection: {"mode": "all"}` to discover every original file. Independently, use `row_selection: {"mode": "all"}` to process every row. Both settings must be `all` for a complete original-data run. Keep/drop comparison files remain fully discovered and searched, because the selected claim may appear anywhere in the supplied outputs; those scans can still take time. `input_sources.json` records selection scope per dataset. Strict five-row samples do not expand related claims, so they are test runs rather than full-population acceptance.
 
 `original` is the stage's input population; `keep` and `drop` are independently supplied observed outputs. Original selection never takes unrelated first-five rows from keep/drop: comparisons scan those datasets for the selected identities and match the calculated decision and fields. Missing or duplicate identities are blocked instead of guessed. Identical record counts alone do not prove correct outputs. Final Action and Split also check `original count = keep count + drop count` when both outputs are supplied. Stay merging and downstream derivations do not assume one output row for every input row. Empty role path lists mean **not supplied**, not an approved zero-row output; supply an empty JSON array file when an actual output is known to be empty.
 
