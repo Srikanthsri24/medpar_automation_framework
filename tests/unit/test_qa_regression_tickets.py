@@ -72,7 +72,7 @@ def test_reg02_final_carry_preserves_value_and_type(actual,passed,make_record,re
 
 def bic_payload(death='20240305',status='1',match=True):
     return dict(admissionDate='20240301',stayThruDate='20240309',dischargeStatus=status,
-        warningIndicator08='0', cacheDataInternal=dict(deathDate=death,isDeathDateVerified='V',bic_api_match_found=match))
+        warningIndicator08='0', cacheDataInternal=dict(deathDate=death,isDeathDateVerified='Y',bic_api_match_found=match))
 
 
 @pytest.mark.parametrize('raw,status,match,expected,verify',[

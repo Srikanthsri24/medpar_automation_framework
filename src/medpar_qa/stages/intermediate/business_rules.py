@@ -243,7 +243,7 @@ DIRECT_MOVES = {
 
 
 def validate_business_rules(source: SourceRecord, target: SourceRecord,
-                            resolver: FieldResolver, *, revenue_category_ranges=None, calculation_sink=None, dod_data_cutoff_date=None, dod_cutoff_inclusive=True) -> list[RuleResult]:
+                            resolver: FieldResolver, *, revenue_category_ranges=None, calculation_sink=None, dod_data_cutoff_date=None, dod_cutoff_inclusive=True, bic_verification_mapping=None) -> list[RuleResult]:
     """Calculate supported Intermediate expectations from source operands and compare them with the
     matched target, emitting field-specific evidence.
     """
@@ -318,7 +318,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
             try:
                 from medpar_qa.stages.death_policy import effective_death
                 policy = effective_death(source.data, resolver, dod_data_cutoff_date=dod_data_cutoff_date,
-                                         dod_cutoff_inclusive=dod_cutoff_inclusive)
+                                         dod_cutoff_inclusive=dod_cutoff_inclusive, bic_verification_mapping=bic_verification_mapping)
                 death_evidence.update(effective_dod=policy.death.isoformat() if policy.death else None,
                                       ignored_after_cutoff=policy.ignored_after_cutoff)
             except (LookupError, ValueError, TypeError) as exc:
@@ -356,7 +356,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         """
         from medpar_qa.stages.death_policy import effective_death
         return effective_death(source.data, resolver, dod_data_cutoff_date=dod_data_cutoff_date,
-                               dod_cutoff_inclusive=dod_cutoff_inclusive).death
+                               dod_cutoff_inclusive=dod_cutoff_inclusive, bic_verification_mapping=bic_verification_mapping).death
 
     check("INT-DEATH-DAYS-CALCULATION", "medpar_death_after_adm_0611", lambda: death_after_admission(admission(), dod()), True)
     check("INT-DOD-CALCULATION", "medpar_himaster_dod_0230", lambda: dod().strftime("%Y%j") if dod() else None, date_value=True)
@@ -366,7 +366,7 @@ def validate_business_rules(source: SourceRecord, target: SourceRecord,
         """
         from medpar_qa.stages.death_policy import effective_death
         value = effective_death(source.data, resolver, dod_data_cutoff_date=dod_data_cutoff_date,
-                                dod_cutoff_inclusive=dod_cutoff_inclusive)
+                                dod_cutoff_inclusive=dod_cutoff_inclusive, bic_verification_mapping=bic_verification_mapping)
         if value.death is not None and value.verification is None and get("dod_reference_matched"):
             raise LookupError("Matched death date requires verification indicator")
         return value.verification

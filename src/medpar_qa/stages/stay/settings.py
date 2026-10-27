@@ -21,6 +21,7 @@ class StaySettings:
     )
     dod_data_cutoff_date: str | None = None
     dod_cutoff_inclusive: bool = True
+    bic_verification_mapping: dict | None = None
     decimal_scale: Decimal = Decimal("0.001")
     require_actual_output: bool = False
     require_expected_output: bool = False

@@ -181,6 +181,9 @@ def _stage_section(stage: StageResult, index: int, parent_link: str | None = Non
           <div class="table-wrap"><table><thead><tr><th>Record ID</th><th>Decision</th><th>Rule</th><th>Explanation</th></tr></thead><tbody>{rows}</tbody></table></div>
         </details>
         """
+    capped = {rid for check in stage.rule_results if check.rule_id == 'FM-OVERFLOW-0520'
+              and check.status.value == 'PASS' and check.evidence.get('cap_required') for rid in check.record_ids}
+    cap_summary = f'<p>Verified blood-pints capped records: {len(capped)}. Open FM-OVERFLOW-0520 for original values and byte evidence.</p>' if stage.stage.value == 'final_medpar' else ''
     open_attr = ""
     return f"""
     <details class="stage-section"{open_attr} data-stage-container="{_esc(stage.stage.value)}">
@@ -194,6 +197,7 @@ def _stage_section(stage: StageResult, index: int, parent_link: str | None = Non
         <div class="stage-intro">
           <strong>How to review this stage:</strong> Read validations in order. Each card states the business requirement, exact check, expected result, observed result, conclusion, and source evidence.
         </div>
+        {cap_summary}
         {catalogue}
         <details class='file-inventory-collapse'><summary>Files reviewed in this stage — KEEP {keep_count} · DROP {drop_count}</summary>{files_html}</details>
         <details><summary>Full rule explanations and evidence — open any rule link above</summary>

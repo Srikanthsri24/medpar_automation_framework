@@ -20,7 +20,7 @@ def test_cutoff_and_signed_fields_move_through_real_processors(tmp_path,resolver
     source=json.loads(Path('data/demo_source_only/claims.json').read_text())[0]
     source['split_year_indicator']='Y00109'
     source['fiscalIntermediary']={'id':'01234','approvedDate':20260101}
-    source['cacheDataInternal']={'deathDate':death,'isDeathDateVerified':'V','bic_api_match_found':True}
+    source['cacheDataInternal']={'deathDate':death,'isDeathDateVerified':'Y','bic_api_match_found':True}
     # A completed Stay is the input of this particular connected test.
     from medpar_qa.stages.stay.settings import StaySettings
     settings=StaySettings(dod_data_cutoff_date='2026-04-20')

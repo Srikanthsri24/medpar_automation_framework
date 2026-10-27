@@ -134,7 +134,7 @@ def intermediate(records,processor):
                 if resolver.get(source.data,field) not in (None,''):raise GenerationBlocked('Cannot regenerate populated field '+field+': '+error)
             else:put(row,field,'' if value is None else value,resolver)
         target=SourceRecord({},source.source,source.record_id)
-        validate_business_rules(source,target,resolver,dod_data_cutoff_date=processor.settings.dod_data_cutoff_date, dod_cutoff_inclusive=processor.settings.dod_cutoff_inclusive, revenue_category_ranges=processor.settings.revenue_category_ranges,calculation_sink=calculation)
+        validate_business_rules(source,target,resolver,dod_data_cutoff_date=processor.settings.dod_data_cutoff_date, dod_cutoff_inclusive=processor.settings.dod_cutoff_inclusive, bic_verification_mapping=processor.settings.bic_verification_mapping, revenue_category_ranges=processor.settings.revenue_category_ranges,calculation_sink=calculation)
         def clinical(collection, code_source, version_source, extra_source, code_field, version_field, extra_field):
             lines=resolver.get(source.data,collection)
             if lines is not None and any(isinstance(line,dict) for line in lines):
@@ -218,8 +218,10 @@ def final_medpar(records,processor):
             for field in ['split_year_indicator',*resolver.aliases.get('split_year_indicator',[])]:row.pop(field,None)
         if raw is None and processor.settings.field_layout:
             try:
+                cap_events = []
                 put(row,'fixed_width_record',encode_record(row,resolver,processor.settings.field_layout,
-                    expected_bytes=processor.settings.expected_bytes,encoding=processor.settings.encoding),resolver)
+                    expected_bytes=processor.settings.expected_bytes,encoding=processor.settings.encoding, record_id=record.record_id, cap_log=cap_events),resolver)
+                notes.extend(str(event) for event in cap_events)
             except (ValueError,KeyError,UnicodeError) as exc:
                 raise GenerationBlocked(str(exc)) from exc
         output.append(row)

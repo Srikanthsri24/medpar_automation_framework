@@ -2,7 +2,7 @@
 from decimal import Decimal
 
 
-def encode_record(data, resolver, layout, *, expected_bytes=3000, encoding='ascii'):
+def encode_record(data, resolver, layout, *, expected_bytes=3000, encoding='ascii', record_id=None, cap_log=None):
     """Use one-based positions with explicit filler, text or integer specifications.
 
     Full coverage is mandatory, including filler. No silent truncation, overlap,
@@ -41,6 +41,16 @@ def encode_record(data, resolver, layout, *, expected_bytes=3000, encoding='asci
                     raise ValueError(f'{name}: expected whole integer')
                 if number < 0:
                     raise ValueError(f'{name}: signed numeric encoding must be explicitly defined')
+                if spec.get('on_overflow') == 'cap' and spec.get('max_value') is not None:
+                    maximum = Decimal(str(spec['max_value']))
+                    if not maximum.is_finite() or maximum < 0 or maximum != maximum.to_integral_value():
+                        raise ValueError(f'{name}: invalid max_value')
+                    if number > maximum:
+                        event = dict(record_id=record_id, field=name, original_value=int(number), capped_value=int(maximum))
+                        if cap_log is not None: cap_log.append(event)
+                        from medpar_qa.progress import emit
+                        emit(f'Physical export cap: {event}')
+                        number = maximum
                 text = str(int(number)).rjust(length, '0')
             elif kind == 'text':
                 text = str(value).ljust(length, ' ')

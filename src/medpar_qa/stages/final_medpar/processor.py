@@ -138,6 +138,11 @@ class FinalMedparProcessor(BaseStageProcessor):
                 layout_result.source_files = [record.source.file_path]
                 results.append(layout_result)
 
+        from .overflow import validate_blood_overflow
+        if self.settings.require_fixed_width or self.settings.field_layout or fixed_width is not None:
+            results.append(validate_blood_overflow(record, self.resolver, self.settings.field_layout,
+                                                  fixed_width, self.settings.encoding))
+
         for field_name in self.settings.selected_fields:
             value = self.resolver.get(record.data, field_name)
             populated = value is not None and (not isinstance(value, str) or bool(value.strip()))

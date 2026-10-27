@@ -14,7 +14,7 @@ def cutoff_options(raw):
     inclusive = raw.get('dod_cutoff_inclusive', True)
     if type(inclusive) is not bool:
         raise ValueError('dod_cutoff_inclusive must be true or false')
-    return dict(dod_data_cutoff_date=cutoff, dod_cutoff_inclusive=inclusive)
+    return dict(dod_data_cutoff_date=cutoff, dod_cutoff_inclusive=inclusive, bic_verification_mapping=raw.get('bic_verification_mapping'))
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,7 @@ class DeathEvidence:
     cutoff: date | None
 
 
-def effective_death(data, resolver, *, dod_data_cutoff_date=None, dod_cutoff_inclusive=True):
+def effective_death(data, resolver, *, dod_data_cutoff_date=None, dod_cutoff_inclusive=True, bic_verification_mapping=None):
     get = lambda name: resolver.get(data, name)
     cached = get('cacheDataInternal')
     bic = isinstance(cached, dict) and any('death' in str(k).lower() or str(k).lower() == 'bic_api_match_found' for k in cached)
@@ -43,6 +43,14 @@ def effective_death(data, resolver, *, dod_data_cutoff_date=None, dod_cutoff_inc
         death = None
     if death is not None:
         verify = get('matched_dod_verify_switch') if available else get('dod_verify_switch')
+        if bic:
+            mapping = {'Y': 'V', 'N': ' ', '': ' '}
+            if bic_verification_mapping is not None:
+                mapping.update(bic_verification_mapping)
+            key = '' if verify is None else str(verify).strip()
+            if key not in mapping:
+                raise ValueError(f'Unmapped BIC isDeathDateVerified value: {verify!r}')
+            verify = mapping[key]
         return DeathEvidence(death, verify, raw, ignored, cutoff)
     status = str(get('discharge_status') or get('patientStatus') or '').strip()
     if status in ('20', 'B'):

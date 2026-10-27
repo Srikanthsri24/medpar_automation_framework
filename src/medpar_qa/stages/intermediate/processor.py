@@ -272,7 +272,7 @@ class IntermediateProcessor(BaseStageProcessor):
 
             from .business_rules import validate_business_rules
             result.rule_results.extend(self._validate_actual_structure(target, source=source))
-            result.rule_results.extend(validate_business_rules(source, target, self.resolver, dod_data_cutoff_date=self.settings.dod_data_cutoff_date, dod_cutoff_inclusive=self.settings.dod_cutoff_inclusive, revenue_category_ranges=self.settings.revenue_category_ranges))
+            result.rule_results.extend(validate_business_rules(source, target, self.resolver, dod_data_cutoff_date=self.settings.dod_data_cutoff_date, dod_cutoff_inclusive=self.settings.dod_cutoff_inclusive, bic_verification_mapping=self.settings.bic_verification_mapping, revenue_category_ranges=self.settings.revenue_category_ranges))
             from medpar_qa.stages.v3_fields import validate_whole_dollar_fields
             result.rule_results.extend(validate_whole_dollar_fields(source,target,self.resolver))
             if actual is not None:
